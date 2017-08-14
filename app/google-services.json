@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "484820173715",
+    "firebase_url": "https://rafflerchat-dda29.firebaseio.com",
+    "project_id": "rafflerchat-dda29",
+    "storage_bucket": "rafflerchat-dda29.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484820173715:android:70292aafa08e57b4",
+        "android_client_info": {
+          "package_name": "com.rafflerchat.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "484820173715-oo6847jg38cg8do9s174k0fgihkqt7qn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rafflerchat.app",
+            "certificate_hash": "b1352ce61518b36936e33c9b766b68fc2dd8f484"
+          }
+        },
+        {
+          "client_id": "484820173715-egs69n4r869sm8djv13fa6fsg0vqpnmn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_XpeKWEQhgnLfm_8chUeiUTa5QGBnR88"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "484820173715-egs69n4r869sm8djv13fa6fsg0vqpnmn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

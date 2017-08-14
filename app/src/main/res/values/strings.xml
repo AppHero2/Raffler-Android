@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">RafflerChat</string>
+
+    <!-- Buttons -->
+    <string name="button_next">Next</string>
+
+    <!-- Register Phone -->
+    <string name="register_verify_phone">Verify your phone number</string>
+    <string name="register_verify_content">RafferChat will send SMS message to verify your phone\nnumber.Enter your country code and phone number.</string>
+    <string name="register_verify_note">Carrier SMS charges may apply</string>
+
+    <!-- Country Picker -->
+    <string name="country_picker_search">Search</string>
+
 </resources>

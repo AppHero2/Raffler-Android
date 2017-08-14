@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.rafflerchat.app.RegisterPhoneActivity">
+
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="@string/register_verify_phone"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/txtContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="@string/register_verify_content"
+        android:layout_below="@+id/txtTitle"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <RelativeLayout
+        android:id="@+id/layout_auth"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/txtContent"
+        android:layout_above="@+id/btnNext">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:id="@+id/frameLayout">
+
+
+            <RelativeLayout
+                android:id="@+id/layout_middle"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/txtCountryCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text=" VE +58 ▾ "
+                    android:textColor="@color/colorAccent"
+                    android:textSize="22dp"
+                    android:gravity="center"
+                    android:layout_alignParentBottom="true" />
+
+                <EditText
+                    android:id="@+id/etPhoneNumber"
+                    android:layout_width="200dp"
+                    android:layout_height="30dp"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textSize="22sp"
+                    android:inputType="phone"
+                    android:textColor="@color/colorAccent"
+                    android:background="@android:color/transparent"
+                    android:layout_alignParentBottom="true"
+                    android:layout_toRightOf="@+id/txtCountryCode"
+                    android:layout_toEndOf="@+id/txtCountryCode"/>
+
+                <ImageView
+                    android:id="@+id/imgCheck"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/ic_false"
+                    android:tint="@color/colorAccent"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginBottom="5dp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="@color/colorAccent"/>
+            </RelativeLayout>
+
+            <!--<com.rafflerchat.app.gridpswd.GridPasswordView
+                android:id="@+id/txtPswd"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@color/colorTransparency"
+                app:gpvLineColor="@color/colorTransparency"
+                app:gpvLineWidth="5dp"
+                app:gpvTextColor="@color/colorAccent"
+                app:gpvTextSize="25sp"
+                app:gpvPasswordLength="7"
+                app:gpvGridColor="@color/colorTransparency"/>-->
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/txtNote"
+        android:text="@string/button_next"
+        android:textColor="@color/colorWhite"
+        android:backgroundTint="@color/colorAccent"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/btnNext" />
+    <TextView
+        android:id="@+id/txtNote"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/register_verify_note"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+</RelativeLayout>

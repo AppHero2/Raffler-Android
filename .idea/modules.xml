@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/RafflerChat.iml" filepath="$PROJECT_DIR$/RafflerChat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RafflerChat-Android.iml" filepath="$PROJECT_DIR$/RafflerChat-Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
