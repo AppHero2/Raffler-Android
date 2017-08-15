@@ -1,35 +1,35 @@
 {
   "project_info": {
-    "project_number": "484820173715",
-    "firebase_url": "https://rafflerchat-dda29.firebaseio.com",
-    "project_id": "rafflerchat-dda29",
-    "storage_bucket": "rafflerchat-dda29.appspot.com"
+    "project_number": "976039941599",
+    "firebase_url": "https://raffler-fbf05.firebaseio.com",
+    "project_id": "raffler-fbf05",
+    "storage_bucket": "raffler-fbf05.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:484820173715:android:70292aafa08e57b4",
+        "mobilesdk_app_id": "1:976039941599:android:40d1e9b4d008c00f",
         "android_client_info": {
-          "package_name": "com.rafflerchat.app"
+          "package_name": "com.raffler.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "484820173715-oo6847jg38cg8do9s174k0fgihkqt7qn.apps.googleusercontent.com",
+          "client_id": "976039941599-cgb343o4cquef87c2kq7ka0jajhe2rdu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.rafflerchat.app",
-            "certificate_hash": "b1352ce61518b36936e33c9b766b68fc2dd8f484"
+            "package_name": "com.raffler.app",
+            "certificate_hash": "8e4d922b9da9da795e3d1c68187f570057812a84"
           }
         },
         {
-          "client_id": "484820173715-egs69n4r869sm8djv13fa6fsg0vqpnmn.apps.googleusercontent.com",
+          "client_id": "976039941599-r6k8ibqvtt6vav74tgkjhj8brncefj1c.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC_XpeKWEQhgnLfm_8chUeiUTa5QGBnR88"
+          "current_key": "AIzaSyAit1_oDcUzhqq53DikYDJARY_JCONvS6k"
         }
       ],
       "services": {
@@ -40,7 +40,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "484820173715-egs69n4r869sm8djv13fa6fsg0vqpnmn.apps.googleusercontent.com",
+              "client_id": "976039941599-r6k8ibqvtt6vav74tgkjhj8brncefj1c.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
