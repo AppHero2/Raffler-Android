@@ -13,25 +13,43 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.kaopiz.kprogresshud.KProgressHUD;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
+import com.raffler.app.classes.AppConsts;
+import com.raffler.app.classes.AppManager;
+import com.raffler.app.models.User;
+import com.raffler.app.utils.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +59,12 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private DatabaseReference userRef;
+    private String userId;
 
     private EditText etName;
     private ImageView imgProfile;
+
+    private KProgressHUD hud;
 
     public static final int MULTIPLE_PERMISSIONS = 10; // code you want.
 
@@ -60,14 +81,31 @@ public class RegisterUserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_user);
 
+        hud = KProgressHUD.create(this)
+                .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
+                .setWindowColor(ContextCompat.getColor(this,R.color.colorTransparency))
+                .setDimAmount(0.5f);
+
         etName = (EditText) findViewById(R.id.etName);
-
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        userRef = database.getReference("Users");
-
-        // get owner name as dummy data
-        loadUserInfoFromPhone();
+        etName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId == EditorInfo.IME_ACTION_DONE){
+                    String name = etName.getText().toString();
+                    userRef.child(userId).child("name").setValue(name);
+                }
+                return false;
+            }
+        });
+        etName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus){
+                    String name = etName.getText().toString();
+                    userRef.child(userId).child("name").setValue(name);
+                }
+            }
+        });
 
         imgProfile = (ImageView) findViewById(R.id.imgProfile);
         imgProfile.setOnClickListener(new View.OnClickListener() {
@@ -76,14 +114,30 @@ public class RegisterUserActivity extends AppCompatActivity {
                 onClickProfile();
             }
         });
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        userId = firebaseUser.getUid();
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        userRef = database.getReference("Users");
+        userRef.child(userId).child("uid").setValue(userId);
+
+        // get owner name as dummy data
+        loadUserInfoFromPhone();
     }
 
     private void loadUserInfoFromPhone(){
-        if (checkPermissions()) {
-            Cursor c = getApplication().getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
-            c.moveToFirst();
-            etName.setText(c.getString(c.getColumnIndex("display_name")));
-            c.close();
+        User user = AppManager.getSession(this);
+        if (user != null) {
+            etName.setText(user.getName());
+            Util.setProfileImage(user.getPhoto(), imgProfile);
+        } else {
+            if (checkPermissions()) {
+                Cursor c = getApplication().getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
+                c.moveToFirst();
+                etName.setText(c.getString(c.getColumnIndex("display_name")));
+                c.close();
+            }
         }
     }
 
@@ -140,8 +194,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             }
             else if (requestCode == RESULT_CROP){
                 Bitmap bitmap = getBitmapFromData(data);
-                //Bitmap roundProfile = AppManager.getRoundedCornerBitmap(bitmap, 160);
-                Bitmap resizedBitmap =  Bitmap.createScaledBitmap(bitmap, 300, 300, false);
+                Bitmap resizedBitmap =  Bitmap.createScaledBitmap(bitmap, AppConsts.profile_size, AppConsts.profile_size, false);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, baos);
                 final byte[] imgData = baos.toByteArray();
@@ -153,7 +206,8 @@ public class RegisterUserActivity extends AppCompatActivity {
                     fos.flush();
                     fos.close();
 
-                    // TODO: 15/8/2017 process image later
+                    // upload user profile to Storage Bucket
+                    uploadProfilePhoto(profile);
 
                 }catch (IOException e){
                     e.printStackTrace();
@@ -226,8 +280,8 @@ public class RegisterUserActivity extends AppCompatActivity {
         intent.putExtra("crop", "true");
         intent.putExtra("aspectX", 1);
         intent.putExtra("aspectY", 1);
-        intent.putExtra("outputX", 320);
-        intent.putExtra("outputY", 320);
+        intent.putExtra("outputX", 300);
+        intent.putExtra("outputY", 300);
         intent.putExtra("return-data", true);
         return intent;
     }
@@ -277,5 +331,38 @@ public class RegisterUserActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQUEST_GALLERY);
             }
         }
+    }
+
+    private void uploadProfilePhoto(File file){
+
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReference();
+        StorageReference profileRef = storageRef.child("profile");
+        final String fileName = userId+".jpg";
+        StorageReference imageRef = profileRef.child(fileName);
+
+        try{
+            InputStream stream = new FileInputStream(file);
+            UploadTask uploadTask = imageRef.putStream(stream);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    e.printStackTrace();
+                }
+
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                    final Uri profileURL = taskSnapshot.getDownloadUrl();
+                    userRef.child(userId).child("photo").setValue(profileURL.toString());
+
+                    Util.setProfileImage(profileURL.toString(), imgProfile);
+                }
+            });
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
+
     }
 }

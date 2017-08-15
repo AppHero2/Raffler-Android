@@ -1,5 +1,6 @@
 package com.raffler.app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +11,11 @@ import android.view.WindowManager;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
+import com.raffler.app.classes.AppManager;
 
 /**
  * Created by Ghost on 14/8/2017.
@@ -46,6 +52,11 @@ public class AppSplashActivity extends AppCompatActivity {
                 dismissSplash();
             }
         });
+
+        AppManager.getInstance().setContext(getApplicationContext());
+
+        // Initialize image loader
+        initImageLoader(this);
     }
 
     @Override
@@ -65,11 +76,26 @@ public class AppSplashActivity extends AppCompatActivity {
     private void dismissSplash(){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null){
+
+            AppManager.getInstance().trackUser(user.getUid());
+
             // TODO: 15/8/2017 case user missed to save profile info
             startActivity(new Intent(this, RegisterUserActivity.class));
         } else {
             startActivity(new Intent(this, RegisterPhoneActivity.class));
         }
         this.finish();
+    }
+
+    public static void initImageLoader(Context context) {
+
+        ImageLoaderConfiguration.Builder config = new ImageLoaderConfiguration.Builder(context);
+        config.threadPriority(Thread.NORM_PRIORITY - 2);
+        config.denyCacheImageMultipleSizesInMemory();
+        config.diskCacheFileNameGenerator(new Md5FileNameGenerator());
+        config.diskCacheSize(50 * 1024 * 1024); // 50 MiB
+        config.tasksProcessingOrder(QueueProcessingType.LIFO);
+        //config.writeDebugLogs(); // Remove for release app
+        ImageLoader.getInstance().init(config.build());
     }
 }

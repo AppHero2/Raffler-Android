@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.raffler.app.R;
 import com.raffler.app.classes.AppConsts;
+import com.raffler.app.utils.Util;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -149,7 +150,7 @@ public class AlertView {
         TextView tvAlertMsg = (TextView) viewGroup.findViewById(R.id.tvAlertMsg);
         if (headerImage != null) {
             ImageView imgHeader = (ImageView) viewGroup.findViewById(R.id.imgHeader);
-            AppConsts.setProfileImage(headerImage, imgHeader);
+            Util.setProfileImage(headerImage, imgHeader);
         } else {
             ImageView imgHeader = (ImageView) viewGroup.findViewById(R.id.imgHeader);
             if (imgHeader != null)

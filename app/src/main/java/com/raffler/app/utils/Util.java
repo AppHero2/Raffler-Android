@@ -4,17 +4,70 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
+import android.widget.ImageView;
+
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.display.CircleBitmapDisplayer;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.raffler.app.classes.AppConsts;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class Util {
+
+    public static DisplayImageOptions displayImageOptions_original = new DisplayImageOptions.Builder()
+            .showImageOnLoading(android.R.drawable.sym_def_app_icon)
+            .showImageForEmptyUri(android.R.drawable.sym_def_app_icon)
+            .showImageOnFail(android.R.drawable.sym_def_app_icon)
+            .cacheInMemory(true)
+            .cacheOnDisk(true)
+            .considerExifParams(true)
+            .build();
+
+    public static DisplayImageOptions displayImageOptions_circluar = new DisplayImageOptions.Builder()
+            .showImageOnLoading(android.R.drawable.sym_def_app_icon)
+            .showImageForEmptyUri(android.R.drawable.sym_def_app_icon)
+            .showImageOnFail(android.R.drawable.sym_def_app_icon)
+            .cacheInMemory(true)
+            .cacheOnDisk(true)
+            .considerExifParams(true)
+            .displayer(new CircleBitmapDisplayer(0xccff8000, 1))
+            .build();
+
+    public static class AnimateFirstDisplayListener extends SimpleImageLoadingListener {
+
+        static final List<String> displayedImages = Collections.synchronizedList(new LinkedList<String>());
+
+        @Override
+        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+            if (loadedImage != null) {
+                ImageView imageView = (ImageView) view;
+                boolean firstDisplay = !displayedImages.contains(imageUri);
+                if (firstDisplay) {
+                    FadeInBitmapDisplayer.animate(imageView, 500);
+                    displayedImages.add(imageUri);
+                }
+            }
+        }
+    }
+
+    public static void setProfileImage(String url, ImageView imgView){
+        ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, new Util.AnimateFirstDisplayListener());
+    }
 
     public static void requestPermission(Activity activity, String permission) {
         if (ContextCompat.checkSelfPermission(activity, permission)
