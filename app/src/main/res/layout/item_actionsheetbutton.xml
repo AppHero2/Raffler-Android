@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <View
+        android:layout_width="match_parent"
+        android:background="@color/bgColor_divier"
+        android:layout_height="@dimen/size_divier"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_alert_button">
+
+        <ImageView
+            android:id="@+id/imgView"
+            android:layout_width="40dp"
+            android:padding="5dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_true"/>
+
+        <TextView
+            android:id="@+id/tvAlert"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:text="button"
+            android:textColor="@color/textColor_alert_button_others"
+            android:textSize="@dimen/textSize_alert_button" />
+    </RelativeLayout>
+</LinearLayout>

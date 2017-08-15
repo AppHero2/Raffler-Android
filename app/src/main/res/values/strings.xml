@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RafflerChat</string>
+    <string name="app_name">Raffler Chat</string>
 
     <!-- Buttons -->
     <string name="button_next">Next</string>
@@ -7,13 +7,14 @@
 
     <!-- Register Phone -->
     <string name="register_verify_phone">Verify your phone number</string>
-    <string name="register_verify_content">RafferChat will send SMS message to verify your phone\nnumber.Enter your country code and phone number.</string>
+    <string name="register_verify_content">Raffer Chat will send SMS message to verify your phone\nnumber.Enter your country code and phone number.</string>
     <string name="register_verify_note">Carrier SMS charges may apply</string>
     <string name="register_verify_sent">Verification code sent</string>
 
     <!-- Register User -->
-    <string name="register_user_name">Enter your name</string>
-    <string name="register_user_content">RafferChat will use your user name.</string>
+    <string name="register_user_title">Edit your profile</string>
+    <string name="register_user_content">Enter your name and add an optional profile picture.</string>
+    <string name="register_user_name">Your name</string>
 
     <!-- Country Picker -->
     <string name="country_picker_search">Search</string>

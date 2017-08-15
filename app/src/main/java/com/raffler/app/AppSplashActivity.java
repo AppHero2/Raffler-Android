@@ -8,6 +8,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 /**
  * Created by Ghost on 14/8/2017.
  */
@@ -60,7 +63,13 @@ public class AppSplashActivity extends AppCompatActivity {
     }
 
     private void dismissSplash(){
-        startActivity(new Intent(this, RegisterPhoneActivity.class));
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null){
+            // TODO: 15/8/2017 case user missed to save profile info
+            startActivity(new Intent(this, RegisterUserActivity.class));
+        } else {
+            startActivity(new Intent(this, RegisterPhoneActivity.class));
+        }
         this.finish();
     }
 }

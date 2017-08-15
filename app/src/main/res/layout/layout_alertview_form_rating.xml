@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--<com.iarcuschin.simpleratingbar.SimpleRatingBar
+        android:id="@+id/alert_ratingBar"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="25dp"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom"
+        app:srb_starSize="25dp"
+        app:srb_starsSeparation="10dp"
+        app:srb_numberOfStars="5"
+        app:srb_rating="0"
+        app:srb_stepSize="0.5"
+        app:srb_isIndicator="false"
+        app:srb_drawBorderEnabled="false"
+        app:srb_starBackgroundColor="@color/colorLightGrey"
+        app:srb_borderColor="@color/colorGold"
+        app:srb_fillColor="@color/colorGold"
+        />-->
+
+</LinearLayout>

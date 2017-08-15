@@ -4,4 +4,21 @@
     <!-- Country Picker -->
     <dimen name="cp_dialog_width">200dp</dimen>
     <dimen name="cp_dialog_height">300dp</dimen>
+
+    <!-- AlertView -->
+    <dimen name="textSize_alert_title">18sp</dimen>
+    <dimen name="textSize_actionsheet_title">12sp</dimen>
+    <dimen name="height_alert_title">40dp</dimen>
+    <dimen name="height_actionsheet_title">40dp</dimen>
+    <dimen name="textSize_alert_msg">14sp</dimen>
+    <dimen name="textSize_actionsheet_msg">14sp</dimen>
+    <dimen name="marginBottom_alert_msg">15dp</dimen>
+    <dimen name="marginBottom_actionsheet_msg">14dp</dimen>
+    <dimen name="margin_alert_left_right">40dp</dimen>
+    <dimen name="margin_actionsheet_left_right">10dp</dimen>
+    <dimen name="size_divier">1px</dimen>
+    <dimen name="height_alert_button">40dp</dimen>
+    <dimen name="textSize_alert_button">16sp</dimen>
+    <dimen name="radius_alertview">15px</dimen>
+
 </resources>
