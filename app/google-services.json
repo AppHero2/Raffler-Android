@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "976039941599-pgb7ea9hs9q41m2a4pv12c5t0jn3vr2d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.raffler.app",
+            "certificate_hash": "55e7ac8b46d3177f76b06d76b104f58079ad37e3"
+          }
+        },
+        {
           "client_id": "976039941599-cgb343o4cquef87c2kq7ka0jajhe2rdu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
