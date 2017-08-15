@@ -7,5 +7,6 @@
     <!-- app colors -->
     <color name="colorWhite">#ffffff</color>
     <color name="colorBlack">#000000</color>
+    <color name="colorGray">#d3d3d3</color>
     <color name="colorTransparency">#00000000</color>
 </resources>

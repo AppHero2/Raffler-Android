@@ -31,9 +31,8 @@
     <RelativeLayout
         android:id="@+id/layout_auth"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/txtContent"
-        android:layout_above="@+id/btnNext">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtContent">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -93,34 +92,43 @@
                     android:background="@color/colorAccent"/>
             </RelativeLayout>
 
-            <!--<com.rafflerchat.app.gridpswd.GridPasswordView
-                android:id="@+id/txtPswd"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
+            <com.raycoarana.codeinputview.CodeInputView
+                android:id="@+id/codeInputView"
                 android:layout_marginTop="20dp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:background="@color/colorTransparency"
-                app:gpvLineColor="@color/colorTransparency"
-                app:gpvLineWidth="5dp"
-                app:gpvTextColor="@color/colorAccent"
-                app:gpvTextSize="25sp"
-                app:gpvPasswordLength="7"
-                app:gpvGridColor="@color/colorTransparency"/>-->
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:underline_color="@color/colorAccent"
+                app:underline_selected_color="#9e1ace"
+                app:code_text_color="#b12eff"
+                app:error_color="#77ce9d"
+                app:input_type="numeric"
+                app:length_of_code="6"
+                />
 
         </FrameLayout>
 
     </RelativeLayout>
 
-    <Button
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btnNext"
         android:layout_width="80dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/txtNote"
         android:text="@string/button_next"
         android:textColor="@color/colorWhite"
-        android:backgroundTint="@color/colorAccent"
+        android:layout_below="@+id/layout_auth"
         android:layout_centerHorizontal="true"
-        android:id="@+id/btnNext" />
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/txtTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resend in 00:58"
+        android:layout_below="@+id/btnNext"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:visibility="invisible"/>
+
     <TextView
         android:id="@+id/txtNote"
         android:layout_width="match_parent"

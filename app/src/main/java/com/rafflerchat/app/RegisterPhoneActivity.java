@@ -1,23 +1,32 @@
 package com.rafflerchat.app;
 
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatButton;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -26,9 +35,13 @@ import com.kaopiz.kprogresshud.KProgressHUD;
 import com.rafflerchat.app.country.Country;
 import com.rafflerchat.app.country.CountryPicker;
 import com.rafflerchat.app.country.CountryPickerListener;
+import com.raycoarana.codeinputview.CodeInputView;
+import com.raycoarana.codeinputview.OnCodeCompleteListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class RegisterPhoneActivity extends AppCompatActivity {
@@ -39,16 +52,25 @@ public class RegisterPhoneActivity extends AppCompatActivity {
     private String formatMobileNumber;
     private boolean isValid = false;
 
+    private Timer timer;
+    private int timeRemaining = 60;
+    private boolean isWaiting = false;
+
     private KProgressHUD hud;
-    private TextView txtCountryCode;
+    private TextView txtCountryCode, txtTimer;
     private EditText etPhoneNumber;
     private ImageView imgCheck;
-    private Button btnNext;
+    private AppCompatButton btnNext;
+    private RelativeLayout layout_middle;
+    private CodeInputView codeInputView;
 
     private CountryPicker countryPicker;
     private Country selectedCountry;
 
+    private FirebaseAuth mAuth;
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
+    private String phoneVerficationID;
+    private PhoneAuthProvider.ForceResendingToken resendToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,14 +91,10 @@ public class RegisterPhoneActivity extends AppCompatActivity {
             }
         });
 
+        txtTimer = (TextView) findViewById(R.id.txtTimer);
+
         countryPicker = CountryPicker.newInstance("Select Country");
         List<Country> countryList = new ArrayList<>(Country.getAllCountries());
-        /*Collections.sort(countryList, new Comparator<Country>() {
-            @Override
-            public int compare(Country o1, Country o2) {
-                return o1.getName().compareToIgnoreCase(o2.getName());
-            }
-        });*/
         countryPicker.setCountriesList(countryList);
         countryPicker.setListener(new CountryPickerListener() {
             @Override
@@ -142,7 +160,6 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 }
             }
         });
-
         etPhoneNumber.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -153,16 +170,35 @@ public class RegisterPhoneActivity extends AppCompatActivity {
             }
         });
 
-        btnNext = (Button) findViewById(R.id.btnNext);
+        btnNext = (AppCompatButton) findViewById(R.id.btnNext);
+        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xFF4081});
+        btnNext.setSupportBackgroundTintList(csl);
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 verifyPhoneNumber(formatMobileNumber);
             }
         });
+
+        layout_middle = (RelativeLayout) findViewById(R.id.layout_middle);
+
+        codeInputView = (CodeInputView) findViewById(R.id.codeInputView);
+        codeInputView.addOnCompleteListener(new OnCodeCompleteListener() {
+            @Override
+            public void onCompleted(String code) {
+                PhoneAuthCredential credential = PhoneAuthProvider.getCredential(phoneVerficationID, code);
+                signInWithPhoneAuthCredential(credential);
+            }
+        });
+        codeInputView.setVisibility(View.INVISIBLE);
+
+        // [START initialize_auth]
+        mAuth = FirebaseAuth.getInstance();
+        // [END initialize_auth]
     }
 
     private void verifyPhoneNumber(String phoneNumber){
+
         if (!isValid){
             Toast.makeText(this, "Invalid Phone number!", Toast.LENGTH_SHORT).show();
             return;
@@ -177,30 +213,29 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 // 1 - Instant verification. In some cases the phone number can be instantly
                 //     verified without needing to send or enter a verification code.
                 // 2 - Auto-retrieval. On some devices Google Play services can automatically
-                //     detect the incoming verification SMS and perform verificaiton without
+                //     detect the incoming verification SMS and perform verification without
                 //     user action.
                 Log.d(TAG, "onVerificationCompleted:" + credential);
 
-                //signInWithPhoneAuthCredential(credential);
                 hud.dismiss();
+                //signInWithPhoneAuthCredential(credential);
             }
 
             @Override
             public void onVerificationFailed(FirebaseException e) {
                 // This callback is invoked in an invalid request for verification is made,
                 // for instance if the the phone number format is not valid.
-                Log.w(TAG, "onVerificationFailed", e);
+                Toast.makeText(RegisterPhoneActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
 
                 if (e instanceof FirebaseAuthInvalidCredentialsException) {
                     // Invalid request
-                    // ...
+                    Toast.makeText(RegisterPhoneActivity.this, "Invalid mobile number", Toast.LENGTH_SHORT).show();
                 } else if (e instanceof FirebaseTooManyRequestsException) {
                     // The SMS quota for the project has been exceeded
-                    // ...
+                    Toast.makeText(RegisterPhoneActivity.this, "The SMS quota for the project has been exceeded", Toast.LENGTH_SHORT).show();
                 }
 
                 // Show a message and update the UI
-                // ...
 
                 hud.dismiss();
             }
@@ -214,12 +249,12 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 Log.d(TAG, "onCodeSent:" + verificationId);
 
                 // Save verification ID and resending token so we can use them later
-//                mVerificationId = verificationId;
-//                mResendToken = token;
-
-                //resendVerificationCode(formatMobileNumber, token);
+                phoneVerficationID = verificationId;
+                resendToken = token;
+                Toast.makeText(RegisterPhoneActivity.this, getString(R.string.register_verify_sent), Toast.LENGTH_SHORT).show();
                 hud.dismiss();
 
+                startResendTimer();
             }
         };
 
@@ -241,5 +276,86 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 this,               // Activity (for callback binding)
                 mCallbacks,         // OnVerificationStateChangedCallbacks
                 token);             // ForceResendingToken from callbacks
+    }
+
+    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
+        hud.show();
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        hud.dismiss();
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithCredential:success");
+
+                            FirebaseUser user = task.getResult().getUser();
+                            // ...
+                            startActivity(new Intent(RegisterPhoneActivity.this, RegisterUserActivity.class));
+                            RegisterPhoneActivity.this.finish();
+                        } else {
+                            // Sign in failed, display a message and update the UI
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
+                                // The verification code entered was invalid
+                                Toast.makeText(RegisterPhoneActivity.this, "The verification code entered was invalid", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                });
+    }
+
+    private void startResendTimer(){
+        if (timer != null){
+            timer.cancel();
+        }
+
+        timer = new Timer();
+        timer.schedule(new WaitingTask(), 0, 1000);
+
+        btnNext.setText(getString(R.string.button_resend));
+        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xd3d3d3}); // Gray
+        btnNext.setSupportBackgroundTintList(csl);
+        btnNext.setEnabled(false);
+
+        layout_middle.setVisibility(View.GONE);
+        codeInputView.setVisibility(View.VISIBLE);
+        txtTimer.setVisibility(View.VISIBLE);
+        isWaiting = true;
+    }
+
+    private void stopResendTimer(){
+        timer.cancel();
+
+        btnNext.setText(getString(R.string.button_next));
+        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xFF4081}); // Ancient
+        btnNext.setSupportBackgroundTintList(csl);
+        btnNext.setEnabled(true);
+
+        layout_middle.setVisibility(View.VISIBLE);
+        txtTimer.setVisibility(View.GONE);
+        codeInputView.setVisibility(View.GONE);
+        timeRemaining = 60;
+
+        isWaiting = false;
+    }
+
+    class WaitingTask extends TimerTask {
+
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    timeRemaining = timeRemaining - 1;
+                    if (timeRemaining == 0){
+                        stopResendTimer();
+                    }else{
+                        String strTimeRemaining = String.format("Resend in %02d:%02d",timeRemaining/60,timeRemaining%60);
+                        txtTimer.setText(strTimeRemaining);
+                    }
+                }
+            });
+        }
     }
 }
