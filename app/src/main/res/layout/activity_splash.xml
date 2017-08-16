@@ -5,9 +5,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raffler.app.MainActivity">
+    tools:context="com.raffler.app.AppSplashActivity">
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:src="@drawable/img_splash"
+        android:scaleType="fitXY"/>
+
+    <com.raffler.app.utils.CustomTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/menu_copyright"
+        android:textColor="@color/colorBlack"
+        android:textStyle="bold"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="10dp"
+        app:outerShadowRadius="1px"
+        app:strokeColor="@color/colorWhite"
+        app:strokeJoinStyle="miter"
+        app:strokeWidth="2px"/>
+
 </RelativeLayout>
