@@ -21,4 +21,8 @@
     <dimen name="textSize_alert_button">16sp</dimen>
     <dimen name="radius_alertview">15px</dimen>
 
+    <!--Text Size-->
+    <dimen name="large_text">16sp</dimen>
+    <dimen name="medium_text">14sp</dimen>
+
 </resources>

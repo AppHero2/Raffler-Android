@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     tools:context=".RegisterUserActivity">
 
     <TextView
@@ -15,6 +16,7 @@
         android:text="@string/register_user_title"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:textColor="@color/colorTextDisable"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -28,6 +30,7 @@
         android:layout_marginRight="15dp"
         android:gravity="center"
         android:text="@string/register_user_content"
+        android:textColor="@color/colorTextDisable"
         android:layout_below="@+id/txtTitle"
         android:layout_toRightOf="@+id/imgProfile"
         android:layout_toEndOf="@+id/imgProfile" />
@@ -68,7 +71,7 @@
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:text="@string/button_next"
-        android:textColor="@color/colorWhite"
+        android:textColor="@color/colorPrimary"
         android:backgroundTint="@color/colorAccent"
         android:id="@+id/btnNext"
         android:layout_alignParentBottom="true"

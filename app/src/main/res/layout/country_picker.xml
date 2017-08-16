@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:drawableLeft="@drawable/ic_search"
+        android:drawableLeft="@drawable/ic_country_search"
         android:drawablePadding="5dp"
         android:hint="@string/country_picker_search"
         android:backgroundTint="@color/colorBlack"

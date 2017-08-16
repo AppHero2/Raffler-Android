@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#333333</color>
+    <color name="colorPrimaryDark">#202020</color>
+    <color name="colorAccent">#ffd700</color>
 
     <!-- app colors -->
     <color name="colorWhite">#ffffff</color>
     <color name="colorBlack">#000000</color>
     <color name="colorGray">#d3d3d3</color>
     <color name="colorTransparency">#00000000</color>
+
+    <!-- Text colors -->
+    <color name="colorTextPrimary">#FFFFFF</color>
+    <color name="colorTextDisable">#66FFFFFF</color>
 
     <!--AlertView-->
     <color name="bgColor_overlay">#60000000</color>

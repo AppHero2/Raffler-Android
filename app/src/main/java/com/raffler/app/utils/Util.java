@@ -170,10 +170,10 @@ public class Util {
         return  value;
     }
 
-    public static Map<String, String> getListDataFromData(String key, Map<String, Object> data){
-        Map<String, String> value = new HashMap<>();
+    public static Map<String, Object> getMapDataFromData(String key, Map<String, Object> data){
+        Map<String, Object> value = new HashMap<>();
         try{
-            value = (Map<String, String>) data.get(key);
+            value = (Map<String, Object>) data.get(key);
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -66,6 +66,7 @@ public class AppManager {
         editor.putString("photo", user.getPhoto());
         editor.putString("phone", user.getPhone());
         editor.putString("pushToken", user.getPushToken());
+        editor.putBoolean("isOnline", user.isOnline());
         editor.commit();
     }
 
@@ -87,7 +88,6 @@ public class AppManager {
             data.put("phone", phone);
             data.put("bio", bio);
             data.put("pushToken", pushToken);
-
             User user = new User(data);
             return user;
         } else {

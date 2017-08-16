@@ -5,6 +5,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,9 +19,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatButton;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -30,8 +33,12 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -52,6 +59,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class RegisterUserActivity extends AppCompatActivity {
 
@@ -63,6 +71,7 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private EditText etName;
     private ImageView imgProfile;
+    private Button btnNext;
 
     private KProgressHUD hud;
 
@@ -115,6 +124,16 @@ public class RegisterUserActivity extends AppCompatActivity {
             }
         });
 
+        btnNext = (AppCompatButton) findViewById(R.id.btnNext);
+        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffff4081});
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
+                RegisterUserActivity.this.finish();
+            }
+        });
+
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         userId = firebaseUser.getUid();
         mAuth = FirebaseAuth.getInstance();
@@ -122,8 +141,13 @@ public class RegisterUserActivity extends AppCompatActivity {
         userRef = database.getReference("Users");
         userRef.child(userId).child("uid").setValue(userId);
 
+
+
         // get owner name as dummy data
         loadUserInfoFromPhone();
+
+        // sync user data from server
+        checkExistUser();
     }
 
     private void loadUserInfoFromPhone(){
@@ -364,5 +388,30 @@ public class RegisterUserActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+    }
+
+    private void checkExistUser(){
+        hud.show();
+        Query query = userRef.child(userId);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
+                    Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
+                    User user = new User(userData);
+                    etName.setText(user.getName());
+                    Util.setProfileImage(user.getPhoto(), imgProfile);
+                    AppManager.saveSession(RegisterUserActivity.this, user);
+                }
+
+                hud.dismiss();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(RegisterUserActivity.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
+                hud.dismiss();
+            }
+        });
     }
 }

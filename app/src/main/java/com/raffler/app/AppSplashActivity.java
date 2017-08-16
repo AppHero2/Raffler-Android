@@ -16,6 +16,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.models.User;
 
 /**
  * Created by Ghost on 14/8/2017.
@@ -74,13 +75,15 @@ public class AppSplashActivity extends AppCompatActivity {
     }
 
     private void dismissSplash(){
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null){
-
-            AppManager.getInstance().trackUser(user.getUid());
-
-            // TODO: 15/8/2017 case user missed to save profile info
-            startActivity(new Intent(this, RegisterUserActivity.class));
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null){
+            AppManager.getInstance().trackUser(firebaseUser.getUid());
+            User user = AppManager.getSession(this);
+            if (user != null) {
+                startActivity(new Intent(this, MainActivity.class));
+            } else {
+                startActivity(new Intent(this, RegisterUserActivity.class));
+            }
         } else {
             startActivity(new Intent(this, RegisterPhoneActivity.class));
         }
