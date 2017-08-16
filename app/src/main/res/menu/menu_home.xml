@@ -13,16 +13,4 @@
         android:orderInCategory="11"
         android:title="@string/action_settings"
         app:showAsAction="never"/>
-    <item android:id="@+id/action_with_icon"
-        android:orderInCategory="12"
-        android:title="@string/action_with_icon"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_without_icon"
-        android:orderInCategory="13"
-        android:title="@string/action_without_icon"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_customtab"
-        android:orderInCategory="14"
-        android:title="@string/action_custom"
-        app:showAsAction="never"/>
 </menu>

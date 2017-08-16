@@ -11,9 +11,6 @@
     <item android:id="@+id/action_new_bc"
         android:title="@string/action_new_broadcast"
         app:showAsAction="never"/>
-    <item android:id="@+id/action_web"
-        android:title="@string/action_whatsapp_web"
-        app:showAsAction="never"/>
     <item android:id="@+id/action_star"
         android:title="@string/action_starred_messages"
         app:showAsAction="never"/>

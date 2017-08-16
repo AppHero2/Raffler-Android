@@ -14,6 +14,7 @@ import android.widget.Toast;
 import com.raffler.app.adapters.ViewPagerAdapter;
 import com.raffler.app.fragments.ChatFragment;
 import com.raffler.app.fragments.ContactsFragment;
+import com.raffler.app.fragments.RafflesFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,11 +23,12 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager viewPager;
 
     //Fragments
+    RafflesFragment rafflesFragment;
     ChatFragment chatFragment;
     ContactsFragment contactsFragment;
 
-    String[] tabTitle={"CHAT","CONTACTS"};
-    int[] unreadCount={5,0};
+    String[] tabTitle={"RAFFLES", "CHAT", "CONTACTS"};
+    int[] unreadCount={0, 5, 0};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,12 +89,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 Toast.makeText(this, "Home Settings Click", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.action_with_icon:
-                Toast.makeText(this, "Home Settings Click", Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.action_without_icon:
-                Toast.makeText(this, "Home Settings Click", Toast.LENGTH_SHORT).show();
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -101,8 +97,10 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager)
     {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        chatFragment=new ChatFragment();
-        contactsFragment=new ContactsFragment();
+        rafflesFragment = new RafflesFragment();
+        chatFragment = new ChatFragment();
+        contactsFragment = new ContactsFragment();
+        adapter.addFragment(rafflesFragment, "RAFFLES");
         adapter.addFragment(chatFragment,"CHAT");
         adapter.addFragment(contactsFragment,"CONTACTS");
         viewPager.setAdapter(adapter);
@@ -136,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
 
             tabLayout.getTabAt(i).setCustomView(prepareTabView(i));
         }
-
 
     }
 }

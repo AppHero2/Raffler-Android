@@ -27,7 +27,6 @@
     <string name="action_chat">Chat</string>
     <string name="action_new_group">New Group</string>
     <string name="action_new_broadcast">New broadcast</string>
-    <string name="action_whatsapp_web">WhatsApp Web</string>
     <string name="action_starred_messages">Starred messages</string>
     <string name="action_status">Status</string>
     <string name="action_settings">Settings</string>
@@ -35,8 +34,5 @@
     <string name="action_calls">Calls</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_contacts">Contacts</string>
-    <string name="action_without_icon">Without Icon</string>
-    <string name="action_with_icon">With Icon</string>
-    <string name="action_custom">Custom Tab</string>
 
 </resources>
