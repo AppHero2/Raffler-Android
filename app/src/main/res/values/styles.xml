@@ -21,4 +21,10 @@
         <item name="colorControlHighlight">@color/colorAccent</item>
     </style>
 
+    <style name="CircleIconStyle">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="border_color">@android:color/black</item>
+    </style>
+
 </resources>

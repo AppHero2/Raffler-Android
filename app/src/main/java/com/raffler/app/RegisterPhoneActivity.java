@@ -172,7 +172,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
         });
 
         btnNext = (AppCompatButton) findViewById(R.id.btnNext);
-        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffff4081});
+        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffffd700});
         btnNext.setSupportBackgroundTintList(csl);
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -329,7 +329,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
         timer.cancel();
 
         btnNext.setText(getString(R.string.button_next));
-        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffff4081}); // Ancient
+        ColorStateList csl = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffffd700}); // Ancient
         btnNext.setSupportBackgroundTintList(csl);
         btnNext.setEnabled(true);
 

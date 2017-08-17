@@ -6,10 +6,16 @@
     tools:context="com.raffler.app.fragments.ContactsFragment">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Contacts"
-        android:layout_centerInParent="true"
-        android:textSize="30sp" />
+        android:id="@+id/txtNoData"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="No Contacts"/>
+
+    <ListView
+        android:id="@+id/list_contacts"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </ListView>
 
 </RelativeLayout>

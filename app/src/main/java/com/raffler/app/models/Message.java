@@ -2,8 +2,9 @@ package com.raffler.app.models;
 
 import java.util.Map;
 
-import static com.raffler.app.models.Message.MessageStatus.EDITING;
-import static com.raffler.app.models.Message.MessageType.TEXT;
+import static com.raffler.app.models.MessageStatus.EDITING;
+import static com.raffler.app.models.MessageType.TEXT;
+import static com.raffler.app.models.UserType.SELF;
 import static com.raffler.app.utils.Util.getBooleanFromData;
 import static com.raffler.app.utils.Util.getIntFromData;
 import static com.raffler.app.utils.Util.getStringFromData;
@@ -14,30 +15,11 @@ import static com.raffler.app.utils.Util.getStringFromData;
 
 public class Message {
 
-    public enum MessageType {
-        TEXT(0), PHOTO(1), AUDIO(2), VIDEO(3), LOCATION(4);
-
-        private final int value;
-        MessageType(int value) {this.value = value;}
-        public int getValue() {
-            return value;
-        }
-    }
-
-    public enum MessageStatus {
-        EDITING(0), SENDING(1), SENT(2), DELETED(3), FAILED(4);
-
-        private final int value;
-        MessageStatus(int value) {this.value = value;}
-        public int getValue() {
-            return value;
-        }
-    }
-
     private String idx, text, resource;
     private Boolean isDelivered = false, isRead = false;
-    private MessageType type = TEXT;
+    private MessageType messageType = TEXT;
     private MessageStatus status = EDITING;
+    private UserType userType = SELF;
     private String senderId, senderName;
 
     public Message(Map<String, Object> data){
@@ -48,8 +30,9 @@ public class Message {
         this.isRead = getBooleanFromData("isRead", data);
         this.senderId = getStringFromData("senderId", data);
         this.senderName = getStringFromData("senderName", data);
-        this.type = MessageType.values()[getIntFromData("type", data)];
+        this.messageType = MessageType.values()[getIntFromData("messageType", data)];
         this.status = MessageStatus.values()[getIntFromData("status", data)];
+        this.userType = UserType.values()[getIntFromData("userType", data)];
     }
 
     public String getIdx() {
@@ -76,8 +59,8 @@ public class Message {
         return status;
     }
 
-    public MessageType getType() {
-        return type;
+    public MessageType getMessageType() {
+        return messageType;
     }
 
     public String getResource() {

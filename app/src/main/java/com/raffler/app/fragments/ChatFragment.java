@@ -9,9 +9,17 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.raffler.app.R;
+import com.raffler.app.classes.AppConsts;
 
 public class ChatFragment extends Fragment {
+
+    private String userId;
+    private DatabaseReference chatsRef;
 
     public ChatFragment() {
 
@@ -27,7 +35,14 @@ public class ChatFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_chat, container, false);
+        View view = inflater.inflate(R.layout.fragment_chat, container, false);
+
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        userId = firebaseUser.getUid();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        chatsRef =  database.getReference("Chats");
+
+        return view;
     }
 
     @Override
@@ -36,4 +51,7 @@ public class ChatFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+    private void loadChatList(){
+
+    }
 }

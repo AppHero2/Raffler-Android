@@ -69,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        viewPager.setCurrentItem(1);
     }
 
     @Override

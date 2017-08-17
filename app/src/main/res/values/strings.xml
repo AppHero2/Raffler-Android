@@ -15,6 +15,7 @@
     <string name="register_user_title">Edit your profile</string>
     <string name="register_user_content">Enter your name and add an optional profile picture.</string>
     <string name="register_user_name">Your name</string>
+    <string name="register_user_alert_empty">Your name should not be empty!</string>
 
     <!-- Country Picker -->
     <string name="country_picker_search">Search</string>
@@ -33,5 +34,9 @@
     <string name="action_contacts">Contacts</string>
 
     <string name="menu_copyright">Raffer Chat version 1.0(Beta version).\n2017. All Rights Reserved Raffler LLC</string>
+
+    <!-- Alert View -->
+    <string name="alert_title_notice">Notice</string>
+    <string name="alert_button_okay">Ok</string>
 
 </resources>

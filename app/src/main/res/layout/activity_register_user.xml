@@ -45,7 +45,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginStart="23dp"
-        android:src="@android:drawable/sym_def_app_icon"/>
+        android:src="@drawable/ic_profile_person"/>
     <android.support.design.widget.TextInputLayout
         android:id="@+id/textInputLayout3"
         android:layout_width="match_parent"

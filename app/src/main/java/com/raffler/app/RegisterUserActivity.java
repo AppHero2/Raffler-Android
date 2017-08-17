@@ -129,8 +129,17 @@ public class RegisterUserActivity extends AppCompatActivity {
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
-                RegisterUserActivity.this.finish();
+
+                String name = etName.getText().toString();
+                if (name.isEmpty() || name == null) {
+                    String alert_title = getString(R.string.alert_title_notice);
+                    String alert_message = getString(R.string.register_user_alert_empty);
+                    Util.showAlert(alert_title, alert_message, RegisterUserActivity.this);
+                } else {
+                    startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
+                    RegisterUserActivity.this.finish();
+                }
+
             }
         });
 
@@ -392,7 +401,7 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private void checkExistUser(){
         hud.show();
-        Query query = userRef.child(userId);
+        Query query = userRef.child(userId).orderByValue();
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

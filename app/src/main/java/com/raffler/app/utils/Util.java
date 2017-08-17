@@ -17,6 +17,8 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.display.CircleBitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
+import com.raffler.app.R;
+import com.raffler.app.alertView.AlertView;
 import com.raffler.app.classes.AppConsts;
 
 import java.io.UnsupportedEncodingException;
@@ -39,9 +41,9 @@ public class Util {
             .build();
 
     public static DisplayImageOptions displayImageOptions_circluar = new DisplayImageOptions.Builder()
-            .showImageOnLoading(android.R.drawable.sym_def_app_icon)
-            .showImageForEmptyUri(android.R.drawable.sym_def_app_icon)
-            .showImageOnFail(android.R.drawable.sym_def_app_icon)
+            .showImageOnLoading(R.drawable.ic_profile_person)
+            .showImageForEmptyUri(R.drawable.ic_profile_person)
+            .showImageOnFail(R.drawable.ic_profile_person)
             .cacheInMemory(true)
             .cacheOnDisk(true)
             .considerExifParams(true)
@@ -203,4 +205,10 @@ public class Util {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         return preferences.getBoolean(PREF_HIGH_QUALITY, false);
     }
+
+    public static void showAlert (String title, String message, Context context) {
+        AlertView alertView = new AlertView(title, message, context.getString(R.string.alert_button_okay), null, null, context, AlertView.Style.Alert, null);
+        alertView.show();
+    }
+
 }

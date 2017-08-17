@@ -5,6 +5,7 @@ import java.util.Map;
 
 import static com.raffler.app.utils.Util.getBooleanFromData;
 import static com.raffler.app.utils.Util.getDateFromData;
+import static com.raffler.app.utils.Util.getIntFromData;
 import static com.raffler.app.utils.Util.getMapDataFromData;
 import static com.raffler.app.utils.Util.getStringFromData;
 
@@ -14,10 +15,21 @@ import static com.raffler.app.utils.Util.getStringFromData;
 
 public class Thread {
 
+    public enum ThreadType {
+        PERSION(0), GROUP(1), CHANNEL(2);
+
+        private final int value;
+        ThreadType(int value) {this.value = value;}
+        public int getValue() {
+            return value;
+        }
+    }
+
     private String idx, name, bio, thumb, image;
     private Date createdAt, updatedAt;
-    private boolean hasNew = false, isPublic = false;
+    private boolean hasNew = false, isPublic = false, isArchived = false;
     private User creator;
+    private ThreadType type = ThreadType.PERSION;
 
     public Thread(Map<String, Object> data) {
         this.idx = getStringFromData("idx", data);
@@ -29,6 +41,8 @@ public class Thread {
         this.updatedAt = getDateFromData("updatedAt", data);
         this.hasNew = getBooleanFromData("hasNew", data);
         this.isPublic = getBooleanFromData("isPublic", data);
+        this.isArchived = getBooleanFromData("isArchived", data);
+        this.type = ThreadType.values()[getIntFromData("type", data)];
 
         Map<String, Object> creatorData = getMapDataFromData("creator", data);
         this.creator = new User(creatorData);
@@ -72,5 +86,13 @@ public class Thread {
 
     public boolean isPublic() {
         return isPublic;
+    }
+
+    public boolean isArchived() {
+        return isArchived;
+    }
+
+    public ThreadType getType() {
+        return type;
     }
 }

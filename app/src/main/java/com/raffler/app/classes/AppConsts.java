@@ -11,4 +11,7 @@ public class AppConsts {
     public static final String URL_FIREBASE_STORAGE_BUCKET = "gs://raffler-fbf05.appspot.com";
 
     public static final int profile_size = 200;
+
+    public static final boolean isDevMode = true;
+    
 }
