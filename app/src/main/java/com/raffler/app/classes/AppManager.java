@@ -29,6 +29,9 @@ public class AppManager {
     private DatabaseReference userRef;
     private ValueEventListener trackUserListener;
 
+
+    public String userId;
+
     private AppManager() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         userRef = database.getReference("Users");

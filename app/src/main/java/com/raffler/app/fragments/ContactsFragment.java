@@ -1,24 +1,26 @@
 package com.raffler.app.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,8 +28,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.kaopiz.kprogresshud.KProgressHUD;
+import com.raffler.app.FindContactActivity;
 import com.raffler.app.R;
-import com.raffler.app.RegisterUserActivity;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.CircleImageView;
@@ -43,13 +45,14 @@ import java.util.Map;
  */
 public class ContactsFragment extends Fragment {
 
-    private DatabaseReference contactsRef;
-    private String userId;
+    private DatabaseReference usersRef, contactsRef;
 
     private ListView listView;
     private KProgressHUD hud;
 
-    private List<User> contacts = new ArrayList<>();
+    private List<String> contacts = new ArrayList<>();
+
+    private ContactListAdapter adapter;
 
     public ContactsFragment() {
         // Required empty public constructor
@@ -66,21 +69,31 @@ public class ContactsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contacts, container, false);
 
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        usersRef = database.getReference("Users");
+        contactsRef = database.getReference("Contacts").child(AppManager.getInstance().userId);
+
+
         TextView txtNoData = (TextView) view.findViewById(R.id.txtNoData);
         listView = (ListView) view.findViewById(R.id.list_contacts);
         listView.setEmptyView(txtNoData);
+
+        adapter = new ContactListAdapter(getActivity());
+        listView.setAdapter(adapter);
 
         hud = KProgressHUD.create(getActivity())
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
                 .setWindowColor(ContextCompat.getColor(getActivity(), R.color.colorTransparency))
                 .setDimAmount(0.5f);
 
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        userId = firebaseUser.getUid();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        contactsRef =  database.getReference("Contacts").child(userId);
-
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        loadContacts();
     }
 
     @Override
@@ -89,6 +102,24 @@ public class ContactsFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_contacts:
+
+                startActivity(new Intent(getActivity(), FindContactActivity.class));
+
+                return true;
+            case R.id.action_refresh:
+
+                // TODO: 18/8/2017 refresh
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     private void loadContacts(){
         Query query = contactsRef;
@@ -97,12 +128,11 @@ public class ContactsFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() != null) {
                     for (DataSnapshot child: dataSnapshot.getChildren()){
-                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
-                        User user = new User(userData);
-                        contacts.add(user);
+                        String userId = child.getKey();
+                        contacts.add(userId);
                     }
 
-                    // TODO: 18/8/2017 reload data
+                    adapter.notifyDataSetChanged();
                 }
 
                 hud.dismiss();
@@ -115,7 +145,6 @@ public class ContactsFragment extends Fragment {
             }
         });
     }
-
 
     private class ContactListAdapter extends BaseAdapter {
 
@@ -133,7 +162,7 @@ public class ContactsFragment extends Fragment {
         }
 
         @Override
-        public User getItem(int position) {
+        public String getItem(int position) {
             return contacts.get(position);
         }
 
@@ -159,17 +188,43 @@ public class ContactsFragment extends Fragment {
             convertView.startAnimation(animation);
             lastPosition = position;
 
-            return null;
+            cell.setUserData(getItem(position));
+
+            return convertView;
         }
     }
 
     private class Cell {
-        public CircleImageView imgProfile;
+        public ImageView imgProfile;
         public TextView txtName, txtBio;
         public Cell(View view){
-            this.imgProfile = (CircleImageView)view.findViewById(R.id.imgProfile);
+            this.imgProfile = (ImageView)view.findViewById(R.id.imgProfile);
             this.txtName = (TextView) view.findViewById(R.id.txtName);
             this.txtBio = (TextView) view.findViewById(R.id.txtBio);
+        }
+
+        public void setUserData(String userId){
+            usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue() != null) {
+                        Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
+                        User user = new User(userData);
+
+                        String name = user.getName();
+                        String photo = user.getPhoto();
+
+                        txtName.setText(name);
+                        if (photo != null)
+                            Util.setProfileImage(photo, imgProfile);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.e("contact list", databaseError.toString());
+                }
+            });
         }
     }
 }

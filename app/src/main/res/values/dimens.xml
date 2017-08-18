@@ -7,7 +7,7 @@
 
     <!-- AlertView -->
     <dimen name="textSize_alert_title">18sp</dimen>
-    <dimen name="textSize_actionsheet_title">12sp</dimen>
+    <dimen name="textSize_actionsheet_title">18sp</dimen>
     <dimen name="height_alert_title">40dp</dimen>
     <dimen name="height_actionsheet_title">40dp</dimen>
     <dimen name="textSize_alert_msg">14sp</dimen>

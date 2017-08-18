@@ -16,17 +16,17 @@
 
     <!--AlertView-->
     <color name="bgColor_overlay">#60000000</color>
-    <color name="bgColor_alertview_alert">#f8f8f8</color>
-    <color name="bgColor_alertview_alert_start">#f0f0f0</color>
+    <color name="bgColor_alertview_alert">#3d3d3d</color>
+    <color name="bgColor_alertview_alert_start">#3d3d3d</color>
     <color name="textColor_alert_title">#3d3d3d</color>
     <color name="textColor_alert_msg">#3d3d3d</color>
-    <color name="textColor_actionsheet_title">#ffff4081</color>
-    <color name="textColor_actionsheet_msg">#a0ff4081</color>
+    <color name="textColor_actionsheet_title">#ffd700</color>
+    <color name="textColor_actionsheet_msg">#a0ffd700</color>
     <color name="bgColor_divier">#3d3d3d</color>
-    <color name="textColor_alert_button_cancel">#333333</color>
-    <color name="textColor_alert_button_destructive">#ffff4081</color>
+    <color name="textColor_alert_button_cancel">#ff4081</color>
+    <color name="textColor_alert_button_destructive">#ffd700</color>
     <color name="textColor_alert_button_others">#333333</color>
     <color name="bgColor_alert_button_press">#EAEAEA</color>
-    <color name="bgColor_actionsheet_cancel_nor">#ffffff</color>
+    <color name="bgColor_actionsheet_cancel_nor">#ff4081</color>
 
 </resources>

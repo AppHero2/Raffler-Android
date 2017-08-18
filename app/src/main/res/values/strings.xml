@@ -17,6 +17,16 @@
     <string name="register_user_name">Your name</string>
     <string name="register_user_alert_empty">Your name should not be empty!</string>
 
+    <!-- Contacts-->
+    <string name="contact_no_data">No Contacts</string>
+
+    <!-- Find Contact -->
+    <string name="find_contact_title">Find Firends</string>
+    <string name="find_contact_search">Search</string>
+    <string name="find_contact_select_all">Select All</string>
+    <string name="find_contact_button_add">Add to contact list</string>
+    <string name="find_contact_button_invite">Invite as a friend</string>
+
     <!-- Country Picker -->
     <string name="country_picker_search">Search</string>
 
@@ -38,5 +48,6 @@
     <!-- Alert View -->
     <string name="alert_title_notice">Notice</string>
     <string name="alert_button_okay">Ok</string>
+    <string name="alert_button_cancel">Cancel</string>
 
 </resources>

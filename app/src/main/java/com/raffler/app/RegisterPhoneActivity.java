@@ -102,7 +102,6 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 String countryCode = " " + code + " " + dialCode + " ▾ ";
                 txtCountryCode.setText(countryCode);
                 selectedCountry = new Country(code, name, dialCode, flagDrawableResID);
-
                 countryPicker.dismiss();
             }
         });

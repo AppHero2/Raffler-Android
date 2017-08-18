@@ -90,6 +90,7 @@ public class RegisterUserActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_user);
 
+        userId = AppManager.getInstance().userId;
         hud = KProgressHUD.create(this)
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
                 .setWindowColor(ContextCompat.getColor(this,R.color.colorTransparency))
@@ -143,13 +144,12 @@ public class RegisterUserActivity extends AppCompatActivity {
             }
         });
 
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        userId = firebaseUser.getUid();
+
+        // firebase
         mAuth = FirebaseAuth.getInstance();
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         userRef = database.getReference("Users");
         userRef.child(userId).child("uid").setValue(userId);
-
 
 
         // get owner name as dummy data
