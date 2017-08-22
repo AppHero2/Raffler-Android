@@ -6,7 +6,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <com.raffler.app.utils.CircleImageView
+    <com.raffler.app.widgets.CircleImageView
         style="@style/CircleIconStyle"
         android:id="@+id/imgProfile"
         android:src="@drawable/ic_add_group"

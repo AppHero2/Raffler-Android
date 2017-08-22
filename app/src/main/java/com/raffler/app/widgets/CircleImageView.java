@@ -1,4 +1,4 @@
-package com.raffler.app.utils;
+package com.raffler.app.widgets;
 
 import android.content.Context;
 import android.content.res.TypedArray;

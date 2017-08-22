@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -31,8 +33,9 @@ import com.kaopiz.kprogresshud.KProgressHUD;
 import com.raffler.app.FindContactActivity;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.models.User;
-import com.raffler.app.utils.CircleImageView;
+import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
 import java.util.ArrayList;
@@ -49,10 +52,12 @@ public class ContactsFragment extends Fragment {
 
     private ListView listView;
     private KProgressHUD hud;
+    private FloatingActionButton btnNewContact;
 
     private List<String> contacts = new ArrayList<>();
 
     private ContactListAdapter adapter;
+    private ChatItemClickListener listener;
 
     public ContactsFragment() {
         // Required empty public constructor
@@ -69,10 +74,8 @@ public class ContactsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contacts, container, false);
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        usersRef = database.getReference("Users");
-        contactsRef = database.getReference("Contacts").child(AppManager.getInstance().userId);
-
+        usersRef = References.getInstance().usersRef;
+        contactsRef = References.getInstance().contactsRef.child(AppManager.getInstance().userId);
 
         TextView txtNoData = (TextView) view.findViewById(R.id.txtNoData);
         listView = (ListView) view.findViewById(R.id.list_contacts);
@@ -80,12 +83,31 @@ public class ContactsFragment extends Fragment {
 
         adapter = new ContactListAdapter(getActivity());
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                Cell cell = (Cell) view.getTag();
+
+                if (listener != null) {
+                    listener.onSelectedUser(cell.user);
+                }
+
+            }
+        });
 
         hud = KProgressHUD.create(getActivity())
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
                 .setWindowColor(ContextCompat.getColor(getActivity(), R.color.colorTransparency))
                 .setDimAmount(0.5f);
 
+        btnNewContact = (FloatingActionButton) view.findViewById(R.id.fab_contact);
+        btnNewContact.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getActivity(), FindContactActivity.class));
+            }
+        });
         return view;
     }
 
@@ -106,11 +128,9 @@ public class ContactsFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.action_contacts:
-
+           /* case R.id.action_contacts:
                 startActivity(new Intent(getActivity(), FindContactActivity.class));
-
-                return true;
+                return true;*/
             case R.id.action_refresh:
 
                 // TODO: 18/8/2017 refresh
@@ -122,6 +142,8 @@ public class ContactsFragment extends Fragment {
     }
 
     private void loadContacts(){
+        contacts.clear();
+
         Query query = contactsRef;
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -144,6 +166,10 @@ public class ContactsFragment extends Fragment {
                 hud.dismiss();
             }
         });
+    }
+
+    public void setListener(ChatItemClickListener listener) {
+        this.listener = listener;
     }
 
     private class ContactListAdapter extends BaseAdapter {
@@ -197,6 +223,8 @@ public class ContactsFragment extends Fragment {
     private class Cell {
         public ImageView imgProfile;
         public TextView txtName, txtBio;
+        public User user;
+
         public Cell(View view){
             this.imgProfile = (ImageView)view.findViewById(R.id.imgProfile);
             this.txtName = (TextView) view.findViewById(R.id.txtName);
@@ -209,7 +237,7 @@ public class ContactsFragment extends Fragment {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.getValue() != null) {
                         Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
-                        User user = new User(userData);
+                        user = new User(userData);
 
                         String name = user.getName();
                         String photo = user.getPhoto();

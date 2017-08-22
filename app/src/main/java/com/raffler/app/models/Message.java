@@ -1,11 +1,16 @@
 package com.raffler.app.models;
 
+import com.raffler.app.classes.AppManager;
+
+import java.util.Date;
 import java.util.Map;
 
 import static com.raffler.app.models.MessageStatus.EDITING;
 import static com.raffler.app.models.MessageType.TEXT;
+import static com.raffler.app.models.UserType.OTHER;
 import static com.raffler.app.models.UserType.SELF;
 import static com.raffler.app.utils.Util.getBooleanFromData;
+import static com.raffler.app.utils.Util.getDateFromData;
 import static com.raffler.app.utils.Util.getIntFromData;
 import static com.raffler.app.utils.Util.getStringFromData;
 
@@ -16,23 +21,27 @@ import static com.raffler.app.utils.Util.getStringFromData;
 public class Message {
 
     private String idx, text, resource;
-    private Boolean isDelivered = false, isRead = false;
     private MessageType messageType = TEXT;
     private MessageStatus status = EDITING;
     private UserType userType = SELF;
     private String senderId, senderName;
+    private Date createdAt, updatedAt;
 
     public Message(Map<String, Object> data){
+        this.updateValue(data);
+    }
+
+    public void updateValue(Map<String, Object> data){
         this.idx = getStringFromData("idx", data);
         this.text = getStringFromData("text", data);
         this.resource = getStringFromData("resource", data);
-        this.isDelivered = getBooleanFromData("isDelivered", data);
-        this.isRead = getBooleanFromData("isRead", data);
         this.senderId = getStringFromData("senderId", data);
         this.senderName = getStringFromData("senderName", data);
         this.messageType = MessageType.values()[getIntFromData("messageType", data)];
         this.status = MessageStatus.values()[getIntFromData("status", data)];
-        this.userType = UserType.values()[getIntFromData("userType", data)];
+        this.userType = senderId.equals(AppManager.getInstance().userId) ? SELF : OTHER;
+        this.createdAt = getDateFromData("createdAt", data);
+        this.updatedAt = getDateFromData("updatedAt", data);
     }
 
     public String getIdx() {
@@ -45,14 +54,6 @@ public class Message {
 
     public String getSenderName() {
         return senderName;
-    }
-
-    public Boolean getDelivered() {
-        return isDelivered;
-    }
-
-    public Boolean getRead() {
-        return isRead;
     }
 
     public MessageStatus getStatus() {
@@ -70,4 +71,17 @@ public class Message {
     public String getText() {
         return text;
     }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public UserType getUserType() {
+        return userType;
+    }
+
 }

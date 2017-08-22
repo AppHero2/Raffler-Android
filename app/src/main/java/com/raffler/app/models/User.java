@@ -3,8 +3,11 @@ package com.raffler.app.models;
 import java.util.Date;
 import java.util.Map;
 
+import static com.raffler.app.models.UserAction.IDLE;
+import static com.raffler.app.models.UserStatus.OFFLINE;
 import static com.raffler.app.utils.Util.getBooleanFromData;
 import static com.raffler.app.utils.Util.getDateFromData;
+import static com.raffler.app.utils.Util.getIntFromData;
 import static com.raffler.app.utils.Util.getStringFromData;
 
 /**
@@ -14,7 +17,8 @@ import static com.raffler.app.utils.Util.getStringFromData;
 public class User {
 
     private String idx, name, photo, phone, bio, pushToken;
-    private boolean isOnline = false;
+    private UserStatus userStatus = OFFLINE;
+    private UserAction userAction = IDLE;
     private Date lastOnlinedAt, lastUpdatedAt;
 
     public User(Map<String, Object> data){
@@ -24,7 +28,8 @@ public class User {
         this.phone = getStringFromData("phone", data);
         this.bio = getStringFromData("bio", data);
         this.pushToken = getStringFromData("pushToken", data);
-        this.isOnline = getBooleanFromData("isOnline", data);
+        this.userStatus = UserStatus.values()[getIntFromData("userStatus", data)];
+        this.userAction = userAction.values()[getIntFromData("userAction", data)];
         this.lastOnlinedAt = getDateFromData("lastOnlinedAt", data);
         this.lastUpdatedAt = getDateFromData("lastUpdatedAt", data);
     }
@@ -53,8 +58,12 @@ public class User {
         return pushToken;
     }
 
-    public boolean isOnline() {
-        return isOnline;
+    public UserStatus getUserStatus() {
+        return userStatus;
+    }
+
+    public UserAction getUserAction() {
+        return userAction;
     }
 
     public Date getLastOnlinedAt() {

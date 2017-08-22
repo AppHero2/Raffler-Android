@@ -5,5 +5,5 @@ package com.raffler.app.models;
  */
 
 public enum MessageStatus {
-    EDITING, SENDING, SENT, DELETED, FAILED
+    EDITING, SENDING, SENT, READ, DELETED, FAILED
 }

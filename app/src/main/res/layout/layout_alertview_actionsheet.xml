@@ -21,7 +21,7 @@
                 android:id="@+id/imgHeader"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
-                android:src="@android:drawable/sym_def_app_icon"
+                android:src="@drawable/ic_profile_person"
                 android:layout_centerVertical="true"
                 android:layout_toLeftOf="@+id/tvAlertTitle"
                 android:layout_toStartOf="@+id/tvAlertTitle"

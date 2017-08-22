@@ -22,11 +22,13 @@ import com.raffler.app.alertView.AlertView;
 import com.raffler.app.classes.AppConsts;
 
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class Util {
@@ -82,6 +84,19 @@ public class Util {
         return getTwoDecimalsValue(seconds / 3600) + ":"
                 + getTwoDecimalsValue(seconds / 60) + ":"
                 + getTwoDecimalsValue(seconds % 60);
+    }
+
+    public static String getMessageTime(Date time) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        return simpleDateFormat.format(time);
+    }
+
+
+    public static String generateChatKeyFrom(String publisher, String subscriber) {
+
+        return (publisher.compareTo(subscriber) < 0 ? publisher + "_" + subscriber
+                : subscriber + "_" + publisher);
     }
 
     private static String getTwoDecimalsValue(int value) {

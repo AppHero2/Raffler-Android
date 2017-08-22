@@ -17,6 +17,11 @@
     <string name="register_user_name">Your name</string>
     <string name="register_user_alert_empty">Your name should not be empty!</string>
 
+    <!-- Chat -->
+    <string name="chat_user_typing">typing</string>
+    <string name="chat_user_online">online</string>
+    <string name="chat_user_lastseen">Last seen</string>
+
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>
 

@@ -10,6 +10,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.raffler.app.models.User;
+import com.raffler.app.models.UserAction;
+import com.raffler.app.models.UserStatus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class AppManager {
     private DatabaseReference userRef;
     private ValueEventListener trackUserListener;
 
-
+    public User selectedUser;
     public String userId;
 
     private AppManager() {
@@ -69,7 +71,8 @@ public class AppManager {
         editor.putString("photo", user.getPhoto());
         editor.putString("phone", user.getPhone());
         editor.putString("pushToken", user.getPushToken());
-        editor.putBoolean("isOnline", user.isOnline());
+        editor.putInt("userStatus", user.getUserStatus().ordinal());
+        editor.putInt("userAction", user.getUserAction().ordinal());
         editor.commit();
     }
 
@@ -81,7 +84,8 @@ public class AppManager {
         String phone = sharedPreferences.getString("phone", "");
         String bio = sharedPreferences.getString("bio", "?");
         String pushToken = sharedPreferences.getString("pushToken", "?");
-
+        int userStatus = sharedPreferences.getInt("userStatus", 0);
+        int userAction = sharedPreferences.getInt("userAction", 0);
         if (uid != null) {
 
             Map<String, Object> data = new HashMap<>();
@@ -91,6 +95,8 @@ public class AppManager {
             data.put("phone", phone);
             data.put("bio", bio);
             data.put("pushToken", pushToken);
+            data.put("userStatus", userStatus);
+            data.put("userAction", userAction);
             User user = new User(data);
             return user;
         } else {

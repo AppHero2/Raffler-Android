@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_below="@+id/appBar"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".ChatActivity"
+    tools:showIn="@layout/activity_chat">
+    <ImageView
+        android:src="@drawable/background_chat"
+        android:scaleType="centerCrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:orientation="vertical"
+            android:id="@+id/container"
+            android:layout_above="@+id/layout_field"
+            android:name="com.raffler.app.fragments.ChatFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/layout_field"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="@dimen/chat_margin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/chat_margin"
+                android:layout_marginLeft="@dimen/chat_margin"
+                android:layout_marginTop="@dimen/chat_margin"
+                android:layout_weight="1"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/imageView_direction"
+                    android:background="@drawable/layerlist_round_rectangle_white"
+                    android:orientation="horizontal">
+
+                    <com.raffler.app.widgets.AEditText
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:padding="12dp"
+                        android:layout_weight="1"
+                        android:background="#0000"
+                        android:id="@+id/editText_message"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/imageView_direction"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:src="@drawable/ic_direction_right_white_24dp" />
+            </RelativeLayout>
+
+            <FrameLayout
+                android:id="@+id/btnSend"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/layerlist_circle_primary">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_send_white_24dp" />
+            </FrameLayout>
+
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

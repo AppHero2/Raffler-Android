@@ -25,14 +25,10 @@ import com.kaopiz.kprogresshud.KProgressHUD;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
-import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.models.User;
-import com.raffler.app.utils.CircleImageView;
 import com.raffler.app.utils.Util;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +84,7 @@ public class FindContactActivity extends AppCompatActivity {
                 new AlertView.Builder().setContext(FindContactActivity.this)
                         .setStyle(AlertView.Style.ActionSheet)
                         .setTitle(user.getName())
+                        .setHeaderImage(user.getPhoto()==null?"":user.getPhoto())
                         .setMessage(null)
                         .setCancelText(getString(R.string.alert_button_cancel))
                         .setDestructive(getString(R.string.find_contact_button_add), getString(R.string.find_contact_button_invite))
@@ -128,6 +125,7 @@ public class FindContactActivity extends AppCompatActivity {
 
     private void loadAllContacts(){
         hud.show();
+        users.clear();
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

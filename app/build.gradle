@@ -9,15 +9,18 @@ android {
             storePassword '123456'
         }
     }
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
     defaultConfig {
         applicationId "com.raffler.app"
         minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 16
+        targetSdkVersion 26
+        versionCode 17
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",
+                                // Project number pulled from dashboard, local value is ignored.
+                                onesignal_google_project_number: "REMOTE"]
     }
     buildTypes {
         release {
@@ -36,6 +39,9 @@ allprojects {
         flatDir {
             dirs 'libs'
         }
+        maven {
+            url "https://maven.google.com"
+        }
     }
 }
 
@@ -46,13 +52,21 @@ dependencies {
     })
     compile(name: 'library-universal-image-loader', ext: 'aar')
     compile(name: 'kprogresshud-green', ext: 'aar')
+    //--> onesginal
+    compile('com.onesignal:OneSignal:[3.6.0, 3.99.99]') {
+        exclude group: 'com.google.android.gms'
+    }
+    //--> onsignal
+    compile 'com.google.android.gms:play-services-gcm:11.0.4'
+    compile 'com.google.android.gms:play-services-location:11.0.4'
     compile 'com.raycoarana.codeinputview:codeinputview:1.1.3'
     compile 'com.google.firebase:firebase-storage:11.0.4'
     compile 'com.google.firebase:firebase-database:11.0.4'
     compile 'com.google.firebase:firebase-auth:11.0.4'
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.android.support:appcompat-v7:26.0.1'
+    compile 'com.android.support:design:26.0.1'
+    compile 'com.android.support:support-v4:26.0.1'
+    compile 'com.android.support:cardview-v7:26.0.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 }

@@ -41,6 +41,12 @@
         <activity
             android:name=".FindContactActivity"
             android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:launchMode="singleTask"
+            android:name=".ChatActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:label="ChatActivity"
             android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 

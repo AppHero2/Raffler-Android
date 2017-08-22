@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="left"
+    android:orientation="horizontal">
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/chat_margin"
+        android:layout_marginLeft="@dimen/chat_margin"
+        android:layout_marginRight="@dimen/chat_margin"
+        android:layout_marginTop="@dimen/chat_margin"
+        android:layout_weight="3"
+        android:gravity="center|left">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="-2px"
+            android:layout_toRightOf="@+id/imageView_direction"
+            android:background="@drawable/layerlist_round_rectangle_white_with_shadow"
+            android:gravity="bottom"
+            android:orientation="horizontal"
+            android:paddingBottom="@dimen/chat_margin"
+            android:paddingLeft="@dimen/chat_margin"
+            android:paddingRight="@dimen/chat_margin"
+            android:paddingTop="@dimen/chat_margin">
+
+            <com.raffler.app.widgets.ATextView
+                android:id="@+id/textView_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/chat_margin"
+                android:layout_toLeftOf="@+id/textView_datetime"
+                android:text="hai               "
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/colorBlack" />
+
+            <LinearLayout
+                android:layout_gravity="bottom|right"
+                android:orientation="horizontal"
+                android:gravity="bottom"
+                android:layout_marginRight="@dimen/chat_margin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.raffler.app.widgets.ATextView
+                    android:id="@+id/textView_datetime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:gravity="right"
+                    android:text="00:00"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+
+                <ImageView
+                    android:id="@+id/imageView_status"
+                    android:visibility="gone"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_sent_gray_24dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <ImageView
+            android:id="@+id/imageView_direction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_direction_left_white_24dp" />
+    </RelativeLayout>
+
+    <android.support.v4.widget.Space
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+</LinearLayout>

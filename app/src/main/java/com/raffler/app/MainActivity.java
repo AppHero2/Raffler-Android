@@ -1,33 +1,46 @@
 package com.raffler.app;
 
+import android.content.Intent;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.FirebaseDatabase;
+import com.onesignal.OSNotificationOpenResult;
+import com.onesignal.OSPermissionObserver;
+import com.onesignal.OSPermissionStateChanges;
+import com.onesignal.OneSignal;
 import com.raffler.app.adapters.ViewPagerAdapter;
-import com.raffler.app.fragments.ChatFragment;
+import com.raffler.app.classes.AppManager;
+import com.raffler.app.fragments.ChatListFragment;
 import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
+import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.models.User;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.HashMap;
+import java.util.Map;
+
+public class MainActivity extends AppCompatActivity implements ChatItemClickListener{
 
     private TabLayout tabLayout;
-
     private ViewPager viewPager;
 
     //Fragments
     RafflesFragment rafflesFragment;
-    ChatFragment chatFragment;
+    ChatListFragment chatFragment;
     ContactsFragment contactsFragment;
 
-    String[] tabTitle={"RAFFLES", "CHAT", "CONTACTS"};
-    int[] unreadCount={0, 5, 0};
+    String[] tabTitle={"CHAT", "RAFFLES", "CONTACTS"};
+    int[] unreadCount={5, 0, 0};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +83,45 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewPager.setCurrentItem(1);
+        // TODO: 21/8/2017 save page index
+        viewPager.setCurrentItem(0);
+
+        OneSignal.startInit(this)
+                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .unsubscribeWhenNotificationsAreDisabled(false)
+                .setNotificationOpenedHandler(new OneSignal.NotificationOpenedHandler() {
+                    @Override
+                    public void notificationOpened(OSNotificationOpenResult result) {
+                        // TODO: 7/28/2017 open an activity
+                    }
+                })
+                .init();
+
+
+        OneSignal.addPermissionObserver(new OSPermissionObserver() {
+            @Override
+            public void onOSPermissionChanged(OSPermissionStateChanges stateChanges) {
+                if (stateChanges.getFrom().getEnabled() &&
+                        !stateChanges.getTo().getEnabled()) {
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setMessage("Notifications Disabled!")
+                            .show();
+                }
+                Log.i("Debug", "onOSPermissionChanged: " + stateChanges);
+            }
+        });
+
+        OneSignal.setSubscription(true);
+        OneSignal.idsAvailable(new OneSignal.IdsAvailableHandler() {
+            @Override
+            public void idsAvailable(String userId, String registrationId) {
+                Log.d("OneSignal", "PlayerID: " + userId + "\nPushToken: " + registrationId);
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                Map<String, Object> pushToken = new HashMap<>();
+                pushToken.put("pushToken", userId);
+                database.getReference("Users").child(AppManager.getInstance().userId).updateChildren(pushToken);
+            }
+        });
     }
 
     @Override
@@ -95,14 +146,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupViewPager(ViewPager viewPager)
-    {
+    @Override
+    public void onSelectedUser(User user) {
+        AppManager.getInstance().selectedUser = user;
+        Intent intent = new Intent(this, ChatActivity.class);
+        startActivity(intent);
+    }
+
+    private void setupViewPager(ViewPager viewPager) {
+
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         rafflesFragment = new RafflesFragment();
-        chatFragment = new ChatFragment();
+        chatFragment = new ChatListFragment();
         contactsFragment = new ContactsFragment();
-        adapter.addFragment(rafflesFragment, "RAFFLES");
+        contactsFragment.setListener(this);
         adapter.addFragment(chatFragment,"CHAT");
+        adapter.addFragment(rafflesFragment, "RAFFLES");
         adapter.addFragment(contactsFragment,"CONTACTS");
         viewPager.setAdapter(adapter);
     }

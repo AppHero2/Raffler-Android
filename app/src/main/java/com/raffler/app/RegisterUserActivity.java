@@ -166,10 +166,20 @@ public class RegisterUserActivity extends AppCompatActivity {
             Util.setProfileImage(user.getPhoto(), imgProfile);
         } else {
             if (checkPermissions()) {
-                Cursor c = getApplication().getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
-                c.moveToFirst();
-                etName.setText(c.getString(c.getColumnIndex("display_name")));
-                c.close();
+                String[] projection = new String[] {
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+
+                /*Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        projection, ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER + "=?", new String[] { "1" },
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);*/
+                Cursor cursor = getApplication().getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
+                if (cursor.moveToFirst()){
+                    etName.setText(cursor.getString(cursor.getColumnIndex("display_name")));
+                }
+                cursor.close();
             }
         }
     }
