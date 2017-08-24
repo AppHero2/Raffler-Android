@@ -20,16 +20,18 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.onesignal.OneSignal;
+import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.fragments.ChatFragment;
+import com.raffler.app.models.Chat;
+import com.raffler.app.models.ChatType;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.MessageType;
 import com.raffler.app.models.User;
-import com.raffler.app.models.UserStatus;
+import com.raffler.app.models.UserAction;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
@@ -45,6 +47,7 @@ import static com.raffler.app.models.UserStatus.ONLINE;
 public class ChatActivity extends AppCompatActivity {
 
     private static final String TAG = ChatActivity.class.getSimpleName();
+
     private EditText messageEditText;
     private TextView titleToolbarTextView;
     private TextView descToolbarTextView;
@@ -53,8 +56,9 @@ public class ChatActivity extends AppCompatActivity {
     private ChatFragment chatFragment;
 
     private DatabaseReference usersRef, messagesRef, chatsRef;
-    private String chatId;
+    private String chatId, lastMessageId;
     private ValueEventListener receiverValueEventListenter;
+    private NewMessageListener newMessageListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +66,9 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
 
         usersRef = References.getInstance().usersRef;
-        chatId = Util.generateChatKeyFrom(AppManager.getInstance().userId, AppManager.getInstance().selectedUser.getIdx());
+        Chat chat = AppManager.getInstance().selectedChat;
+        chatId = Util.generateChatKeyFrom(AppManager.getInstance().userId, chat.getUser().getIdx());
+        lastMessageId = chat.getMessage() == null ? "" : chat.getMessage().getIdx();
         messagesRef = References.getInstance().messagesRef.child(chatId);
         chatsRef = References.getInstance().chatsRef.child(chatId);
 
@@ -103,14 +109,12 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                /*DatabaseReference reference = ref.getUser()
-                        .status(Common.getSimSerialNumber(ChatActivity.this))
-                        .child(Constant.ACTION);
+                DatabaseReference reference = usersRef.child(AppManager.getInstance().userId).child("userAction");
                 if (charSequence.length() > 0) {
-                    reference.setValue(1);
+                    reference.setValue(UserAction.TYPING.ordinal());
                 } else {
-                    reference.setValue(0);
-                }*/
+                    reference.setValue(UserAction.IDLE.ordinal());
+                }
             }
 
             @Override
@@ -131,7 +135,8 @@ public class ChatActivity extends AppCompatActivity {
 
         trackReceiverStatus();
 
-        chatFragment = ChatFragment.newInstance(chatId);
+        chatFragment = ChatFragment.newInstance(chatId, lastMessageId);
+        this.newMessageListener = chatFragment.messageListener;
         try {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, chatFragment).commitAllowingStateLoss();
         } catch (Exception e) {
@@ -148,7 +153,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private void loadData() {
         sender = AppManager.getSession(this);
-        receiver = AppManager.getInstance().selectedUser;
+        receiver = AppManager.getInstance().selectedChat.getUser();
 
         if (receiver == null)
             finish();
@@ -195,10 +200,12 @@ public class ChatActivity extends AppCompatActivity {
         long miliSeconds = System.currentTimeMillis();
         long currentTime = miliSeconds/1000;
         final Map<String, Object> messageData = new HashMap<>();
-        messageData.put("idx", miliSeconds);
+        messageData.put("idx", String.valueOf(miliSeconds));
         messageData.put("text", text);
         messageData.put("senderId", sender.getIdx());
         messageData.put("senderName", sender.getName());
+        messageData.put("senderPhoto", sender.getPhoto());
+        messageData.put("chatType", ChatType.PERSONAL.ordinal());
         messageData.put("messageType", MessageType.TEXT.ordinal());
         messageData.put("status", MessageStatus.SENDING.ordinal());
         messageData.put("createdAt", currentTime);
@@ -206,11 +213,12 @@ public class ChatActivity extends AppCompatActivity {
 
         final Message message = new Message(messageData);
 
-        final DatabaseReference reference = messagesRef.push();
+        messageData.put("status", MessageStatus.SENT.ordinal());
+        final DatabaseReference reference = messagesRef.child(message.getIdx());
         reference.setValue(messageData).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                messageData.put("status", MessageStatus.SENT.ordinal());
+                messageData.put("status", MessageStatus.DELIVERED.ordinal());
                 reference.setValue(messageData);
                 message.updateValue(messageData);
             }
@@ -218,7 +226,7 @@ public class ChatActivity extends AppCompatActivity {
 
         if (receiver.getUserStatus() != ONLINE) {
             try {
-                JSONObject pushObject = new JSONObject("{'contents': {'en':'"+ message +"'}, 'include_player_ids': ['" + receiver.getPushToken() + "']}");
+                JSONObject pushObject = new JSONObject("{'contents': {'en':'"+ message.getText() +"'}, 'include_player_ids': ['" + receiver.getPushToken() + "']}");
                 OneSignal.postNotification(pushObject, null);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -231,5 +239,8 @@ public class ChatActivity extends AppCompatActivity {
         chat.put(chatId, currentTime);
         usersRef.child(sender.getIdx()).child("chats").updateChildren(chat);
         usersRef.child(receiver.getIdx()).child("chats").updateChildren(chat);
+
+        messageEditText.setText(null);
+
     }
 }

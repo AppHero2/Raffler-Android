@@ -9,6 +9,7 @@
     <color name="colorBlack">#000000</color>
     <color name="colorGray">#d3d3d3</color>
     <color name="colorGreen">#DCEDC8</color>
+    <color name="colorEmerland">#2ecc71</color>
     <color name="colorTransparency">#00000000</color>
 
     <!-- Text colors -->

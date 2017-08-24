@@ -8,9 +8,10 @@
     tools:context="com.raffler.app.AppSplashActivity">
 
     <ImageView
+        android:id="@+id/imgSpplash"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/img_splash"
+        android:src="@drawable/img_splash_50"
         android:scaleType="fitXY"/>
 
     <com.raffler.app.widgets.CustomTextView

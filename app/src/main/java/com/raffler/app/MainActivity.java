@@ -24,23 +24,28 @@ import com.raffler.app.fragments.ChatListFragment;
 import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.UnreadMessageListener;
+import com.raffler.app.models.Chat;
 import com.raffler.app.models.User;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements ChatItemClickListener{
+public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
     //Fragments
-    RafflesFragment rafflesFragment;
-    ChatListFragment chatFragment;
-    ContactsFragment contactsFragment;
+    private RafflesFragment rafflesFragment;
+    private ChatListFragment chatFragment;
+    private ContactsFragment contactsFragment;
 
-    String[] tabTitle={"CHAT", "RAFFLES", "CONTACTS"};
-    int[] unreadCount={5, 0, 0};
+    private String[] tabTitle={"CHAT", "RAFFLES", "CONTACTS"};
+    int[] unreadData ={0, 0, 0};
+    Map<String, Integer> unreadCount = new HashMap<>();
+
+    private UnreadMessageListener unreadMessageListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +102,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 })
                 .init();
 
-
         OneSignal.addPermissionObserver(new OSPermissionObserver() {
             @Override
             public void onOSPermissionChanged(OSPermissionStateChanges stateChanges) {
@@ -147,17 +151,31 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     }
 
     @Override
-    public void onSelectedUser(User user) {
-        AppManager.getInstance().selectedUser = user;
+    public void onSelectedChat(Chat chat) {
+        AppManager.getInstance().selectedChat = chat;
         Intent intent = new Intent(this, ChatActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onUnreadMessages(String chatId, int count) {
+        unreadCount.put(chatId, count);
+        int total_unread_count = 0;
+        for (Map.Entry<String, Integer> entry : unreadCount.entrySet()){
+            String key = entry.getKey();
+            Integer value = entry.getValue();
+            total_unread_count += value;
+        }
+        updateTabBadgeCount(0, total_unread_count);
     }
 
     private void setupViewPager(ViewPager viewPager) {
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        rafflesFragment = new RafflesFragment();
         chatFragment = new ChatListFragment();
+        chatFragment.setUnreadMessageListener(this);
+        chatFragment.setChatItemClickListener(this);
+        rafflesFragment = new RafflesFragment();
         contactsFragment = new ContactsFragment();
         contactsFragment.setListener(this);
         adapter.addFragment(chatFragment,"CHAT");
@@ -171,10 +189,10 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         TextView tv_title = (TextView) view.findViewById(R.id.tv_title);
         TextView tv_count = (TextView) view.findViewById(R.id.tv_count);
         tv_title.setText(tabTitle[pos]);
-        if(unreadCount[pos]>0)
+        if(unreadData[pos]>0)
         {
             tv_count.setVisibility(View.VISIBLE);
-            tv_count.setText(""+unreadCount[pos]);
+            tv_count.setText(""+ unreadData[pos]);
         }
         else
             tv_count.setVisibility(View.GONE);
@@ -185,7 +203,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     private void setupTabIcons()
     {
-
         for(int i=0;i<tabTitle.length;i++)
         {
             /*TabLayout.Tab tabitem = tabLayout.newTab();
@@ -195,5 +212,17 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
             tabLayout.getTabAt(i).setCustomView(prepareTabView(i));
         }
 
+    }
+
+    private void updateTabBadgeCount(int index, int count){
+        View customView = tabLayout.getTabAt(index).getCustomView();
+        TextView tv_count = (TextView) customView.findViewById(R.id.tv_count);
+        if(count > 0)
+        {
+            tv_count.setVisibility(View.VISIBLE);
+            tv_count.setText(""+count);
+        }
+        else
+            tv_count.setVisibility(View.GONE);
     }
 }

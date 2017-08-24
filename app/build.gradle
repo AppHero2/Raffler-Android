@@ -15,7 +15,7 @@ android {
         applicationId "com.raffler.app"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 17
+        versionCode 18
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",
@@ -57,6 +57,7 @@ dependencies {
         exclude group: 'com.google.android.gms'
     }
     //--> onsignal
+    compile 'com.google.code.gson:gson:2.7'
     compile 'com.google.android.gms:play-services-gcm:11.0.4'
     compile 'com.google.android.gms:play-services-location:11.0.4'
     compile 'com.raycoarana.codeinputview:codeinputview:1.1.3'

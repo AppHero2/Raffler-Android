@@ -18,9 +18,12 @@
     <string name="register_user_alert_empty">Your name should not be empty!</string>
 
     <!-- Chat -->
+    <string name="yesterday">Yesterday</string>
+    <string name="today">Today</string>
     <string name="chat_user_typing">typing</string>
     <string name="chat_user_online">online</string>
     <string name="chat_user_lastseen">Last seen</string>
+    <string name="chat_list_nodata">No Chats\nAdd your friends to Contacts</string>
 
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>

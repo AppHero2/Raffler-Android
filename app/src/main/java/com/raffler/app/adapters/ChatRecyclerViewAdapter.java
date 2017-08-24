@@ -15,8 +15,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
+import com.google.firebase.database.DatabaseReference;
 import com.raffler.app.R;
 import com.raffler.app.models.Message;
+import com.raffler.app.models.MessageStatus;
+import com.raffler.app.models.UserType;
+import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
 import java.util.List;
@@ -26,9 +30,12 @@ import java.util.Locale;
 public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<Message> mValues;
+    private final String chatId, lastMessageId;
 
-    public ChatRecyclerViewAdapter(List<Message> items) {
+    public ChatRecyclerViewAdapter(List<Message> items, String chatId, String lastMessageId) {
         mValues = items;
+        this.chatId = chatId;
+        this.lastMessageId = lastMessageId;
     }
 
     @Override
@@ -40,12 +47,13 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                     .inflate(R.layout.fragment_chat_date_label, parent, false);
             return new DateLabelViewHolder(view);
 
-        } else if (viewType == 1)
+        } else if (viewType == 1) {
             view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.fragment_chat_right, parent, false);
-        else
+        } else {
             view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.fragment_chat_left, parent, false);
+        }
         return new OwnMessageViewHolder(view);
     }
 
@@ -80,37 +88,39 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
         holder.dateView.setText(
                 Util.getMessageTime(holder.mItem.getUpdatedAt()));
-//        holder.dateView.setText(
-//                String.valueOf(mValues.get(position).datetime)
-//        );
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: 22/8/2017 on click item
+                // TODO: 22/8/2017 click message view
             }
         });
 
+        if (holder.mItem.getUserType() != UserType.SELF) {
+            if (holder.mItem.getIdx().equals(lastMessageId)) {
+                References.getInstance().chatsRef.child(chatId).child("status").setValue(MessageStatus.READ.ordinal());
+            }
+            DatabaseReference reference = References.getInstance().messagesRef.child(chatId).child(holder.mItem.getIdx()).child("status");
+            reference.setValue(MessageStatus.READ.ordinal());
+        }
+
         int resId;
         switch (holder.mItem.getStatus()) {
-            case SENDING:
+            case SENT:
                 resId = R.drawable.ic_sent_gray_24dp;
                 break;
-            case SENT:
+            case DELIVERED:
                 resId = R.drawable.ic_receive_gray_24dp;
                 break;
             case READ:
                 resId = R.drawable.ic_read_cyan_24dp;
                 break;
-
             default:
                 resId = R.drawable.ic_schedule_gray_24dp;
 
         }
 
         holder.statusView.setImageResource(resId);
-
-
 
     }
 
@@ -145,7 +155,6 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
-
     public class DateLabelViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
         public final TextView labelView;
@@ -162,6 +171,5 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             return super.toString();
         }
     }
-
 
 }

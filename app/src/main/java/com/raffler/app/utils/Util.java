@@ -20,9 +20,11 @@ import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListene
 import com.raffler.app.R;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.classes.AppConsts;
+import com.raffler.app.classes.AppManager;
 
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -92,6 +94,104 @@ public class Util {
         return simpleDateFormat.format(time);
     }
 
+    public static String getUserTime(long datetime) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(datetime);
+        return getUserTime(calendar);
+    }
+
+    public static String getUserTime(Calendar calendar) {
+        return getUserTime(calendar.getTime());
+    }
+
+    public static String getUserTime(Date time) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        return simpleDateFormat.format(time);
+    }
+
+    public static String getUserFriendlyDate(Context context, long millis) {
+
+        millis = getMillisForDateOnly(millis);
+        long currentMillis = getMillisForDateOnly(System.currentTimeMillis());
+
+        long diff = currentMillis - millis;
+        int days = (int) Math.floor(diff / (1000 * 60 * 60 * 24));
+        if (days == 1)
+            return context.getResources().getString(R.string.yesterday);
+        else {
+            return Util.getSimpleDateString(millis);
+        }
+    }
+
+    public static String getUserFriendlyDateForChat(Context context, long millis) {
+
+        millis = getMillisForDateOnly(millis);
+        long currentMillis = getMillisForDateOnly(System.currentTimeMillis());
+
+        long diff = currentMillis - millis;
+        int days = (int) Math.floor(diff / (1000 * 60 * 60 * 24));
+        if (days == 0)
+            return context.getResources().getString(R.string.today);
+        else if (days == 1)
+            return context.getResources().getString(R.string.yesterday);
+        else {
+            return Util.getChatDateString(millis);
+        }
+    }
+
+    public static String getSimpleDateString(long millis) {
+
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(millis);
+        return getSimpleDateString(date.getTime());
+
+    }
+
+    public static String getSimpleDateString(Date date) {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
+
+        return format.format(date);
+    }
+
+    public static String getChatDateString(long millis) {
+
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(millis);
+        return getChatDateString(date.getTime());
+
+    }
+
+    public static String getChatDateString(Date date) {
+        SimpleDateFormat format = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+
+        return format.format(date);
+    }
+
+    private static long getMillisForDateOnly(long millis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(millis);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        return calendar.getTimeInMillis();
+    }
+
+    public static String getDateString(long millis) {
+
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(millis);
+        return getDateString(date.getTime());
+
+    }
+
+    public static String getDateString(Date date) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+
+        return format.format(date);
+    }
 
     public static String generateChatKeyFrom(String publisher, String subscriber) {
 
@@ -196,6 +296,11 @@ public class Util {
         }
         if (value == null) value = new HashMap<>();
         return  value;
+    }
+
+    public static String[] getUserIdsFrom(String chatId) {
+        String[] userIds = chatId.split("_");
+        return userIds;
     }
 
     /**

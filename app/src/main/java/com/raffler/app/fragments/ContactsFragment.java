@@ -34,6 +34,7 @@ import com.raffler.app.FindContactActivity;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.models.Chat;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
@@ -90,7 +91,8 @@ public class ContactsFragment extends Fragment {
                 Cell cell = (Cell) view.getTag();
 
                 if (listener != null) {
-                    listener.onSelectedUser(cell.user);
+                    Chat chat = new Chat(cell.user, null, 0);
+                    listener.onSelectedChat(chat);
                 }
 
             }

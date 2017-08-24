@@ -16,6 +16,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.raffler.app.R;
 import com.raffler.app.adapters.ChatRecyclerViewAdapter;
+import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.Message;
 import com.raffler.app.utils.References;
@@ -27,11 +28,12 @@ import java.util.Map;
 public class ChatFragment extends BaseFragment {
 
     private static final String CHAT_ID = "chat_id";
+    private static final String LAST_ID = "last_id";
     private static final String TAG = ChatFragment.class.getSimpleName();
 
     private int mColumnCount = 1;
     public int limit = 20;
-    private String chatId;
+    private String chatId, lastMessageId;
 
     private RecyclerView recyclerView;
     private boolean isMax = false;
@@ -43,14 +45,25 @@ public class ChatFragment extends BaseFragment {
 
     private DatabaseReference usersRef, messagesRef, chatsRef;
 
-    public ChatFragment() {
+    public NewMessageListener messageListener;
 
+    public ChatFragment() {
+        messageListener = new NewMessageListener() {
+            @Override
+            public void onGetNewMessage(Message message) {
+                messages.add(message);
+                if (adapter != null)
+                    adapter.notifyDataSetChanged();
+                readjust();
+            }
+        };
     }
 
-    public static ChatFragment newInstance(String chatId) {
+    public static ChatFragment newInstance(String chatId, String lastMessageId) {
         ChatFragment fragment = new ChatFragment();
         Bundle args = new Bundle();
         args.putSerializable(CHAT_ID, chatId);
+        args.putSerializable(LAST_ID, lastMessageId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -61,6 +74,7 @@ public class ChatFragment extends BaseFragment {
 
         if (getArguments() != null) {
             chatId = (String) getArguments().getSerializable(CHAT_ID);
+            lastMessageId = (String) getArguments().getSerializable(LAST_ID);
             usersRef = References.getInstance().usersRef.child(AppManager.getInstance().userId);
             messagesRef = References.getInstance().messagesRef.child(chatId);
             chatsRef = References.getInstance().chatsRef.child(chatId);
@@ -83,7 +97,7 @@ public class ChatFragment extends BaseFragment {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
 
-            adapter = new ChatRecyclerViewAdapter(messages);
+            adapter = new ChatRecyclerViewAdapter(messages, chatId, lastMessageId);
             recyclerView.setAdapter(adapter);
             recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
                 @Override
@@ -155,15 +169,16 @@ public class ChatFragment extends BaseFragment {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 if (dataSnapshot.getValue() != null) {
                     Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
-                    Message message = new Message(messageData);
-                    messages.add(message);
-                    adapter.notifyDataSetChanged();
+                    updateMessage(messageData);
                 }
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+                if (dataSnapshot.getValue() != null) {
+                    Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
+                    updateMessage(messageData);
+                }
             }
 
             @Override
@@ -210,6 +225,24 @@ public class ChatFragment extends BaseFragment {
 
     }
 
+    private void updateMessage (Map<String, Object> messageData) {
+        Message message = new Message(messageData);
+        boolean isExist = false;
+        for (Message item : messages) {
+            if (item.getIdx().equals(message.getIdx())) {
+                item.updateValue(messageData);
+                isExist = true;
+                break;
+            }
+        }
+
+        if (!isExist) {
+            messages.add(message);
+        }
+        adapter.notifyDataSetChanged();
+        readjust();
+    }
+
     public void readjust() {
         recyclerView.scrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
     }
@@ -224,6 +257,5 @@ public class ChatFragment extends BaseFragment {
             return false;
         return currentScroll >= maxScroll;
     }
-
 
 }

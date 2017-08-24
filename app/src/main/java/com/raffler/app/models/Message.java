@@ -5,11 +5,11 @@ import com.raffler.app.classes.AppManager;
 import java.util.Date;
 import java.util.Map;
 
-import static com.raffler.app.models.MessageStatus.EDITING;
+import static com.raffler.app.models.ChatType.PERSONAL;
+import static com.raffler.app.models.MessageStatus.SENDING;
 import static com.raffler.app.models.MessageType.TEXT;
 import static com.raffler.app.models.UserType.OTHER;
 import static com.raffler.app.models.UserType.SELF;
-import static com.raffler.app.utils.Util.getBooleanFromData;
 import static com.raffler.app.utils.Util.getDateFromData;
 import static com.raffler.app.utils.Util.getIntFromData;
 import static com.raffler.app.utils.Util.getStringFromData;
@@ -21,10 +21,11 @@ import static com.raffler.app.utils.Util.getStringFromData;
 public class Message {
 
     private String idx, text, resource;
+    private ChatType chatType = PERSONAL;
     private MessageType messageType = TEXT;
-    private MessageStatus status = EDITING;
+    private MessageStatus status = SENDING;
     private UserType userType = SELF;
-    private String senderId, senderName;
+    private String senderId, senderName, senderPhoto;
     private Date createdAt, updatedAt;
 
     public Message(Map<String, Object> data){
@@ -37,6 +38,8 @@ public class Message {
         this.resource = getStringFromData("resource", data);
         this.senderId = getStringFromData("senderId", data);
         this.senderName = getStringFromData("senderName", data);
+        this.senderPhoto = getStringFromData("senderPhoto", data);
+        this.chatType = ChatType.values()[getIntFromData("chatType", data)];
         this.messageType = MessageType.values()[getIntFromData("messageType", data)];
         this.status = MessageStatus.values()[getIntFromData("status", data)];
         this.userType = senderId.equals(AppManager.getInstance().userId) ? SELF : OTHER;
@@ -56,12 +59,20 @@ public class Message {
         return senderName;
     }
 
+    public String getSenderPhoto() {
+        return senderPhoto;
+    }
+
     public MessageStatus getStatus() {
         return status;
     }
 
     public MessageType getMessageType() {
         return messageType;
+    }
+
+    public ChatType getChatType() {
+        return chatType;
     }
 
     public String getResource() {

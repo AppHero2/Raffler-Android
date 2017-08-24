@@ -48,6 +48,7 @@ import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppConsts;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.User;
+import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
 import java.io.ByteArrayOutputStream;
@@ -411,7 +412,7 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private void checkExistUser(){
         hud.show();
-        Query query = userRef.child(userId).orderByValue();
+        Query query = References.getInstance().usersRef.child(userId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

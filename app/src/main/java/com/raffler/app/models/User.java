@@ -1,13 +1,16 @@
 package com.raffler.app.models;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.raffler.app.models.UserAction.IDLE;
 import static com.raffler.app.models.UserStatus.OFFLINE;
-import static com.raffler.app.utils.Util.getBooleanFromData;
 import static com.raffler.app.utils.Util.getDateFromData;
 import static com.raffler.app.utils.Util.getIntFromData;
+import static com.raffler.app.utils.Util.getMapDataFromData;
 import static com.raffler.app.utils.Util.getStringFromData;
 
 /**
@@ -20,8 +23,13 @@ public class User {
     private UserStatus userStatus = OFFLINE;
     private UserAction userAction = IDLE;
     private Date lastOnlinedAt, lastUpdatedAt;
+    private Map<String,Object> chats = new HashMap<>();
 
     public User(Map<String, Object> data){
+        updateData(data);
+    }
+
+    public void updateData(Map<String, Object> data){
         this.idx = getStringFromData("uid", data);
         this.name = getStringFromData("name", data);
         this.photo = getStringFromData("photo", data);
@@ -29,9 +37,10 @@ public class User {
         this.bio = getStringFromData("bio", data);
         this.pushToken = getStringFromData("pushToken", data);
         this.userStatus = UserStatus.values()[getIntFromData("userStatus", data)];
-        this.userAction = userAction.values()[getIntFromData("userAction", data)];
+        this.userAction = UserAction.values()[getIntFromData("userAction", data)];
         this.lastOnlinedAt = getDateFromData("lastOnlinedAt", data);
         this.lastUpdatedAt = getDateFromData("lastUpdatedAt", data);
+        this.chats = getMapDataFromData("chats", data);
     }
 
     public String getBio() {
@@ -72,5 +81,9 @@ public class User {
 
     public Date getLastUpdatedAt() {
         return lastUpdatedAt;
+    }
+
+    public Map<String, Object> getChats() {
+        return chats;
     }
 }

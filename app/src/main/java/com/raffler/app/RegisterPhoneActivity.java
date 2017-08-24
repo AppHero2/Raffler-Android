@@ -32,6 +32,7 @@ import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.kaopiz.kprogresshud.KProgressHUD;
+import com.raffler.app.classes.AppManager;
 import com.raffler.app.country.Country;
 import com.raffler.app.country.CountryPicker;
 import com.raffler.app.country.CountryPickerListener;
@@ -290,6 +291,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                             Log.d(TAG, "signInWithCredential:success");
 
                             FirebaseUser user = task.getResult().getUser();
+                            AppManager.getInstance().userId = user.getUid();
                             // ...
                             startActivity(new Intent(RegisterPhoneActivity.this, RegisterUserActivity.class));
                             RegisterPhoneActivity.this.finish();
