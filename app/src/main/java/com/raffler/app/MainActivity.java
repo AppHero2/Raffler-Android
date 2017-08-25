@@ -13,7 +13,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.onesignal.OSNotification;
 import com.onesignal.OSNotificationOpenResult;
 import com.onesignal.OSPermissionObserver;
 import com.onesignal.OSPermissionStateChanges;
@@ -27,6 +29,8 @@ import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.User;
+import com.raffler.app.models.UserStatus;
+import com.raffler.app.utils.References;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     private ChatListFragment chatFragment;
     private ContactsFragment contactsFragment;
 
+    private DatabaseReference userStatusRef;
+
     private String[] tabTitle={"CHAT", "RAFFLES", "CONTACTS"};
     int[] unreadData ={0, 0, 0};
     Map<String, Integer> unreadCount = new HashMap<>();
@@ -52,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        userStatusRef = References.getInstance().usersRef.child(AppManager.getInstance().userId).child("userStatus");
+        userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
+
         //Initializing viewPager
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setOffscreenPageLimit(3);
@@ -61,8 +70,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         tabLayout = (TabLayout) findViewById(R.id.tablayout);
         tabLayout.setupWithViewPager(viewPager);
 
-        try
-        {
+        try{
             setupTabIcons();
         }
         catch (Exception e)
@@ -100,6 +108,12 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                         // TODO: 7/28/2017 open an activity
                     }
                 })
+                .setNotificationReceivedHandler(new OneSignal.NotificationReceivedHandler() {
+                    @Override
+                    public void notificationReceived(OSNotification notification) {
+                        Log.d("Notification", notification.toString());
+                    }
+                })
                 .init();
 
         OneSignal.addPermissionObserver(new OSPermissionObserver() {
@@ -126,6 +140,29 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 database.getReference("Users").child(AppManager.getInstance().userId).updateChildren(pushToken);
             }
         });
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        userStatusRef.setValue(UserStatus.ONLINE.ordinal());
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        userStatusRef.setValue(UserStatus.AWAY.ordinal());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        userStatusRef.setValue(UserStatus.OFFLINE.ordinal());
     }
 
     @Override

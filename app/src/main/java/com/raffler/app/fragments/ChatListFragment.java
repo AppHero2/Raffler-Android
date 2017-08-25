@@ -2,6 +2,7 @@ package com.raffler.app.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,6 +31,7 @@ import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +42,7 @@ public class ChatListFragment extends Fragment {
     private DatabaseReference chatsRef;
 
     private List<String> chats = new ArrayList<>();
+    private Map<String, Integer> badges = new HashMap<>();
     private List<Query> queryList = new ArrayList<>();
     private List<ValueEventListener> listeners = new ArrayList<>();
 
@@ -77,7 +80,7 @@ public class ChatListFragment extends Fragment {
             recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), mColumnCount));
         }
 
-        adapter = new ChatListRecyclerViewAdapter(chats);
+        adapter = new ChatListRecyclerViewAdapter(chats, badges);
         recyclerView.setAdapter(adapter);
         if (chatItemClickListener != null) {
             adapter.setChatItemClickListener(chatItemClickListener);
@@ -111,12 +114,13 @@ public class ChatListFragment extends Fragment {
     }
 
     private void loadData(){
-        User user = AppManager.getSession(getActivity());
+        User user = AppManager.getSession();
         if (user.getChats() != null){
             for (Map.Entry<String, Object> entry : user.getChats().entrySet()){
                 final String chatId = entry.getKey();
                 if (!chats.contains(chatId)) {
                     chats.add(chatId);
+                    badges.put(chatId, 0);
                     startTrackingChat(chatId);
                 }
             }
@@ -135,22 +139,25 @@ public class ChatListFragment extends Fragment {
         }
     }
 
-    private void startTrackingChat(final String chatId) {
+    private void startTrackingChat(final String chat_Id) {
         ValueEventListener valueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Util.wait(1000, new Runnable() {
+
+                AppManager.getUnreadMessageCount(chat_Id, new UnreadMessageListener() {
                     @Override
-                    public void run() {
-                        AppManager.getUnreadMessageCount(chatId, new UnreadMessageListener() {
+                    public void onUnreadMessages(final String chatId, final int count) {
+                        getActivity().runOnUiThread(new Runnable() {
                             @Override
-                            public void onUnreadMessages(String chatId, int count) {
+                            public void run() {
                                 if (unreadMessageListener != null) {
                                     unreadMessageListener.onUnreadMessages(chatId, count);
                                 }
-                                //adapter.notifyDataSetChanged();
+                                badges.put(chatId, count);
+                                adapter.notifyDataSetChanged();
                             }
                         });
+
                     }
                 });
             }
@@ -160,7 +167,7 @@ public class ChatListFragment extends Fragment {
 
             }
         };
-        Query query = References.getInstance().chatsRef.child(chatId);
+        Query query = References.getInstance().chatsRef.child(chat_Id);
         query.addValueEventListener(valueEventListener);
         queryList.add(query);
         listeners.add(valueEventListener);

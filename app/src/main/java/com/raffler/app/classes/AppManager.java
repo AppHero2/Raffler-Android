@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -44,6 +46,10 @@ public class AppManager {
 
     private AppManager() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser != null) {
+            userId = firebaseUser.getUid();
+        }
         userRef = database.getReference("Users");
     }
 
@@ -54,7 +60,7 @@ public class AppManager {
                 if (dataSnapshot.getValue() != null){
                     Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
                     User user = new User(userData);
-                    AppManager.saveSession(context, user);
+                    AppManager.saveSession(user);
                     if (userValueListener != null) {
                         userValueListener.onLoadedUser(user);
                     }
@@ -128,7 +134,8 @@ public class AppManager {
 
     }
 
-    public static void saveSession(Context context, User user){
+    public static void saveSession(User user){
+        Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("uid", user.getIdx());
@@ -142,11 +149,13 @@ public class AppManager {
         Gson gson = new Gson();
         String chatsDic = gson.toJson(user.getChats());
         editor.putString("chats", chatsDic);
-
+        String lastSeen = gson.toJson(user.getLastseens());
+        editor.putString("lastseens", lastSeen);
         editor.commit();
     }
 
-    public static User getSession(Context context) {
+    public static User getSession() {
+        Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
         String uid = sharedPreferences.getString("uid", null);
         String name = sharedPreferences.getString("name", "?");
@@ -158,6 +167,8 @@ public class AppManager {
         int userAction = sharedPreferences.getInt("userAction", 0);
         String chatsDic = sharedPreferences.getString("chats", null);
         Map<String,Object> chats = new Gson().fromJson(chatsDic, new TypeToken<Map<String, Object>>(){}.getType());
+        String lastSeen = sharedPreferences.getString("lastseens", null);
+        Map<String,Object> lastSeens = new Gson().fromJson(lastSeen, new TypeToken<Map<String, Object>>(){}.getType());
         if (uid != null) {
             Map<String, Object> data = new HashMap<>();
             data.put("uid", uid);
@@ -169,6 +180,7 @@ public class AppManager {
             data.put("userStatus", userStatus);
             data.put("userAction", userAction);
             data.put("chats", (chats != null) ? chats : new HashMap<String, Object>());
+            data.put("lastseens", (chats != null) ? lastSeens : new HashMap<String, Object>());
             User user = new User(data);
             return user;
         } else {

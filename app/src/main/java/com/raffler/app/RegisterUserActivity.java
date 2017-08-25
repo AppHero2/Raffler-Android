@@ -161,7 +161,7 @@ public class RegisterUserActivity extends AppCompatActivity {
     }
 
     private void loadUserInfoFromPhone(){
-        User user = AppManager.getSession(this);
+        User user = AppManager.getSession();
         if (user != null) {
             etName.setText(user.getName());
             Util.setProfileImage(user.getPhoto(), imgProfile);
@@ -421,7 +421,7 @@ public class RegisterUserActivity extends AppCompatActivity {
                     User user = new User(userData);
                     etName.setText(user.getName());
                     Util.setProfileImage(user.getPhoto(), imgProfile);
-                    AppManager.saveSession(RegisterUserActivity.this, user);
+                    AppManager.saveSession(user);
                 }
 
                 hud.dismiss();

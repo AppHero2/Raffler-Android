@@ -30,14 +30,16 @@ import java.util.Map;
 public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRecyclerViewAdapter.ViewHolder> {
 
     private final List<String> mValues;
+    private final Map<String, Integer> mBadges;
     private ChatItemClickListener chatItemClickListener;
 
     public void setChatItemClickListener(ChatItemClickListener chatItemClickListener) {
         this.chatItemClickListener = chatItemClickListener;
     }
 
-    public ChatListRecyclerViewAdapter(List<String> items) {
+    public ChatListRecyclerViewAdapter(List<String> items, Map<String, Integer> badges) {
         mValues = items;
+        mBadges = badges;
     }
 
     @Override
@@ -118,22 +120,17 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 }
             });
 
-            /*AppManager.getUnreadMessageCount(idx, new UnreadMessageListener() {
-                @Override
-                public void onUnreadMessages(String chatId, int count) {
-                    mUnreadCount = count;
-                    if(count == 0){
-                        typeView.setTextColor(typeTextColor);
-                        countLayout.setVisibility(View.GONE);
-                    } else {
-                        int color = typeView.getResources().getColor(R.color.colorEmerland);
-                        typeView.setTextColor(color);
-                        countView.setText(String.valueOf(count));
-                        countLayout.setVisibility(View.VISIBLE);
-                        countImageView.setColorFilter(color);
-                    }
-                }
-            });*/
+            int count = mBadges.get(idx);
+            if(count == 0){
+                typeView.setTextColor(typeTextColor);
+                countLayout.setVisibility(View.GONE);
+            } else {
+                int color = typeView.getResources().getColor(R.color.colorEmerland);
+                typeView.setTextColor(color);
+                countView.setText(String.valueOf(count));
+                countLayout.setVisibility(View.VISIBLE);
+                countImageView.setColorFilter(color);
+            }
 
         }
 

@@ -17,14 +17,17 @@ import android.widget.TextView;
 
 import com.google.firebase.database.DatabaseReference;
 import com.raffler.app.R;
+import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.UserType;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 
 public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -102,6 +105,10 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
             DatabaseReference reference = References.getInstance().messagesRef.child(chatId).child(holder.mItem.getIdx()).child("status");
             reference.setValue(MessageStatus.READ.ordinal());
+
+            Map<String, Object> lastSeen = new HashMap<>();
+            lastSeen.put(chatId, System.currentTimeMillis());
+            References.getInstance().usersRef.child(AppManager.getInstance().userId).child("lastSeen").updateChildren(lastSeen);
         }
 
         int resId;

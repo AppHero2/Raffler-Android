@@ -54,8 +54,6 @@ public class AppSplashActivity extends AppCompatActivity {
             }
         });
 
-        AppManager.getInstance().setContext(getApplicationContext());
-
         // Initialize image loader
         initImageLoader(this);
     }
@@ -77,9 +75,8 @@ public class AppSplashActivity extends AppCompatActivity {
     private void dismissSplash(){
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null){
-            AppManager.getInstance().userId = firebaseUser.getUid();
             AppManager.getInstance().trackUser(firebaseUser.getUid());
-            User user = AppManager.getSession(this);
+            User user = AppManager.getSession();
             if (user != null) {
                 startActivity(new Intent(this, MainActivity.class));
             } else {

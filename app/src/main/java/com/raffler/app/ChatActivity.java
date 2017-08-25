@@ -1,7 +1,5 @@
 package com.raffler.app;
 
-import android.content.Intent;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -17,6 +16,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,13 +32,18 @@ import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.MessageType;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserAction;
+import com.raffler.app.models.UserStatus;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static com.raffler.app.models.UserAction.TYPING;
@@ -55,10 +60,13 @@ public class ChatActivity extends AppCompatActivity {
     private FrameLayout btnSend;
     private ChatFragment chatFragment;
 
-    private DatabaseReference usersRef, messagesRef, chatsRef;
+    private DatabaseReference usersRef, messagesRef, chatsRef, presenceRef, connnectedUsersRef;
     private String chatId, lastMessageId;
     private ValueEventListener receiverValueEventListenter;
+    private ChildEventListener presenceValueEventListenter;
     private NewMessageListener newMessageListener;
+
+    private List<String> connectedUsers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +79,16 @@ public class ChatActivity extends AppCompatActivity {
         lastMessageId = chat.getMessage() == null ? "" : chat.getMessage().getIdx();
         messagesRef = References.getInstance().messagesRef.child(chatId);
         chatsRef = References.getInstance().chatsRef.child(chatId);
+        connnectedUsersRef = chatsRef.child("connectedUser");
+
+        String userId = AppManager.getInstance().userId;
+
+        // detect user disconnected
+        presenceRef = connnectedUsersRef.child(userId);
+        presenceRef.onDisconnect().removeValue();
+
+        // register user as connected
+        presenceRef.setValue(true);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_chat);
         setSupportActionBar(toolbar);
@@ -133,7 +151,8 @@ public class ChatActivity extends AppCompatActivity {
 
         loadData();
 
-        trackReceiverStatus();
+        startTrackingReceiver();
+        startTrackingPresence();
 
         chatFragment = ChatFragment.newInstance(chatId, lastMessageId);
         this.newMessageListener = chatFragment.messageListener;
@@ -149,10 +168,22 @@ public class ChatActivity extends AppCompatActivity {
         super.onDestroy();
 
         stopTrackingReceiver();
+        stopTrackingPresence();
+
+        presenceRef.onDisconnect().cancel();
+        presenceRef.removeValue();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        presenceRef.onDisconnect().cancel();
+        presenceRef.removeValue();
     }
 
     private void loadData() {
-        sender = AppManager.getSession(this);
+        sender = AppManager.getSession();
         receiver = AppManager.getInstance().selectedChat.getUser();
 
         if (receiver == null)
@@ -162,7 +193,7 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    private void trackReceiverStatus(){
+    private void startTrackingReceiver(){
         receiverValueEventListenter = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -174,7 +205,26 @@ public class ChatActivity extends AppCompatActivity {
                     } else if (receiver.getUserStatus() == ONLINE) {
                         descToolbarTextView.setText(R.string.chat_user_online);
                     } else {
-                        descToolbarTextView.setText(R.string.chat_user_lastseen);
+                        long lastSeen = System.currentTimeMillis();
+                        for (Map.Entry<String, Object> entry: receiver.getLastseens().entrySet()){
+                            String key = entry.getKey();
+                            if (key.equals(chatId)) {
+                                lastSeen = (long)entry.getValue();
+                                break;
+                            }
+                        }
+
+                        descToolbarTextView.setText(
+                                String.format(
+                                        Locale.getDefault(),
+                                        "%s %s at %s",
+                                        getResources().getString(R.string.chat_user_lastseen),
+                                        Util.getUserFriendlyDateForChat(
+                                                ChatActivity.this, lastSeen
+                                        ).toLowerCase(),
+                                        Util.getUserTime(lastSeen)
+                                )
+                        );
                     }
                 }
             }
@@ -191,16 +241,58 @@ public class ChatActivity extends AppCompatActivity {
         usersRef.removeEventListener(receiverValueEventListenter);
     }
 
+    private void startTrackingPresence(){
+        presenceValueEventListenter = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                String userId = dataSnapshot.getKey();
+                if (!connectedUsers.contains(userId)){
+                    connectedUsers.add(userId);
+                }
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                String userId = dataSnapshot.getKey();
+                if (connectedUsers.contains(userId)){
+                    connectedUsers.remove(userId);
+                }
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        connnectedUsersRef.addChildEventListener(presenceValueEventListenter);
+    }
+
+    private void stopTrackingPresence(){
+        connnectedUsersRef.removeEventListener(presenceValueEventListenter);
+    }
+
     private void sendMessage(){
         final String text = messageEditText.getText().toString();
         if (text.trim().length() == 0) {
             return;
         }
 
-        long miliSeconds = System.currentTimeMillis();
-        long currentTime = miliSeconds/1000;
+        final DatabaseReference reference = messagesRef.push();
+
+        long currentTime = System.currentTimeMillis();
         final Map<String, Object> messageData = new HashMap<>();
-        messageData.put("idx", String.valueOf(miliSeconds));
+
         messageData.put("text", text);
         messageData.put("senderId", sender.getIdx());
         messageData.put("senderName", sender.getName());
@@ -210,30 +302,42 @@ public class ChatActivity extends AppCompatActivity {
         messageData.put("status", MessageStatus.SENDING.ordinal());
         messageData.put("createdAt", currentTime);
         messageData.put("updatedAt", currentTime);
+        messageData.put("idx", reference.getKey());
 
         final Message message = new Message(messageData);
+        if (newMessageListener != null) {
+            newMessageListener.onGetNewMessage(message);
+        }
 
         messageData.put("status", MessageStatus.SENT.ordinal());
-        final DatabaseReference reference = messagesRef.child(message.getIdx());
         reference.setValue(messageData).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 messageData.put("status", MessageStatus.DELIVERED.ordinal());
                 reference.setValue(messageData);
-                message.updateValue(messageData);
             }
         });
 
-        if (receiver.getUserStatus() != ONLINE) {
+        // send push notification
+        if (!connectedUsers.contains(receiver.getIdx())) {
             try {
-                JSONObject pushObject = new JSONObject("{'contents': {'en':'"+ message.getText() +"'}, 'include_player_ids': ['" + receiver.getPushToken() + "']}");
+                JSONArray receivers = new JSONArray();
+                receivers.put(receiver.getPushToken());
+                JSONObject pushObject = new JSONObject();
+                JSONObject contents = new JSONObject();
+                contents.put("en", message.getText());
+                JSONObject headings = new JSONObject();
+                headings.put("en", sender.getName());
+                pushObject.put("headings", headings);
+                pushObject.put("contents", contents);
+                pushObject.put("include_player_ids", receivers);
                 OneSignal.postNotification(pushObject, null);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
-        chatsRef.setValue(messageData);
+        chatsRef.updateChildren(messageData);
 
         Map<String, Object> chat = new HashMap<>();
         chat.put(chatId, currentTime);

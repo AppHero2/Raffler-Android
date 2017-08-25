@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Logger;
+import com.raffler.app.classes.AppManager;
 import com.raffler.app.utils.References;
 
 /**
@@ -18,12 +19,16 @@ public class AppApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
+
         if(database==null) {
             FirebaseDatabase.getInstance().setPersistenceEnabled(true);
             FirebaseDatabase.getInstance().setLogLevel(Logger.Level.DEBUG);
 
         }
+
         database = FirebaseDatabase.getInstance();
         References.init(this, database);
+
+        AppManager.getInstance().setContext(getApplicationContext());
     }
 }

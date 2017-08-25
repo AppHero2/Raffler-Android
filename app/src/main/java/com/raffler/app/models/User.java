@@ -24,6 +24,7 @@ public class User {
     private UserAction userAction = IDLE;
     private Date lastOnlinedAt, lastUpdatedAt;
     private Map<String,Object> chats = new HashMap<>();
+    private Map<String,Object> lastseens = new HashMap<>();
 
     public User(Map<String, Object> data){
         updateData(data);
@@ -41,6 +42,7 @@ public class User {
         this.lastOnlinedAt = getDateFromData("lastOnlinedAt", data);
         this.lastUpdatedAt = getDateFromData("lastUpdatedAt", data);
         this.chats = getMapDataFromData("chats", data);
+        this.lastseens = getMapDataFromData("lastseens", data);
     }
 
     public String getBio() {
@@ -85,5 +87,9 @@ public class User {
 
     public Map<String, Object> getChats() {
         return chats;
+    }
+
+    public Map<String, Object> getLastseens() {
+        return lastseens;
     }
 }

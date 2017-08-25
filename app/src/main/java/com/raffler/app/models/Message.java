@@ -42,7 +42,8 @@ public class Message {
         this.chatType = ChatType.values()[getIntFromData("chatType", data)];
         this.messageType = MessageType.values()[getIntFromData("messageType", data)];
         this.status = MessageStatus.values()[getIntFromData("status", data)];
-        this.userType = senderId.equals(AppManager.getInstance().userId) ? SELF : OTHER;
+        String userId = AppManager.getInstance().userId;
+        if (userId != null) this.userType = senderId.equals(userId) ? SELF : OTHER;
         this.createdAt = getDateFromData("createdAt", data);
         this.updatedAt = getDateFromData("updatedAt", data);
     }

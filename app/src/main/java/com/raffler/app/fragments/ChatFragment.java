@@ -22,6 +22,7 @@ import com.raffler.app.models.Message;
 import com.raffler.app.utils.References;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class ChatFragment extends BaseFragment {
     private static final String TAG = ChatFragment.class.getSimpleName();
 
     private int mColumnCount = 1;
-    public int limit = 20;
+    public int limit = 1000;
     private String chatId, lastMessageId;
 
     private RecyclerView recyclerView;
@@ -153,7 +154,9 @@ public class ChatFragment extends BaseFragment {
             });
 
             trackMessages();
+
         }
+
         return view;
     }
 
