@@ -39,7 +39,7 @@ public class AppManager {
     private Context context;
     private DatabaseReference userRef;
     private ValueEventListener trackUserListener;
-    private UserValueListener userValueListener;
+    private UserValueListener userValueListener, userValueListenerForChat;
 
     public Chat selectedChat;
     public String userId;
@@ -63,6 +63,9 @@ public class AppManager {
                     AppManager.saveSession(user);
                     if (userValueListener != null) {
                         userValueListener.onLoadedUser(user);
+                    }
+                    if (userValueListenerForChat != null) {
+                        userValueListenerForChat.onLoadedUser(user);
                     }
                 }
             }
@@ -151,6 +154,7 @@ public class AppManager {
         editor.putString("chats", chatsDic);
         String lastSeen = gson.toJson(user.getLastseens());
         editor.putString("lastseens", lastSeen);
+        editor.putInt("raffles", user.getRaffles());
         editor.commit();
     }
 
@@ -165,6 +169,7 @@ public class AppManager {
         String pushToken = sharedPreferences.getString("pushToken", "?");
         int userStatus = sharedPreferences.getInt("userStatus", 0);
         int userAction = sharedPreferences.getInt("userAction", 0);
+        int raffles = sharedPreferences.getInt("raffles", 0);
         String chatsDic = sharedPreferences.getString("chats", null);
         Map<String,Object> chats = new Gson().fromJson(chatsDic, new TypeToken<Map<String, Object>>(){}.getType());
         String lastSeen = sharedPreferences.getString("lastseens", null);
@@ -181,6 +186,7 @@ public class AppManager {
             data.put("userAction", userAction);
             data.put("chats", (chats != null) ? chats : new HashMap<String, Object>());
             data.put("lastseens", (chats != null) ? lastSeens : new HashMap<String, Object>());
+            data.put("raffles", raffles);
             User user = new User(data);
             return user;
         } else {
@@ -201,5 +207,9 @@ public class AppManager {
 
     public void setUserValueListener(UserValueListener userValueListener) {
         this.userValueListener = userValueListener;
+    }
+
+    public void setUserValueListenerForChat(UserValueListener userValueListenerForChat) {
+        this.userValueListenerForChat = userValueListenerForChat;
     }
 }

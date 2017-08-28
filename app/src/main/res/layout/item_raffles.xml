@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="48dp"
+    android:padding="5dp">
+
+    <ImageView
+        android:id="@+id/imgView"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_raffle_pack"/>
+
+    <TextView
+        android:id="@+id/tv_count"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:background="@drawable/badge_round_yellow"
+        android:gravity="center"
+        android:text="0"
+        android:layout_marginLeft="-22dp"
+        android:layout_marginBottom="2dp"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/medium_text"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/imgView"
+        android:layout_toEndOf="@+id/imgView" />
+
+</RelativeLayout>

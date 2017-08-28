@@ -25,6 +25,7 @@ public class User {
     private Date lastOnlinedAt, lastUpdatedAt;
     private Map<String,Object> chats = new HashMap<>();
     private Map<String,Object> lastseens = new HashMap<>();
+    private int raffles = 0;
 
     public User(Map<String, Object> data){
         updateData(data);
@@ -43,6 +44,7 @@ public class User {
         this.lastUpdatedAt = getDateFromData("lastUpdatedAt", data);
         this.chats = getMapDataFromData("chats", data);
         this.lastseens = getMapDataFromData("lastseens", data);
+        this.raffles = getIntFromData("raffles", data);
     }
 
     public String getBio() {
@@ -94,5 +96,9 @@ public class User {
 
     public Map<String, Object> getLastseens() {
         return lastseens;
+    }
+
+    public int getRaffles() {
+        return raffles;
     }
 }

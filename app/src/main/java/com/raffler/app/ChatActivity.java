@@ -25,6 +25,7 @@ import com.onesignal.OneSignal;
 import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.fragments.ChatFragment;
+import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.ChatType;
 import com.raffler.app.models.Message;
@@ -49,13 +50,14 @@ import java.util.Map;
 import static com.raffler.app.models.UserAction.TYPING;
 import static com.raffler.app.models.UserStatus.ONLINE;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements UserValueListener{
 
     private static final String TAG = ChatActivity.class.getSimpleName();
 
     private EditText messageEditText;
     private TextView titleToolbarTextView;
     private TextView descToolbarTextView;
+    private TextView txtRafflesCount;
     private User sender, receiver;
     private FrameLayout btnSend;
     private ChatFragment chatFragment;
@@ -67,6 +69,8 @@ public class ChatActivity extends AppCompatActivity {
     private NewMessageListener newMessageListener;
 
     private List<String> connectedUsers = new ArrayList<>();
+
+    private int raffles_count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +86,7 @@ public class ChatActivity extends AppCompatActivity {
         connnectedUsersRef = chatsRef.child("connectedUser");
 
         String userId = AppManager.getInstance().userId;
+        raffles_count = AppManager.getSession().getRaffles();
 
         // detect user disconnected
         presenceRef = connnectedUsersRef.child(userId);
@@ -106,8 +111,9 @@ public class ChatActivity extends AppCompatActivity {
 
         titleToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_title);
         descToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
-
         descToolbarTextView.setText(null);
+        txtRafflesCount = (TextView) toolbar.findViewById(R.id.tv_count);
+        txtRafflesCount.setText(String.valueOf(raffles_count));
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -161,6 +167,8 @@ public class ChatActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        AppManager.getInstance().setUserValueListenerForChat(this);
     }
 
     @Override
@@ -180,6 +188,12 @@ public class ChatActivity extends AppCompatActivity {
 
         presenceRef.onDisconnect().cancel();
         presenceRef.removeValue();
+    }
+
+    @Override
+    public void onLoadedUser(User user) {
+        raffles_count = user.getRaffles();
+        txtRafflesCount.setText(String.valueOf(raffles_count));
     }
 
     private void loadData() {
@@ -234,6 +248,7 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         };
+
         usersRef.child(receiver.getIdx()).addValueEventListener(receiverValueEventListenter);
     }
 
@@ -242,6 +257,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void startTrackingPresence(){
+
         presenceValueEventListenter = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -315,6 +331,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<Void> task) {
                 messageData.put("status", MessageStatus.DELIVERED.ordinal());
                 reference.setValue(messageData);
+                usersRef.child(sender.getIdx()).child("raffles").setValue(raffles_count+1);
             }
         });
 

@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
 import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
+import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserStatus;
@@ -35,10 +37,12 @@ import com.raffler.app.utils.References;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener{
+public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener, UserValueListener{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
+
+    private TextView txtRaffles;
 
     //Fragments
     private RafflesFragment rafflesFragment;
@@ -51,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     int[] unreadData ={0, 0, 0};
     Map<String, Integer> unreadCount = new HashMap<>();
 
-    private UnreadMessageListener unreadMessageListener;
+    private int raffles_count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         userStatusRef = References.getInstance().usersRef.child(AppManager.getInstance().userId).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
+
+        raffles_count = AppManager.getSession().getRaffles();
 
         //Initializing viewPager
         viewPager = (ViewPager) findViewById(R.id.viewpager);
@@ -140,8 +146,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 database.getReference("Users").child(AppManager.getInstance().userId).updateChildren(pushToken);
             }
         });
-
-
     }
 
     @Override
@@ -169,6 +173,11 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.menu_home, menu);
         // Associate searchable configuration with the SearchView
+        RelativeLayout rafflesLayout = (RelativeLayout) menu.findItem(R.id.action_raffles).getActionView();
+
+        txtRaffles = rafflesLayout.findViewById(R.id.tv_count);
+        txtRaffles.setText(String.valueOf(raffles_count));
+
         return true;
     }
 
@@ -176,12 +185,12 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.action_status:
+            /*case R.id.action_status:
                 Toast.makeText(this, "Home Status Click", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.action_settings:
                 Toast.makeText(this, "Home Settings Click", Toast.LENGTH_SHORT).show();
-                return true;
+                return true;*/
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -206,12 +215,21 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         updateTabBadgeCount(0, total_unread_count);
     }
 
+    @Override
+    public void onLoadedUser(User user) {
+
+        raffles_count = AppManager.getSession().getRaffles();
+        if (txtRaffles != null)
+            txtRaffles.setText(String.valueOf(raffles_count));
+    }
+
     private void setupViewPager(ViewPager viewPager) {
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         chatFragment = new ChatListFragment();
         chatFragment.setUnreadMessageListener(this);
         chatFragment.setChatItemClickListener(this);
+        chatFragment.setUserValueListener(this);
         rafflesFragment = new RafflesFragment();
         contactsFragment = new ContactsFragment();
         contactsFragment.setListener(this);
@@ -240,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     private void setupTabIcons()
     {
-        for(int i=0;i<tabTitle.length;i++)
+        for(int i=0; i<tabTitle.length; i++)
         {
             /*TabLayout.Tab tabitem = tabLayout.newTab();
             tabitem.setCustomView(prepareTabView(i));

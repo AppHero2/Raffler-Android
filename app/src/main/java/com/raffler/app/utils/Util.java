@@ -268,7 +268,8 @@ public class Util {
         }catch (Exception e){
             e.printStackTrace();
         }
-        return  value;
+        if(value == null) value = 0;
+        return value;
     }
 
     public static String getStringFromData(String key, Map<String, Object> data){

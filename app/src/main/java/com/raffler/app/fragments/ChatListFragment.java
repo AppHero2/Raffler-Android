@@ -25,10 +25,8 @@ import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
-import com.raffler.app.models.Chat;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
-import com.raffler.app.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,6 +51,7 @@ public class ChatListFragment extends Fragment {
 
     private UnreadMessageListener unreadMessageListener;
     private ChatItemClickListener chatItemClickListener;
+    private UserValueListener userValueListener;
 
     public ChatListFragment() {
 
@@ -92,6 +91,10 @@ public class ChatListFragment extends Fragment {
             @Override
             public void onLoadedUser(User user) {
                 loadData();
+
+                if (userValueListener != null) {
+                    userValueListener.onLoadedUser(user);
+                }
             }
         };
 
@@ -187,5 +190,9 @@ public class ChatListFragment extends Fragment {
 
     public void setChatItemClickListener(ChatItemClickListener chatItemClickListener) {
         this.chatItemClickListener = chatItemClickListener;
+    }
+
+    public void setUserValueListener(UserValueListener userValueListener) {
+        this.userValueListener = userValueListener;
     }
 }

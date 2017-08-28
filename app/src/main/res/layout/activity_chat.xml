@@ -12,32 +12,77 @@
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_chat"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:background="@color/colorPrimaryDark"
             app:popupTheme="@style/AppTheme.PopupOverlay">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <com.raffler.app.widgets.ATextView
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
-                    android:id="@+id/textView_toolbar_title"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                    android:text="Title"/>
-                <com.raffler.app.widgets.ATextView
-                    android:id="@+id/textView_toolbar_description"
+                    android:orientation="vertical"
+                    android:layout_toLeftOf="@+id/layout_raffles"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true">
+                    <com.raffler.app.widgets.ATextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/colorWhite"
+                        android:id="@+id/textView_toolbar_title"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:text="Title"/>
+                    <com.raffler.app.widgets.ATextView
+                        android:id="@+id/textView_toolbar_description"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/colorWhite"
+                        android:text="description"/>
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:id="@+id/layout_raffles"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
-                    android:text="description"/>
-            </LinearLayout>
+                    android:layout_height="48dp"
+                    android:padding="5dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true">
+
+                    <ImageView
+                        android:id="@+id/imgView"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_raffle_pack"/>
+
+                    <TextView
+                        android:id="@+id/tv_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="25dp"
+                        android:paddingLeft="7dp"
+                        android:paddingRight="7dp"
+                        android:background="@drawable/badge_round_yellow"
+                        android:gravity="center"
+                        android:text="0"
+                        android:layout_marginLeft="-22dp"
+                        android:layout_marginBottom="2dp"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="@dimen/medium_text"
+                        android:layout_alignParentBottom="true"
+                        android:layout_toRightOf="@+id/imgView"
+                        android:layout_toEndOf="@+id/imgView" />
+
+                </RelativeLayout>
+
+            </RelativeLayout>
 
         </android.support.v7.widget.Toolbar>
 
