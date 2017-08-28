@@ -1,6 +1,5 @@
 package com.raffler.app;
 
-import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
@@ -32,7 +31,6 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -67,7 +65,7 @@ public class RegisterUserActivity extends AppCompatActivity {
     private static final String TAG = "RegisterUserActivity";
 
     private FirebaseAuth mAuth;
-    private DatabaseReference userRef;
+    private DatabaseReference usersRef;
     private String userId;
 
     private EditText etName;
@@ -92,6 +90,12 @@ public class RegisterUserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register_user);
 
         userId = AppManager.getInstance().userId;
+        // firebase
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        usersRef = database.getReference("Users");
+        usersRef.child(userId).child("uid").setValue(userId);
+
         hud = KProgressHUD.create(this)
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
                 .setWindowColor(ContextCompat.getColor(this,R.color.colorTransparency))
@@ -103,7 +107,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_DONE){
                     String name = etName.getText().toString();
-                    userRef.child(userId).child("name").setValue(name);
+                    usersRef.child(userId).child("name").setValue(name);
                 }
                 return false;
             }
@@ -113,7 +117,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus){
                     String name = etName.getText().toString();
-                    userRef.child(userId).child("name").setValue(name);
+                    usersRef.child(userId).child("name").setValue(name);
                 }
             }
         });
@@ -144,13 +148,6 @@ public class RegisterUserActivity extends AppCompatActivity {
 
             }
         });
-
-
-        // firebase
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        userRef = database.getReference("Users");
-        userRef.child(userId).child("uid").setValue(userId);
 
 
         // get owner name as dummy data
@@ -208,6 +205,9 @@ public class RegisterUserActivity extends AppCompatActivity {
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     // permissions granted.
                     loadUserInfoFromPhone();
+
+                    // sync user data from server
+                    checkExistUser();
                 } else {
                     String permissionList = "";
                     for (String per : permissions) {
@@ -399,7 +399,7 @@ public class RegisterUserActivity extends AppCompatActivity {
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
                     final Uri profileURL = taskSnapshot.getDownloadUrl();
-                    userRef.child(userId).child("photo").setValue(profileURL.toString());
+                    usersRef.child(userId).child("photo").setValue(profileURL.toString());
 
                     Util.setProfileImage(profileURL.toString(), imgProfile);
                 }
@@ -411,17 +411,22 @@ public class RegisterUserActivity extends AppCompatActivity {
     }
 
     private void checkExistUser(){
+
+        if (!checkPermissions()) return;
+
         hud.show();
-        Query query = References.getInstance().usersRef.child(userId);
+        Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(userId);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() != null) {
-                    Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
-                    User user = new User(userData);
-                    etName.setText(user.getName());
-                    Util.setProfileImage(user.getPhoto(), imgProfile);
-                    AppManager.saveSession(user);
+                    for (DataSnapshot child: dataSnapshot.getChildren()) {
+                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
+                        User user = new User(userData);
+                        etName.setText(user.getName());
+                        Util.setProfileImage(user.getPhoto(), imgProfile);
+                        AppManager.saveSession(user);
+                    }
                 }
 
                 hud.dismiss();

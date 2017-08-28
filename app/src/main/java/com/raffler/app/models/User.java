@@ -62,6 +62,9 @@ public class User {
     }
 
     public String getPhoto() {
+        if (photo == null) {
+            return "";
+        }
         return photo;
     }
 

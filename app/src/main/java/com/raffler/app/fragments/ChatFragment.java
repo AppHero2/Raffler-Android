@@ -230,6 +230,9 @@ public class ChatFragment extends BaseFragment {
 
     private void updateMessage (Map<String, Object> messageData) {
         Message message = new Message(messageData);
+        if (message.getIdx() == null)
+            return;
+
         boolean isExist = false;
         for (Message item : messages) {
             if (item.getIdx().equals(message.getIdx())) {

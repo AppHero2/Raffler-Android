@@ -43,7 +43,8 @@ public class Message {
         this.messageType = MessageType.values()[getIntFromData("messageType", data)];
         this.status = MessageStatus.values()[getIntFromData("status", data)];
         String userId = AppManager.getInstance().userId;
-        if (userId != null) this.userType = senderId.equals(userId) ? SELF : OTHER;
+        if (userId != null && this.senderId != null)
+            this.userType = senderId.equals(userId) ? SELF : OTHER;
         this.createdAt = getDateFromData("createdAt", data);
         this.updatedAt = getDateFromData("updatedAt", data);
     }

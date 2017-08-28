@@ -192,11 +192,11 @@ public class FindContactActivity extends AppCompatActivity {
                 cell = (Cell) convertView.getTag();
             }
 
-            Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
-            convertView.startAnimation(animation);
-            lastPosition = position;
-
             cell.setUserData(getItem(position));
+
+            /*Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
+            convertView.startAnimation(animation);
+            lastPosition = position;*/
 
             return convertView;
         }
@@ -216,8 +216,7 @@ public class FindContactActivity extends AppCompatActivity {
             String photo = user.getPhoto();
 
             this.txtName.setText(name);
-            if (photo != null)
-                Util.setProfileImage(photo, this.imgProfile);
+            Util.setProfileImage(photo, this.imgProfile);
         }
     }
 }

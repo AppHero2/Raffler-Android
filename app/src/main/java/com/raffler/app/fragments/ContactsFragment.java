@@ -245,8 +245,7 @@ public class ContactsFragment extends Fragment {
                         String photo = user.getPhoto();
 
                         txtName.setText(name);
-                        if (photo != null)
-                            Util.setProfileImage(photo, imgProfile);
+                        Util.setProfileImage(photo, imgProfile);
                     }
                 }
 

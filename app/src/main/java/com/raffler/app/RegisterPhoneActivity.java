@@ -219,7 +219,8 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 Log.d(TAG, "onVerificationCompleted:" + credential);
 
                 hud.dismiss();
-                //signInWithPhoneAuthCredential(credential);
+
+                signInWithPhoneAuthCredential(credential);
             }
 
             @Override

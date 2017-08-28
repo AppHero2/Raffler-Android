@@ -72,7 +72,11 @@ public class Util {
     }
 
     public static void setProfileImage(String url, ImageView imgView){
-        ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, new Util.AnimateFirstDisplayListener());
+        if (url != null) {
+            ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, new Util.AnimateFirstDisplayListener());
+        } else {
+            //imgView.setImageDrawable(R.drawable.ic_profile_person);
+        }
     }
 
     public static void requestPermission(Activity activity, String permission) {

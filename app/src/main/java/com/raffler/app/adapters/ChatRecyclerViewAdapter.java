@@ -103,12 +103,16 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             if (holder.mItem.getIdx().equals(lastMessageId)) {
                 References.getInstance().chatsRef.child(chatId).child("status").setValue(MessageStatus.READ.ordinal());
             }
-            DatabaseReference reference = References.getInstance().messagesRef.child(chatId).child(holder.mItem.getIdx()).child("status");
-            reference.setValue(MessageStatus.READ.ordinal());
 
-            Map<String, Object> lastSeen = new HashMap<>();
-            lastSeen.put(chatId, System.currentTimeMillis());
-            References.getInstance().usersRef.child(AppManager.getInstance().userId).child("lastSeen").updateChildren(lastSeen);
+            if (holder.mItem.getStatus() != MessageStatus.READ) {
+                DatabaseReference reference = References.getInstance().messagesRef.child(chatId).child(holder.mItem.getIdx()).child("status");
+                reference.setValue(MessageStatus.READ.ordinal());
+
+                Map<String, Object> lastSeen = new HashMap<>();
+                lastSeen.put(chatId, System.currentTimeMillis());
+                References.getInstance().usersRef.child(AppManager.getInstance().userId).child("lastSeen").updateChildren(lastSeen);
+            }
+
         }
 
         int resId;
