@@ -36,9 +36,9 @@ import java.util.Map;
 public class Util {
 
     public static DisplayImageOptions displayImageOptions_original = new DisplayImageOptions.Builder()
-            .showImageOnLoading(android.R.drawable.sym_def_app_icon)
-            .showImageForEmptyUri(android.R.drawable.sym_def_app_icon)
-            .showImageOnFail(android.R.drawable.sym_def_app_icon)
+            .showImageOnLoading(R.drawable.img_logo)
+            .showImageForEmptyUri(R.drawable.img_logo)
+            .showImageOnFail(R.drawable.img_logo)
             .cacheInMemory(true)
             .cacheOnDisk(true)
             .considerExifParams(true)
@@ -74,6 +74,14 @@ public class Util {
     public static void setProfileImage(String url, ImageView imgView){
         if (url != null) {
             ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, new Util.AnimateFirstDisplayListener());
+        } else {
+            //imgView.setImageDrawable(R.drawable.ic_profile_person);
+        }
+    }
+
+    public static void setURLImage(String url, ImageView imgView){
+        if (url != null) {
+            ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_original, new Util.AnimateFirstDisplayListener());
         } else {
             //imgView.setImageDrawable(R.drawable.ic_profile_person);
         }

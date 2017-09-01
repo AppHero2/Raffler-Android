@@ -52,11 +52,13 @@ dependencies {
     })
     compile(name: 'library-universal-image-loader', ext: 'aar')
     compile(name: 'kprogresshud-green', ext: 'aar')
+    compile(name: 'LabelView', ext: 'aar')
     //--> onesginal
     compile('com.onesignal:OneSignal:[3.6.0, 3.99.99]') {
         exclude group: 'com.google.android.gms'
     }
     //--> onsignal
+
     compile 'com.google.code.gson:gson:2.7'
     compile 'com.google.android.gms:play-services-gcm:11.0.4'
     compile 'com.google.android.gms:play-services-location:11.0.4'
@@ -72,6 +74,15 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        def requested = details.requested
+        if (requested.group == 'com.android.support') {
+            if (!requested.name.startsWith("multidex")) {
+                details.useVersion '26.0.1'
+            }
+        }
+    }
+}
 
 apply plugin: 'com.google.gms.google-services'

@@ -16,7 +16,7 @@ public class References {
     private FirebaseDatabase database;
     private Context context;
 
-    public DatabaseReference usersRef, contactsRef, chatsRef, messagesRef;
+    public DatabaseReference usersRef, contactsRef, chatsRef, messagesRef, rafflesRef;
 
     public static void init(Context context, FirebaseDatabase database) {
         instance = new References(context, database);
@@ -37,6 +37,7 @@ public class References {
         contactsRef = database.getReference(Constant.CONTACTS);
         chatsRef = database.getReference(Constant.CHAT);
         messagesRef = database.getReference(Constant.MESSAGES);
+        rafflesRef = database.getReference(Constant.RAFFLES);
     }
 
 

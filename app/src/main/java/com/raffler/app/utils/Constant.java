@@ -8,6 +8,7 @@ public class Constant {
     public static final String USER = "Users";
     public static final String CONTACTS = "Contacts";
     public static final String CHAT = "Chats";
+    public static final String RAFFLES = "Raffles";
     public static final String MESSAGES = "messages";
     public static final String META = "meta";
     public static final String INFORMATION = "information";

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorPrimary">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="3dp">
+
+        <com.lid.lib.LabelImageView
+            android:id="@+id/img_cell_cover"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            app:label_orientation="LEFT_TOP"
+            app:label_text="R25"
+            app:label_backgroundColor="#C2185B" />
+
+        <TextView
+            android:id="@+id/txt_cell_description"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:text="adsfas asdfasd ds d dfdfa\n adfsdfasdf adfasd ads sadf asdfasd asdf"
+            android:textSize="16sp"
+            android:textColor="@color/colorAccent"
+            android:layout_toRightOf="@+id/img_cell_cover"
+            android:layout_toEndOf="@+id/img_cell_cover"
+            android:layout_above="@+id/txt_cell_timer" />
+
+        <com.raffler.app.widgets.CustomTextView
+            android:id="@+id/txt_cell_timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="02:05:12 remaining"
+            android:textColor="@color/colorAccent"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            app:outerShadowRadius="1px"
+            app:strokeColor="@color/colorWhite"
+            app:strokeJoinStyle="miter"
+            app:strokeWidth="2px"
+            android:layout_marginBottom="10dp"
+            android:layout_alignParentBottom="true"
+            android:layout_toRightOf="@+id/img_cell_cover"
+            android:layout_toEndOf="@+id/img_cell_cover" />
+    </RelativeLayout>
+
+
+</RelativeLayout>
