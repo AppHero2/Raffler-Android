@@ -27,6 +27,9 @@
 
     <!-- Raffles -->
     <string name="raffles_title">Raffles</string>
+    <string name="raffles_alert_expired">This raffle is already expired.</string>
+    <string name="raffles_alert_no_enough">Not enough your points to get&#160;</string>
+    <string name="raffles_alert_make_sure">Are you really sure to get&#160;</string>
 
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>

@@ -1,9 +1,9 @@
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raffler.app.fragments.ContactsFragment">
+    tools:context="com.raffler.app.fragments.ContactsFragment"
+    android:background="@color/colorPrimary">
 
     <TextView
         android:id="@+id/txtNoData"
@@ -16,8 +16,8 @@
     <ListView
         android:id="@+id/list_contacts"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </ListView>
+        android:layout_height="match_parent"
+        tools:listitem="@layout/row_contact_cell"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_contact"

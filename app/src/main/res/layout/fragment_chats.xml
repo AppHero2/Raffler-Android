@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="com.raffler.app.fragments.ChatListFragment">
+    tools:context="com.raffler.app.fragments.ChatListFragment"
+    android:background="@color/colorPrimary">
 
     <TextView
         android:id="@+id/txtNoData"

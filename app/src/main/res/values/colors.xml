@@ -11,6 +11,7 @@
     <color name="colorGreen">#DCEDC8</color>
     <color name="colorEmerland">#2ecc71</color>
     <color name="colorTransparency">#00000000</color>
+    <color name="colorTransYellow">#a0ffd700</color>
 
     <!-- Text colors -->
     <color name="colorTextPrimary">#FFFFFF</color>
@@ -20,8 +21,8 @@
     <color name="bgColor_overlay">#60000000</color>
     <color name="bgColor_alertview_alert">#3d3d3d</color>
     <color name="bgColor_alertview_alert_start">#3d3d3d</color>
-    <color name="textColor_alert_title">#3d3d3d</color>
-    <color name="textColor_alert_msg">#3d3d3d</color>
+    <color name="textColor_alert_title">#ffd700</color>
+    <color name="textColor_alert_msg">#a0ffd700</color>
     <color name="textColor_actionsheet_title">#ffd700</color>
     <color name="textColor_actionsheet_msg">#a0ffd700</color>
     <color name="bgColor_divier">#202020</color>

@@ -11,8 +11,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -22,6 +22,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.lid.lib.LabelImageView;
 import com.raffler.app.R;
+import com.raffler.app.alertView.AlertView;
+import com.raffler.app.alertView.OnItemClickListener;
+import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.Raffle;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.TimeUtil;
@@ -29,6 +32,7 @@ import com.raffler.app.utils.Util;
 import com.raffler.app.widgets.CustomTextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -45,6 +49,7 @@ public class RafflesFragment extends Fragment {
 
     private List<Raffle> raffles = new ArrayList<>();
     private RafflesAdapter adapter;
+    private String userId;
 
     public RafflesFragment() {
         // Required empty public constructor
@@ -56,6 +61,7 @@ public class RafflesFragment extends Fragment {
         setHasOptionsMenu(true);
 
         rafflesRef = References.getInstance().rafflesRef;
+        userId = AppManager.getSession().getIdx();
     }
 
     @Override
@@ -75,6 +81,42 @@ public class RafflesFragment extends Fragment {
         adapter = new RafflesAdapter(getActivity(), raffles);
         adapter.startUpdateTimer();
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                Cell cell = (Cell) view.getTag();
+                final Raffle raffle = cell.getData();
+                int raffles_num = raffle.getRaffles_num();
+                boolean isExpired = cell.isExpired();
+                if (isExpired) {
+                    Util.showAlert(getString(R.string.alert_title_notice),
+                            getString(R.string.raffles_alert_expired), getActivity());
+                } else {
+                    if (AppManager.getSession().getRaffles() < raffles_num) {
+                        Util.showAlert(getString(R.string.alert_title_notice),
+                                getString(R.string.raffles_alert_no_enough), getActivity());
+                    } else {
+                        AlertView alertView = new AlertView(getString(R.string.alert_title_notice),
+                                getString(R.string.raffles_alert_make_sure),
+                                getString(R.string.alert_button_cancel),
+                                new String[]{getString(R.string.alert_button_okay)}, null,
+                                getActivity(),
+                                AlertView.Style.Alert, new OnItemClickListener() {
+                            @Override
+                            public void onItemClick(Object o, int position) {
+                                if (position != AlertView.CANCELPOSITION) {
+                                    Map<String, Object> dicUser = new HashMap<>();
+                                    dicUser.put(userId, false);
+                                    rafflesRef.child(raffle.getIdx()).updateChildren(dicUser);
+                                }
+                            }
+                        });
+                        alertView.show();
+                    }
+                }
+            }
+        });
 
         startTrackingRaffles();
         return view;
@@ -236,6 +278,7 @@ public class RafflesFragment extends Fragment {
         public CustomTextView txtTimer;
         public TextView txtDescription;
         private Raffle raffle;
+        private boolean isExpired = false;
 
         public Cell(View itemView) {
             imgCover = (LabelImageView) itemView.findViewById(R.id.img_cell_cover);
@@ -252,6 +295,14 @@ public class RafflesFragment extends Fragment {
             txtDescription.setText(raffle.getDescription());
         }
 
+        public Raffle getData() {
+            return this.raffle;
+        }
+
+        public boolean isExpired() {
+            return isExpired;
+        }
+
         public void updateTimeRemaining(long currentTime) {
             long timeDiff = raffle.getEndingAt().getTime() - currentTime;
             if (timeDiff > 0) {
@@ -259,6 +310,7 @@ public class RafflesFragment extends Fragment {
                 txtTimer.setText(remaining);
             } else {
                 txtTimer.setText("Expired!!");
+                this.isExpired = true;
             }
         }
     }
