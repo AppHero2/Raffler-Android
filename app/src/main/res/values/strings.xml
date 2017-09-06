@@ -4,6 +4,8 @@
     <!-- Buttons -->
     <string name="button_next">Next</string>
     <string name="button_resend">Resend</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_save">Save</string>
 
     <!-- Register Phone -->
     <string name="register_verify_phone">Verify your phone number</string>
@@ -33,6 +35,13 @@
 
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>
+    <string name="contact_add_title">New Contact</string>
+    <string name="contact_add_name">Name</string>
+    <string name="contact_add_phone">Phone</string>
+    <string name="contact_add_email">Email</string>
+    <string name="contact_add_address">Address</string>
+    <string name="contact_add_groups">Groups</string>
+    <string name="contact_add_ringtone">Ringtone</string>
 
     <!-- Find Contact -->
     <string name="find_contact_title">Find Friends</string>

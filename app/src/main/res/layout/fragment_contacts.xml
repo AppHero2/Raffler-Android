@@ -11,7 +11,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:text="@string/contact_no_data"
-        android:textSize="@dimen/large_text"/>
+        android:textSize="@dimen/large_text"
+        android:textColor="@color/colorAccent"/>
 
     <ListView
         android:id="@+id/list_contacts"

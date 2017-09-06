@@ -10,7 +10,7 @@
 
     <include
         android:id="@+id/toolbar"
-        layout="@layout/toolbar_contact"
+        layout="@layout/toolbar_find"
         android:layout_width="match_parent"
         android:layout_height="50dp" />
 

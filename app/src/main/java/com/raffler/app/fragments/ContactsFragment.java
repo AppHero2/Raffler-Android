@@ -2,7 +2,11 @@ package com.raffler.app.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -26,11 +30,9 @@ import android.widget.Toast;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.kaopiz.kprogresshud.KProgressHUD;
-import com.raffler.app.FindContactActivity;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
@@ -39,9 +41,13 @@ import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static android.app.Activity.RESULT_OK;
 
 
 /**
@@ -49,13 +55,17 @@ import java.util.Map;
  */
 public class ContactsFragment extends Fragment {
 
+    private static final int Request_Contact = 711;
+    private static final String TAG = "ContactsFragment";
+
     private DatabaseReference usersRef, contactsRef;
 
     private ListView listView;
     private KProgressHUD hud;
     private FloatingActionButton btnNewContact;
 
-    private List<String> contacts = new ArrayList<>();
+    private List<String> userIds = new ArrayList<>();
+    private Map<String, String> contacts = new HashMap<>();
 
     private ContactListAdapter adapter;
     private ChatItemClickListener listener;
@@ -107,10 +117,57 @@ public class ContactsFragment extends Fragment {
         btnNewContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getActivity(), FindContactActivity.class));
+                /*  set profile photo
+                ArrayList<ContentValues> data = new ArrayList<ContentValues>();
+                Bitmap bit = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+                ContentValues row = new ContentValues();
+                row.put(ContactsContract.Contacts.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE);
+                row.put(ContactsContract.CommonDataKinds.Photo.PHOTO, bitmapToByteArray(bit));
+                data.add(row);*/
+
+                Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION, ContactsContract.Contacts.CONTENT_URI);
+                // Sets the MIME type to match the Contacts Provider
+                intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
+                // Inserts a Phone number
+                /*intent.putExtra(ContactsContract.Intents.Insert.PHONE, mPhoneNumber.getText())*/
+
+                /* set profile photo
+                intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, data);*/
+
+                startActivityForResult(intent, Request_Contact);
             }
         });
         return view;
+    }
+
+    private byte[] bitmapToByteArray(Bitmap bitmap){
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        return byteArray;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Request_Contact && resultCode == RESULT_OK) {
+            // Get the URI and query the content provider for the phone number
+            Uri contactUri = data.getData();
+            try {
+                Uri result = data.getData();
+                Log.v(TAG, "Got a contact result: " + result.toString());
+
+                // get the contact id from the Uri
+                String id = result.getLastPathSegment();
+                Log.d(TAG, id);
+
+                loadContacts();
+
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        }
     }
 
     @Override
@@ -118,6 +175,8 @@ public class ContactsFragment extends Fragment {
         super.onResume();
 
         loadContacts();
+
+        loadUsers();
     }
 
     @Override
@@ -143,8 +202,8 @@ public class ContactsFragment extends Fragment {
         }
     }
 
-    private void loadContacts(){
-        contacts.clear();
+    private void loadUsers(){
+        userIds.clear();
 
         Query query = contactsRef;
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -153,7 +212,7 @@ public class ContactsFragment extends Fragment {
                 if (dataSnapshot.getValue() != null) {
                     for (DataSnapshot child: dataSnapshot.getChildren()){
                         String userId = child.getKey();
-                        contacts.add(userId);
+                        userIds.add(userId);
                     }
 
                     adapter.notifyDataSetChanged();
@@ -168,6 +227,47 @@ public class ContactsFragment extends Fragment {
                 hud.dismiss();
             }
         });
+    }
+
+    private void loadContacts(){
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String[] projection    = new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER};
+
+        Cursor people = getActivity().getContentResolver().query(uri, projection, null, null, null);
+
+        int indexName = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+        int indexNumber = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+        if(people.moveToFirst()) {
+            do {
+                String name   = people.getString(indexName);
+                String number = people.getString(indexNumber);
+                // Do work...
+                if (number != null){
+                    contacts.put(number, name);
+                }
+
+            } while (people.moveToNext());
+        }
+    }
+
+    private ArrayList<String> loadCustomTypeContacts(){
+        Cursor c = getActivity().getContentResolver().query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[] { ContactsContract.RawContacts.CONTACT_ID, ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY },
+                ContactsContract.RawContacts.ACCOUNT_TYPE + "= ?",
+                new String[] { "com.raffler.app" }, null);
+
+        ArrayList<String> myContacts = new ArrayList<String>();
+        int contactNameColumn = c.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY);
+        while (c.moveToNext())
+        {
+            // You can also read RawContacts.CONTACT_ID to read the
+            // ContactsContract.Contacts table or any of the other related ones.
+            myContacts.add(c.getString(contactNameColumn));
+        }
+
+        return myContacts;
     }
 
     public void setListener(ChatItemClickListener listener) {
@@ -186,12 +286,12 @@ public class ContactsFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return contacts.size();
+            return userIds.size();
         }
 
         @Override
         public String getItem(int position) {
-            return contacts.get(position);
+            return userIds.get(position);
         }
 
         @Override

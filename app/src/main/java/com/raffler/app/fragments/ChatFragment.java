@@ -137,7 +137,6 @@ public class ChatFragment extends BaseFragment {
                         final int scroll = currentScroll +
                                 Math.abs(i7 - i3);
 
-
                         if (scroll >= maxScroll)
                             if (getView() != null)
                                 getView().postDelayed(new Runnable() {

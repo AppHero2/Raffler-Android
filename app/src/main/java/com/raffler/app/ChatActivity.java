@@ -1,17 +1,23 @@
 package com.raffler.app;
 
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -61,6 +67,8 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private User sender, receiver;
     private FrameLayout btnSend;
     private ChatFragment chatFragment;
+    private LinearLayout layoutTopBanner;
+    private AppCompatButton btnBlock, btnAdd;
 
     private DatabaseReference usersRef, messagesRef, chatsRef, presenceRef, connnectedUsersRef;
     private String chatId, lastMessageId;
@@ -69,6 +77,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private NewMessageListener newMessageListener;
 
     private List<String> connectedUsers = new ArrayList<>();
+    private Map<String, String> contacts = new HashMap<>();
 
     private int raffles_count = 0;
 
@@ -108,6 +117,12 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 }
             });
         }
+
+
+        layoutTopBanner = (LinearLayout) findViewById(R.id.layout_top_banner);
+        layoutTopBanner.setVisibility(View.GONE);
+        btnBlock = (AppCompatButton) findViewById(R.id.btnBlock);
+        btnAdd = (AppCompatButton) findViewById(R.id.btnAdd);
 
         titleToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_title);
         descToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
@@ -155,7 +170,11 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         });
 
+        loadContacts();
+
         loadData();
+
+        checkSenderStatus();
 
         startTrackingReceiver();
         startTrackingPresence();
@@ -194,6 +213,48 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     public void onLoadedUser(User user) {
         raffles_count = user.getRaffles();
         txtRafflesCount.setText(String.valueOf(raffles_count));
+    }
+
+    private void checkSenderStatus() {
+        boolean isExisting = false;
+        if (contacts != null){
+            for (Map.Entry<String, String> entry : contacts.entrySet()){
+                String phoneNumber = entry.getKey();
+                if (phoneNumber.equals(sender.getPhone())) {
+                    isExisting = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isExisting) {
+            layoutTopBanner.setVisibility(View.VISIBLE);
+        } else {
+            layoutTopBanner.setVisibility(View.GONE);
+        }
+    }
+
+    private void loadContacts(){
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String[] projection    = new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER};
+
+        Cursor people = getContentResolver().query(uri, projection, null, null, null);
+
+        int indexName = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+        int indexNumber = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+        if(people.moveToFirst()) {
+            do {
+                String name   = people.getString(indexName);
+                String number = people.getString(indexNumber);
+                // Do work...
+                if (number != null){
+                    contacts.put(number, name);
+                }
+
+            } while (people.moveToNext());
+        }
     }
 
     private void loadData() {

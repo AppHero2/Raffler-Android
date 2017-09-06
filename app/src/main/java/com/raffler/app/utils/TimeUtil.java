@@ -41,9 +41,9 @@ public class TimeUtil {
             if (days == 0) {
                 res = String.format("%02d:%02d:%02d", hours, minutes, seconds);//String.format("%02dh%02dm%02ds", hours, minutes, seconds);
             } else if (years == 0) {
-                res = String.format("%ddays %02d:%02d:%02d", days, hours, minutes, seconds);//String.format("%ddays %02dh%02dm%02ds", days, hours, minutes, seconds);
+                res = String.format("%d days %02d:%02d:%02d", days, hours, minutes, seconds);//String.format("%ddays %02dh%02dm%02ds", days, hours, minutes, seconds);
             } else {
-                res = String.format("%dyrs %ddays %02d:%02d:%02d", years, days, hours, minutes, seconds);//String.format("%dyrs %ddays %02dh%02dm%02ds", years, days, hours, minutes, seconds);
+                res = String.format("%d yrs %d days %02d:%02d:%02d", years, days, hours, minutes, seconds);//String.format("%dyrs %ddays %02dh%02dm%02ds", years, days, hours, minutes, seconds);
             }
         }
         return res;

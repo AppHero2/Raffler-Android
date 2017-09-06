@@ -15,7 +15,7 @@ android {
         applicationId "com.raffler.app"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 25
+        versionCode 26
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",
@@ -84,5 +84,6 @@ configurations.all {
         }
     }
 }
+
 
 apply plugin: 'com.google.gms.google-services'

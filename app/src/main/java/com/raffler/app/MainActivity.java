@@ -1,6 +1,8 @@
 package com.raffler.app;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -34,6 +36,7 @@ import com.raffler.app.models.User;
 import com.raffler.app.models.UserStatus;
 import com.raffler.app.utils.References;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -153,13 +156,15 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         super.onResume();
 
         userStatusRef.setValue(UserStatus.ONLINE.ordinal());
+
+        loadContacts();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        userStatusRef.setValue(UserStatus.AWAY.ordinal());
+//        userStatusRef.setValue(UserStatus.AWAY.ordinal());
     }
 
     @Override
@@ -221,6 +226,24 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         raffles_count = AppManager.getSession().getRaffles();
         if (txtRaffles != null)
             txtRaffles.setText(String.valueOf(raffles_count));
+    }
+
+    private ArrayList<String> loadContacts(){
+        Cursor c = getContentResolver().query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[] { ContactsContract.RawContacts.CONTACT_ID, ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY },
+                ContactsContract.RawContacts.ACCOUNT_TYPE + "= ?",
+                new String[] { "com.raffler.app.Account" }, null);
+
+        ArrayList<String> myContacts = new ArrayList<String>();
+        int contactNameColumn = c.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY);
+        while (c.moveToNext())
+        {
+            // You can also read RawContacts.CONTACT_ID to read the
+            // ContactsContract.Contacts table or any of the other related ones.
+            myContacts.add(c.getString(contactNameColumn));
+        }
+
+        return myContacts;
     }
 
     private void setupViewPager(ViewPager viewPager) {
