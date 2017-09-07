@@ -75,7 +75,7 @@ public class AppSplashActivity extends AppCompatActivity {
     private void dismissSplash(){
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null){
-            AppManager.getInstance().trackUser(firebaseUser.getUid());
+            AppManager.getInstance().startTrackingUser(firebaseUser.getUid());
             User user = AppManager.getSession();
             if (user != null) {
                 startActivity(new Intent(this, MainActivity.class));

@@ -4,9 +4,9 @@ android {
     signingConfigs {
         config {
             keyAlias 'raffler'
-            keyPassword '123456'
-            storeFile file('/Users/Ghost/Documents/Git/Raffler-Android/com_raffler_app.jks')
-            storePassword '123456'
+            keyPassword '??????'
+            storeFile file('F:/Android Projects/Raffler-Android/com_raffler_app.jks')
+            storePassword '??????'
         }
     }
     compileSdkVersion 26
@@ -15,7 +15,7 @@ android {
         applicationId "com.raffler.app"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 26
+        versionCode 27
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",

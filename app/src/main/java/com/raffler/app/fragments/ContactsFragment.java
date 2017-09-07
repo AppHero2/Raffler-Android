@@ -55,7 +55,7 @@ import static android.app.Activity.RESULT_OK;
  */
 public class ContactsFragment extends Fragment {
 
-    private static final int Request_Contact = 711;
+    private static final int REQUEST_CONTACT = 711;
     private static final String TAG = "ContactsFragment";
 
     private DatabaseReference usersRef, contactsRef;
@@ -65,7 +65,6 @@ public class ContactsFragment extends Fragment {
     private FloatingActionButton btnNewContact;
 
     private List<String> userIds = new ArrayList<>();
-    private Map<String, String> contacts = new HashMap<>();
 
     private ContactListAdapter adapter;
     private ChatItemClickListener listener;
@@ -104,7 +103,6 @@ public class ContactsFragment extends Fragment {
                     Chat chat = new Chat(cell.user, null, 0);
                     listener.onSelectedChat(chat);
                 }
-
             }
         });
 
@@ -134,7 +132,7 @@ public class ContactsFragment extends Fragment {
                 /* set profile photo
                 intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, data);*/
 
-                startActivityForResult(intent, Request_Contact);
+                startActivityForResult(intent, REQUEST_CONTACT);
             }
         });
         return view;
@@ -151,30 +149,58 @@ public class ContactsFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == Request_Contact && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_CONTACT && resultCode == RESULT_OK) {
+
+            String contactID = null;
+            String contactNumber = null;
+            String contactName = "";
             // Get the URI and query the content provider for the phone number
             Uri contactUri = data.getData();
-            try {
-                Uri result = data.getData();
-                Log.v(TAG, "Got a contact result: " + result.toString());
-
-                // get the contact id from the Uri
-                String id = result.getLastPathSegment();
-                Log.d(TAG, id);
-
-                loadContacts();
-
-            } catch (Exception e) {
-                Log.e(TAG, e.toString());
+            // getting contacts ID
+            Cursor cursorID = getActivity().getContentResolver().query(contactUri,
+                    new String[]{ContactsContract.Contacts._ID},
+                    null, null, null);
+            if (cursorID.moveToFirst()) {
+                contactID = cursorID.getString(cursorID.getColumnIndex(ContactsContract.Contacts._ID));
             }
+            cursorID.close();
+            Cursor cursorName = getActivity().getContentResolver().query(contactUri, null, null, null, null);
+            if (cursorName.moveToFirst()) {
+                // DISPLAY_NAME = The display name for the contact.
+                // HAS_PHONE_NUMBER =   An indicator of whether this contact has at least one phone number.
+                contactName = cursorName.getString(cursorName.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+            }
+
+            cursorName.close();
+
+
+            // Using the contact ID now we will get contact phone number
+            Cursor cursorPhone = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                    /*ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ? AND " +
+                            ContactsContract.CommonDataKinds.Phone.TYPE + " = " +
+                            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,*/
+
+                    new String[]{contactID},
+                    null);
+
+            if (cursorPhone.moveToFirst()) {
+                contactNumber = cursorPhone.getString(cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            }
+
+            cursorPhone.close();
+
+            Log.d(TAG, "Contact Phone Number: " + contactNumber);
+
+            AppManager.getInstance().updatePhoneContacts();
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        loadContacts();
 
         loadUsers();
     }
@@ -227,29 +253,6 @@ public class ContactsFragment extends Fragment {
                 hud.dismiss();
             }
         });
-    }
-
-    private void loadContacts(){
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String[] projection    = new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER};
-
-        Cursor people = getActivity().getContentResolver().query(uri, projection, null, null, null);
-
-        int indexName = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-        int indexNumber = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-
-        if(people.moveToFirst()) {
-            do {
-                String name   = people.getString(indexName);
-                String number = people.getString(indexNumber);
-                // Do work...
-                if (number != null){
-                    contacts.put(number, name);
-                }
-
-            } while (people.moveToNext());
-        }
     }
 
     private ArrayList<String> loadCustomTypeContacts(){

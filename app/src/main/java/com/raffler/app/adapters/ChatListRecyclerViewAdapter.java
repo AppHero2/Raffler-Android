@@ -15,7 +15,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
-import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.ChatType;
@@ -26,6 +25,8 @@ import com.raffler.app.utils.Util;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.raffler.app.utils.Util.getMapDataFromData;
 
 public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRecyclerViewAdapter.ViewHolder> {
 
@@ -73,6 +74,8 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
         public String mItem;
         public User mUser;
         public Message mMessage;
+        public String mContactPhone;
+        public String mContactName;
         public int mUnreadCount;
         public int typeTextColor;
 
@@ -98,6 +101,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                     if (dataSnapshot.getValue() != null) {
                         Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
                         Message message = new Message(messageData);
+                        Map<String, Object> phones = getMapDataFromData("phones", messageData);
                         if (message.getChatType() == ChatType.PERSONAL) {
                             String key = dataSnapshot.getKey();
                             String[] userIds = Util.getUserIdsFrom(key);
@@ -107,7 +111,17 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                                     contactId = userId;
                                 }
                             }
+
+                            mContactPhone = (String) phones.get(contactId);
+                            if (AppManager.getInstance().isExistingPhoneContact(mContactPhone)){
+                                mContactName = AppManager.getInstance().phoneContacts.get(mContactPhone);
+                                mIdView.setText(mContactName);
+                            } else {
+                                mIdView.setText(mContactPhone);
+                            }
+
                             updateData(message, contactId);
+
                         } else {
 
                         }
@@ -141,7 +155,8 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             AppManager.getUser(contactId, new UserValueListener() {
                 @Override
                 public void onLoadedUser(final User user) {
-                    mIdView.setText(user.getName());
+                    if (mContactPhone == null)
+                        mIdView.setText(user.getName());
                     Util.setProfileImage(user.getPhoto(), imgProfile);
                     mUser = user;
                 }

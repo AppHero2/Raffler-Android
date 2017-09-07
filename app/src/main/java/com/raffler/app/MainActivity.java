@@ -158,6 +158,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         userStatusRef.setValue(UserStatus.ONLINE.ordinal());
 
         loadContacts();
+
+        AppManager.getInstance().updatePhoneContacts();
     }
 
     @Override

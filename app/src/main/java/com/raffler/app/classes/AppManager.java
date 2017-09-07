@@ -2,7 +2,11 @@ package com.raffler.app.classes;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -43,6 +47,7 @@ public class AppManager {
 
     public Chat selectedChat;
     public String userId;
+    public Map<String, String> phoneContacts = new HashMap<>();
 
     private AppManager() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -53,7 +58,9 @@ public class AppManager {
         userRef = database.getReference("Users");
     }
 
-    public void trackUser(String uid) {
+    public void startTrackingUser(String uid) {
+        if (trackUserListener != null)
+            return;
         trackUserListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -78,7 +85,7 @@ public class AppManager {
         userRef.child(uid).addValueEventListener(trackUserListener);
     }
 
-    public void stopTrackUser(String uid){
+    public void stopTrackingUser(String uid){
         userRef.child(uid).removeEventListener(trackUserListener);
     }
 
@@ -201,6 +208,23 @@ public class AppManager {
         editor.commit();
     }
 
+    public static void saveContact(Map<String,Object> contacts){
+        Context context = AppManager.getInstance().context;
+        SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String contactsDic = gson.toJson(contacts);
+        editor.putString("contacts", contactsDic);
+    }
+
+    public static Map<String, Object> getContacts(){
+        Context context = AppManager.getInstance().context;
+        SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
+        String contactsDic = sharedPreferences.getString("contacts", null);
+        Map<String,Object> contacts = new Gson().fromJson(contactsDic, new TypeToken<Map<String, Object>>(){}.getType());
+        return contacts;
+    }
+
     public void setContext(Context context) {
         this.context = context;
     }
@@ -211,5 +235,46 @@ public class AppManager {
 
     public void setUserValueListenerForChat(UserValueListener userValueListenerForChat) {
         this.userValueListenerForChat = userValueListenerForChat;
+    }
+
+    public void updatePhoneContacts(){
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String[] projection    = new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER};
+
+        Cursor people = context.getContentResolver().query(uri, projection, null, null, null);
+
+        int indexName = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+        int indexNumber = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+        if(people.moveToFirst()) {
+            do {
+                String name   = people.getString(indexName);
+                String number = people.getString(indexNumber);
+                // Do work...
+                if (number != null){
+                    String key = number.replace(" ", "").replace("-", "");
+                    phoneContacts.put(key, name);
+                }
+
+            } while (people.moveToNext());
+        }
+
+        Log.d("Contacts", phoneContacts.toString());
+    }
+
+    public boolean isExistingPhoneContact(String phonenumber){
+        boolean isExisting = false;
+        if (phoneContacts != null){
+            for (Map.Entry<String, String> entry : phoneContacts.entrySet()){
+                String contactPhone = entry.getKey();
+                if (contactPhone.equals(phonenumber)) {
+                    isExisting = true;
+                    break;
+                }
+            }
+        }
+
+        return isExisting;
     }
 }

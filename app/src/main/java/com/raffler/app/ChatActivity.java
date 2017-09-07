@@ -1,6 +1,6 @@
 package com.raffler.app;
 
-import android.database.Cursor;
+import android.content.Intent;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
@@ -14,7 +14,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -39,7 +38,6 @@ import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.MessageType;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserAction;
-import com.raffler.app.models.UserStatus;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
@@ -58,6 +56,7 @@ import static com.raffler.app.models.UserStatus.ONLINE;
 
 public class ChatActivity extends AppCompatActivity implements UserValueListener{
 
+    private static final int REQUEST_CONTACT = 567;
     private static final String TAG = ChatActivity.class.getSimpleName();
 
     private EditText messageEditText;
@@ -77,7 +76,6 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private NewMessageListener newMessageListener;
 
     private List<String> connectedUsers = new ArrayList<>();
-    private Map<String, String> contacts = new HashMap<>();
 
     private int raffles_count = 0;
 
@@ -118,11 +116,28 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             });
         }
 
-
         layoutTopBanner = (LinearLayout) findViewById(R.id.layout_top_banner);
         layoutTopBanner.setVisibility(View.GONE);
         btnBlock = (AppCompatButton) findViewById(R.id.btnBlock);
+        btnBlock.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // TODO: 9/7/2017 block user
+            }
+        });
         btnAdd = (AppCompatButton) findViewById(R.id.btnAdd);
+        btnAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // TODO: 9/7/2017 add contact user
+                Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION, ContactsContract.Contacts.CONTENT_URI);
+                // Sets the MIME type to match the Contacts Provider
+                intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
+                // Inserts a Phone number
+                intent.putExtra(ContactsContract.Intents.Insert.PHONE, receiver.getPhone());
+                startActivityForResult(intent, REQUEST_CONTACT);
+            }
+        });
 
         titleToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_title);
         descToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
@@ -170,11 +185,9 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         });
 
-        loadContacts();
-
         loadData();
 
-        checkSenderStatus();
+        checkContactStatus();
 
         startTrackingReceiver();
         startTrackingPresence();
@@ -188,6 +201,30 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         }
 
         AppManager.getInstance().setUserValueListenerForChat(this);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CONTACT && resultCode == RESULT_OK) {
+            // Get the URI and query the content provider for the phone number
+            try {
+                Uri result = data.getData();
+                Log.v(TAG, "Got a contact result: " + result.toString());
+
+                // get the contact id from the Uri
+                String id = result.getLastPathSegment();
+                Log.d(TAG, id);
+
+                AppManager.getInstance().updatePhoneContacts();
+
+                checkContactStatus();
+
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        }
     }
 
     @Override
@@ -215,45 +252,21 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         txtRafflesCount.setText(String.valueOf(raffles_count));
     }
 
-    private void checkSenderStatus() {
-        boolean isExisting = false;
-        if (contacts != null){
-            for (Map.Entry<String, String> entry : contacts.entrySet()){
-                String phoneNumber = entry.getKey();
-                if (phoneNumber.equals(sender.getPhone())) {
-                    isExisting = true;
-                    break;
-                }
-            }
-        }
-
-        if (!isExisting) {
+    private void checkContactStatus() {
+        String receiverPhone = receiver.getPhone();
+        if (!AppManager.getInstance().isExistingPhoneContact(receiverPhone)) {
+            if (receiverPhone == null)
+                titleToolbarTextView.setText(receiver.getName());
+            else
+                titleToolbarTextView.setText(receiverPhone);
             layoutTopBanner.setVisibility(View.VISIBLE);
         } else {
+            String contactName = AppManager.getInstance().phoneContacts.get(receiverPhone);
+            if (contactName == null)
+                titleToolbarTextView.setText(receiverPhone);
+            else
+                titleToolbarTextView.setText(contactName);
             layoutTopBanner.setVisibility(View.GONE);
-        }
-    }
-
-    private void loadContacts(){
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String[] projection    = new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER};
-
-        Cursor people = getContentResolver().query(uri, projection, null, null, null);
-
-        int indexName = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-        int indexNumber = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-
-        if(people.moveToFirst()) {
-            do {
-                String name   = people.getString(indexName);
-                String number = people.getString(indexNumber);
-                // Do work...
-                if (number != null){
-                    contacts.put(number, name);
-                }
-
-            } while (people.moveToNext());
         }
     }
 
@@ -263,9 +276,6 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         if (receiver == null)
             finish();
-        else {
-            titleToolbarTextView.setText(receiver.getName());
-        }
     }
 
     private void startTrackingReceiver(){
@@ -369,8 +379,11 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         long currentTime = System.currentTimeMillis();
         final Map<String, Object> messageData = new HashMap<>();
-
+        Map<String, Object> phones = new HashMap<>();
+        phones.put(sender.getIdx(), sender.getPhone());
+        phones.put(receiver.getIdx(), receiver.getPhone());
         messageData.put("text", text);
+        messageData.put("phones", phones);
         messageData.put("senderId", sender.getIdx());
         messageData.put("senderName", sender.getName());
         messageData.put("senderPhoto", sender.getPhoto());

@@ -280,7 +280,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                 token);             // ForceResendingToken from callbacks
     }
 
-    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
+    private void signInWithPhoneAuthCredential(final PhoneAuthCredential credential) {
         hud.show();
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -292,6 +292,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
                             Log.d(TAG, "signInWithCredential:success");
 
                             FirebaseUser user = task.getResult().getUser();
+                            user.updatePhoneNumber(credential);
                             AppManager.getInstance().userId = user.getUid();
                             // ...
                             startActivity(new Intent(RegisterPhoneActivity.this, RegisterUserActivity.class));
