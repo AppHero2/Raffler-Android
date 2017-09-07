@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -18,9 +17,11 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
+import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.User;
@@ -34,6 +35,9 @@ import java.util.Map;
  */
 
 public class AppManager {
+
+    private static final String TAG = "AppManager";
+
     private static final AppManager ourInstance = new AppManager();
 
     public static AppManager getInstance() {
@@ -41,7 +45,7 @@ public class AppManager {
     }
 
     private Context context;
-    private DatabaseReference userRef;
+    private DatabaseReference usersRef;
     private ValueEventListener trackUserListener;
     private UserValueListener userValueListener, userValueListenerForChat;
 
@@ -55,7 +59,7 @@ public class AppManager {
         if (firebaseUser != null) {
             userId = firebaseUser.getUid();
         }
-        userRef = database.getReference("Users");
+        usersRef = database.getReference("Users");
     }
 
     public void startTrackingUser(String uid) {
@@ -82,11 +86,11 @@ public class AppManager {
                 Log.d("TrackUser", databaseError.toString());
             }
         };
-        userRef.child(uid).addValueEventListener(trackUserListener);
+        usersRef.child(uid).addValueEventListener(trackUserListener);
     }
 
     public void stopTrackingUser(String uid){
-        userRef.child(uid).removeEventListener(trackUserListener);
+        usersRef.child(uid).removeEventListener(trackUserListener);
     }
 
     public static void getUser(String userId, final UserValueListener listener) {
@@ -208,20 +212,23 @@ public class AppManager {
         editor.commit();
     }
 
-    public static void saveContact(Map<String,Object> contacts){
+    public static void saveContact(Map<String,Contact> contacts){
         Context context = AppManager.getInstance().context;
-        SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Gson gson = new Gson();
         String contactsDic = gson.toJson(contacts);
         editor.putString("contacts", contactsDic);
+        editor.commit();
     }
 
-    public static Map<String, Object> getContacts(){
+    public static Map<String, Contact> getContacts(){
         Context context = AppManager.getInstance().context;
-        SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
         String contactsDic = sharedPreferences.getString("contacts", null);
-        Map<String,Object> contacts = new Gson().fromJson(contactsDic, new TypeToken<Map<String, Object>>(){}.getType());
+        Map<String,Contact> contacts = new Gson().fromJson(contactsDic, new TypeToken<Map<String, Contact>>(){}.getType());
+        if (contacts == null)
+            contacts = new HashMap<>();
         return contacts;
     }
 
@@ -235,6 +242,82 @@ public class AppManager {
 
     public void setUserValueListenerForChat(UserValueListener userValueListenerForChat) {
         this.userValueListenerForChat = userValueListenerForChat;
+    }
+
+    public void addNewContact(Uri contactUri, final ResultListener listener){
+        String contactID = null;
+        String contactNumber = null;
+        String contactName = "";
+
+        // getting contacts ID
+        Cursor cursorID = context.getContentResolver().query(contactUri,
+                new String[]{ContactsContract.Contacts._ID},
+                null, null, null);
+        if (cursorID.moveToFirst()) {
+            contactID = cursorID.getString(cursorID.getColumnIndex(ContactsContract.Contacts._ID));
+        }
+        cursorID.close();
+        Cursor cursorName = context.getContentResolver().query(contactUri, null, null, null, null);
+        if (cursorName.moveToFirst()) {
+            // DISPLAY_NAME = The display name for the contact.
+            // HAS_PHONE_NUMBER =   An indicator of whether this contact has at least one phone number.
+            contactName = cursorName.getString(cursorName.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+        }
+
+        cursorName.close();
+
+        // Using the contact ID now we will get contact phone number
+        Cursor cursorPhone = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                    /*ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ? AND " +
+                            ContactsContract.CommonDataKinds.Phone.TYPE + " = " +
+                            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,*/
+
+                new String[]{contactID},
+                null);
+
+        if (cursorPhone.moveToFirst()) {
+            contactNumber = cursorPhone.getString(cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+        }
+
+        cursorPhone.close();
+
+        final String idx = contactID;
+        final String name = contactName;
+        final String phone = contactNumber.replace(" ", "").replace("-", "");
+
+        Query query = usersRef.orderByChild("phone").equalTo(phone);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
+                        User user = new User(userData);
+                        Contact contact = new Contact(idx, name, phone, user.getIdx(), user.getPhoto());
+                        Map<String, Contact> contacts = AppManager.getContacts();
+                        contacts.put(idx, contact);
+                        AppManager.saveContact(contacts);
+                        if (listener != null)
+                            listener.onResult(true);
+                    }
+                } else {
+                    if (listener != null)
+                        listener.onResult(false);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, databaseError.toString());
+                if (listener != null)
+                    listener.onResult(false);
+            }
+        });
+
+        updatePhoneContacts();
     }
 
     public void updatePhoneContacts(){

@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
@@ -36,7 +37,9 @@ import com.kaopiz.kprogresshud.KProgressHUD;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Chat;
+import com.raffler.app.models.Contact;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
@@ -64,7 +67,7 @@ public class ContactsFragment extends Fragment {
     private KProgressHUD hud;
     private FloatingActionButton btnNewContact;
 
-    private List<String> userIds = new ArrayList<>();
+    private List<Contact> contacts = new ArrayList<>();
 
     private ContactListAdapter adapter;
     private ChatItemClickListener listener;
@@ -151,50 +154,15 @@ public class ContactsFragment extends Fragment {
 
         if (requestCode == REQUEST_CONTACT && resultCode == RESULT_OK) {
 
-            String contactID = null;
-            String contactNumber = null;
-            String contactName = "";
             // Get the URI and query the content provider for the phone number
             Uri contactUri = data.getData();
-            // getting contacts ID
-            Cursor cursorID = getActivity().getContentResolver().query(contactUri,
-                    new String[]{ContactsContract.Contacts._ID},
-                    null, null, null);
-            if (cursorID.moveToFirst()) {
-                contactID = cursorID.getString(cursorID.getColumnIndex(ContactsContract.Contacts._ID));
-            }
-            cursorID.close();
-            Cursor cursorName = getActivity().getContentResolver().query(contactUri, null, null, null, null);
-            if (cursorName.moveToFirst()) {
-                // DISPLAY_NAME = The display name for the contact.
-                // HAS_PHONE_NUMBER =   An indicator of whether this contact has at least one phone number.
-                contactName = cursorName.getString(cursorName.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-            }
 
-            cursorName.close();
-
-
-            // Using the contact ID now we will get contact phone number
-            Cursor cursorPhone = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
-
-                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                    /*ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ? AND " +
-                            ContactsContract.CommonDataKinds.Phone.TYPE + " = " +
-                            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,*/
-
-                    new String[]{contactID},
-                    null);
-
-            if (cursorPhone.moveToFirst()) {
-                contactNumber = cursorPhone.getString(cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-            }
-
-            cursorPhone.close();
-
-            Log.d(TAG, "Contact Phone Number: " + contactNumber);
-
-            AppManager.getInstance().updatePhoneContacts();
+            AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
+                @Override
+                public void onResult(boolean success) {
+                    //TODO: reload data
+                }
+            });
         }
     }
 
@@ -202,7 +170,9 @@ public class ContactsFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        loadUsers();
+        loadContacts();
+
+//        loadUsers();
     }
 
     @Override
@@ -228,31 +198,17 @@ public class ContactsFragment extends Fragment {
         }
     }
 
-    private void loadUsers(){
-        userIds.clear();
+    private void loadContacts(){
+        contacts.clear();
+        Map<String, Contact> mapData = AppManager.getContacts();
+        for (Map.Entry<String, Contact> entry : mapData.entrySet()){
+            String contactId = entry.getKey();
+            Contact contact = entry.getValue();
+            if (contact.getUid() != null)
+                contacts.add(contact);
+        }
 
-        Query query = contactsRef;
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null) {
-                    for (DataSnapshot child: dataSnapshot.getChildren()){
-                        String userId = child.getKey();
-                        userIds.add(userId);
-                    }
-
-                    adapter.notifyDataSetChanged();
-                }
-
-                hud.dismiss();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getActivity(), databaseError.toString(), Toast.LENGTH_SHORT).show();
-                hud.dismiss();
-            }
-        });
+        adapter.notifyDataSetChanged();
     }
 
     private ArrayList<String> loadCustomTypeContacts(){
@@ -289,12 +245,12 @@ public class ContactsFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return userIds.size();
+            return contacts.size();
         }
 
         @Override
-        public String getItem(int position) {
-            return userIds.get(position);
+        public Contact getItem(int position) {
+            return contacts.get(position);
         }
 
         @Override
@@ -315,9 +271,9 @@ public class ContactsFragment extends Fragment {
                 cell = (Cell) convertView.getTag();
             }
 
-            Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
+            /*Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
             convertView.startAnimation(animation);
-            lastPosition = position;
+            lastPosition = position;*/
 
             cell.setUserData(getItem(position));
 
@@ -336,27 +292,12 @@ public class ContactsFragment extends Fragment {
             this.txtBio = (TextView) view.findViewById(R.id.txtBio);
         }
 
-        public void setUserData(String userId){
-            usersRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue() != null) {
-                        Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
-                        user = new User(userData);
+        public void setUserData(Contact contact){
+            String name = contact.getName();
+            String photo = contact.getPhoto();
 
-                        String name = user.getName();
-                        String photo = user.getPhoto();
-
-                        txtName.setText(name);
-                        Util.setProfileImage(photo, imgProfile);
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.e("contact list", databaseError.toString());
-                }
-            });
+            txtName.setText(name);
+            Util.setProfileImage(photo, imgProfile);
         }
     }
 }

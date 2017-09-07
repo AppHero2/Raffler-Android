@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -30,6 +31,7 @@ import com.onesignal.OneSignal;
 import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.fragments.ChatFragment;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.ChatType;
@@ -209,21 +211,18 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         if (requestCode == REQUEST_CONTACT && resultCode == RESULT_OK) {
             // Get the URI and query the content provider for the phone number
-            try {
-                Uri result = data.getData();
-                Log.v(TAG, "Got a contact result: " + result.toString());
+            Uri contactUri = data.getData();
 
-                // get the contact id from the Uri
-                String id = result.getLastPathSegment();
-                Log.d(TAG, id);
+            AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
+                @Override
+                public void onResult(boolean success) {
+                    if (!success){
+                        Toast.makeText(ChatActivity.this, "Could not find that phone number.", Toast.LENGTH_SHORT).show();
+                    }
 
-                AppManager.getInstance().updatePhoneContacts();
-
-                checkContactStatus();
-
-            } catch (Exception e) {
-                Log.e(TAG, e.toString());
-            }
+                    checkContactStatus();
+                }
+            });
         }
     }
 
