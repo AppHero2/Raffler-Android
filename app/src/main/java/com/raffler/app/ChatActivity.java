@@ -12,7 +12,6 @@ import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -22,6 +21,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -35,6 +35,7 @@ import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.ChatType;
+import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.MessageType;
@@ -79,7 +80,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
     private List<String> connectedUsers = new ArrayList<>();
 
-    private int raffles_count = 0;
+    private int raffles_point = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +96,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         connnectedUsersRef = chatsRef.child("connectedUser");
 
         String userId = AppManager.getInstance().userId;
-        raffles_count = AppManager.getSession().getRaffles();
+        raffles_point = AppManager.getSession().getRaffle_point();
 
         // detect user disconnected
         presenceRef = connnectedUsersRef.child(userId);
@@ -145,7 +146,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         descToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
         descToolbarTextView.setText(null);
         txtRafflesCount = (TextView) toolbar.findViewById(R.id.tv_count);
-        txtRafflesCount.setText(String.valueOf(raffles_count));
+        txtRafflesCount.setText(String.valueOf(raffles_point));
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -247,20 +248,22 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
     @Override
     public void onLoadedUser(User user) {
-        raffles_count = user.getRaffles();
-        txtRafflesCount.setText(String.valueOf(raffles_count));
+        raffles_point = user.getRaffle_point();
+        txtRafflesCount.setText(String.valueOf(raffles_point));
     }
 
     private void checkContactStatus() {
         String receiverPhone = receiver.getPhone();
-        if (!AppManager.getInstance().isExistingPhoneContact(receiverPhone)) {
+        String phoneContactId = AppManager.getInstance().getPhoneContactId(receiverPhone);
+        if (phoneContactId == null) {
             if (receiverPhone == null)
                 titleToolbarTextView.setText(receiver.getName());
             else
                 titleToolbarTextView.setText(receiverPhone);
             layoutTopBanner.setVisibility(View.VISIBLE);
         } else {
-            String contactName = AppManager.getInstance().phoneContacts.get(receiverPhone);
+            Contact contact = AppManager.getInstance().phoneContacts.get(phoneContactId);
+            String contactName = contact.getName();
             if (contactName == null)
                 titleToolbarTextView.setText(receiverPhone);
             else
@@ -404,7 +407,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             public void onComplete(@NonNull Task<Void> task) {
                 messageData.put("status", MessageStatus.DELIVERED.ordinal());
                 reference.setValue(messageData);
-                usersRef.child(sender.getIdx()).child("raffles").setValue(raffles_count+1);
+                usersRef.child(sender.getIdx()).child("raffle_point").setValue(raffles_point +1);
             }
         });
 
@@ -436,5 +439,9 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         messageEditText.setText(null);
 
+        // analysis
+        Bundle params = new Bundle();
+        params.putString("sender", sender.getIdx());
+        References.getInstance().analytics.logEvent("send_message", params);
     }
 }

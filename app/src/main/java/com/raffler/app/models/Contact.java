@@ -16,6 +16,12 @@ public class Contact {
         this.photo = photo;
     }
 
+    public Contact(String idx, String name, String phone){
+        this.idx = idx;
+        this.name = name;
+        this.phone = phone;
+    }
+
     public String getIdx() {
         return idx;
     }
@@ -34,5 +40,13 @@ public class Contact {
 
     public String getUid() {
         return uid;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 }

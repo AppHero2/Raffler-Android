@@ -100,11 +100,28 @@ public class ContactsFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                Cell cell = (Cell) view.getTag();
-
-                if (listener != null) {
-                    Chat chat = new Chat(cell.user, null, 0);
-                    listener.onSelectedChat(chat);
+                if (i < contacts.size()) {
+                    Cell cell = (Cell) view.getTag();
+                    if (listener != null) {
+                        if (cell.user != null){
+                            Chat chat = new Chat(cell.user, null, 0);
+                            listener.onSelectedChat(chat);
+                        }
+                    }
+                } else if (i == contacts.size()){
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Awesome Raffler app");
+                    sendIntent.putExtra(Intent.EXTRA_TEXT,
+                            "Hey,\n\n " +
+                                    "I just downloaded Raffler app on my Android\n" +
+                                    "It's smartphone raffle app I have seen ever.\n\n" +
+                                    "Get it now from\n" +
+                                    " https://play.google.com/store/apps/details?id=com.raffler.app");
+                    sendIntent.setType("text/plain");
+                    startActivity(sendIntent);
+                } else {
+                    Toast.makeText(getActivity(), "This feature is coming soon.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -171,8 +188,6 @@ public class ContactsFragment extends Fragment {
         super.onResume();
 
         loadContacts();
-
-//        loadUsers();
     }
 
     @Override
@@ -185,12 +200,7 @@ public class ContactsFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-           /* case R.id.action_contacts:
-                startActivity(new Intent(getActivity(), FindContactActivity.class));
-                return true;*/
             case R.id.action_refresh:
-
-                // TODO: 18/8/2017 refresh
 
                 return true;
             default:
@@ -244,8 +254,22 @@ public class ContactsFragment extends Fragment {
         }
 
         @Override
+        public int getItemViewType(int position) {
+            if (position < contacts.size()){
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return 2;
+        }
+
+        @Override
         public int getCount() {
-            return contacts.size();
+            return contacts.size() + 2;
         }
 
         @Override
@@ -262,22 +286,44 @@ public class ContactsFragment extends Fragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
-            Cell cell;
-            if (convertView == null) {
-                convertView = inflater.inflate(R.layout.row_contact_cell, null);
-                cell = new Cell(convertView);
-                convertView.setTag(cell);
-            } else {
-                cell = (Cell) convertView.getTag();
-            }
+            if (position < contacts.size()) {
+
+                Cell cell;
+                if (convertView == null) {
+                    convertView = inflater.inflate(R.layout.row_contact_cell, null);
+                    cell = new Cell(convertView);
+                    convertView.setTag(cell);
+                } else {
+                    cell = (Cell) convertView.getTag();
+                }
 
             /*Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
             convertView.startAnimation(animation);
             lastPosition = position;*/
 
-            cell.setUserData(getItem(position));
+                cell.setUserData(getItem(position));
+                return convertView;
 
-            return convertView;
+            } else {
+                CellExtra cell;
+                if (convertView == null) {
+                    convertView = inflater.inflate(R.layout.row_contact_extra, null);
+                    cell = new CellExtra(convertView);
+                    convertView.setTag(cell);
+                } else {
+                    cell = (CellExtra) convertView.getTag();
+                }
+
+                if (position == contacts.size()) {
+                    cell.imgIcon.setImageResource(R.drawable.ic_contact_invite);
+                    cell.tvTitle.setText(getString(R.string.contact_invite));
+                } else {
+                    cell.imgIcon.setImageResource(R.drawable.ic_contact_help);
+                    cell.tvTitle.setText(getString(R.string.contact_help));
+                }
+
+                return convertView;
+            }
         }
     }
 
@@ -298,6 +344,34 @@ public class ContactsFragment extends Fragment {
 
             txtName.setText(name);
             Util.setProfileImage(photo, imgProfile);
+
+            Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(contact.getUid());
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue() != null) {
+                        for (DataSnapshot child : dataSnapshot.getChildren()) {
+                            Map<String, Object> userData = (Map<String, Object>) child.getValue();
+                            user = new User(userData);
+                            break;
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.e(TAG, databaseError.toString());
+                }
+            });
+        }
+    }
+
+    private class CellExtra {
+        public ImageView imgIcon;
+        public TextView tvTitle;
+        public CellExtra(View view){
+            this.tvTitle = (TextView) view.findViewById(R.id.tv_title);
+            this.imgIcon = (ImageView) view.findViewById(R.id.imgIcon);
         }
     }
 }

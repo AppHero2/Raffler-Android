@@ -18,6 +18,7 @@ import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.ChatType;
+import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
@@ -74,8 +75,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
         public String mItem;
         public User mUser;
         public Message mMessage;
-        public String mContactPhone;
-        public String mContactName;
+        public String mPhoneContactId, mPhoneContactName, mPhoneContactNumber;
         public int mUnreadCount;
         public int typeTextColor;
 
@@ -112,12 +112,17 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                                 }
                             }
 
-                            mContactPhone = (String) phones.get(contactId);
-                            if (AppManager.getInstance().isExistingPhoneContact(mContactPhone)){
-                                mContactName = AppManager.getInstance().phoneContacts.get(mContactPhone);
-                                mIdView.setText(mContactName);
+                            mPhoneContactNumber = (String) phones.get(contactId);
+                            String phoneContactId = AppManager.getInstance().getPhoneContactId(mPhoneContactNumber);
+                            if (phoneContactId != null){
+                                mPhoneContactId = phoneContactId;
+                                Contact contact = AppManager.getInstance().phoneContacts.get(phoneContactId);
+                                mPhoneContactName = contact.getName();
+                                mIdView.setText(mPhoneContactName);
                             } else {
-                                mIdView.setText(mContactPhone);
+                                mPhoneContactId = null;
+                                mPhoneContactName = null;
+                                mIdView.setText(mPhoneContactNumber);
                             }
 
                             updateData(message, contactId);
@@ -155,10 +160,28 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             AppManager.getUser(contactId, new UserValueListener() {
                 @Override
                 public void onLoadedUser(final User user) {
-                    if (mContactPhone == null)
+                    if (mPhoneContactNumber == null)
                         mIdView.setText(user.getName());
                     Util.setProfileImage(user.getPhoto(), imgProfile);
                     mUser = user;
+
+                    if (mPhoneContactId != null) {
+                        boolean isSavedContactInfo = false;
+                        Map<String, Contact> contacts = AppManager.getContacts();
+                        for (Map.Entry<String, Contact> entry : contacts.entrySet()){
+                            String contactId = entry.getKey();
+                            if (contactId.equals(mPhoneContactId)) {
+                                isSavedContactInfo = true;
+                                break;
+                            }
+                        }
+
+//                        if (!isSavedContactInfo) {
+                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
+                            contacts.put(mPhoneContactId, contact);
+                            AppManager.saveContact(contacts);
+//                        }
+                    }
                 }
             });
             String lastMessage = message.getText();

@@ -2,6 +2,7 @@ package com.raffler.app.utils;
 
 import android.content.Context;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -15,6 +16,7 @@ public class References {
     private final Chat chat;
     private FirebaseDatabase database;
     private Context context;
+    public FirebaseAnalytics analytics;
 
     public DatabaseReference usersRef, contactsRef, chatsRef, messagesRef, rafflesRef;
 
@@ -38,6 +40,8 @@ public class References {
         chatsRef = database.getReference(Constant.CHAT);
         messagesRef = database.getReference(Constant.MESSAGES);
         rafflesRef = database.getReference(Constant.RAFFLES);
+
+        analytics = FirebaseAnalytics.getInstance(context);
     }
 
 

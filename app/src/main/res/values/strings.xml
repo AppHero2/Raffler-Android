@@ -30,18 +30,14 @@
     <!-- Raffles -->
     <string name="raffles_title">Raffles</string>
     <string name="raffles_alert_expired">This raffle is already expired.</string>
+    <string name="raffles_alert_already">You\'ve got already this one.</string>
     <string name="raffles_alert_no_enough">Not enough your points to get&#160;</string>
     <string name="raffles_alert_make_sure">Are you really sure to get&#160;</string>
 
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>
-    <string name="contact_add_title">New Contact</string>
-    <string name="contact_add_name">Name</string>
-    <string name="contact_add_phone">Phone</string>
-    <string name="contact_add_email">Email</string>
-    <string name="contact_add_address">Address</string>
-    <string name="contact_add_groups">Groups</string>
-    <string name="contact_add_ringtone">Ringtone</string>
+    <string name="contact_invite">Invite friends</string>
+    <string name="contact_help">Contacts help</string>
 
     <!-- Find Contact -->
     <string name="find_contact_title">Find Friends</string>

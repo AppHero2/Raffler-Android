@@ -3,6 +3,7 @@ package com.raffler.app.models;
 import com.raffler.app.utils.Util;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,6 +17,9 @@ public class Raffle {
     private boolean isClosed = false;
     private int raffles_num = 0;
     private int winners_num = 0;
+
+    private Map<String, Object> rafflers = new HashMap<>();
+    private Map<String, Object> winners = new HashMap<>();
 
     public Raffle(Map<String, Object> data){
         updateValue(data);
@@ -31,6 +35,8 @@ public class Raffle {
         String ending_date =  Util.getStringFromData("ending_date", data);
         long a = Long.parseLong(ending_date) * 1000;
         this.endingAt = new Date(a);
+        this.rafflers = Util.getMapDataFromData("rafflers", data);
+        this.winners = Util.getMapDataFromData("winners", data);
     }
     public Date getEndingAt() {
         return endingAt;
@@ -54,5 +60,37 @@ public class Raffle {
 
     public String getImageLink() {
         return imageLink;
+    }
+
+    public Map<String, Object> getRafflers() {
+        return rafflers;
+    }
+
+    public Map<String, Object> getWinners() {
+        return winners;
+    }
+
+    public boolean isExistRaffler(String uid){
+        boolean isExist = false;
+        for (Map.Entry<String, Object> entry : rafflers.entrySet()){
+            String rafflerId = entry.getKey();
+            if (rafflerId.equals(uid)) {
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
+    }
+
+    public boolean isExistWinner(String uid){
+        boolean isExist = false;
+        for (Map.Entry<String, Object> entry : winners.entrySet()){
+            String rafflerId = entry.getKey();
+            if (rafflerId.equals(uid)) {
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
     }
 }

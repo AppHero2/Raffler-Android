@@ -12,10 +12,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -59,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     int[] unreadData ={0, 0, 0};
     Map<String, Integer> unreadCount = new HashMap<>();
 
-    private int raffles_count = 0;
+    private int raffles_point = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         userStatusRef = References.getInstance().usersRef.child(AppManager.getInstance().userId).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
 
-        raffles_count = AppManager.getSession().getRaffles();
+        raffles_point = AppManager.getSession().getRaffle_point();
 
         //Initializing viewPager
         viewPager = (ViewPager) findViewById(R.id.viewpager);
@@ -184,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         RelativeLayout rafflesLayout = (RelativeLayout) menu.findItem(R.id.action_raffles).getActionView();
 
         txtRaffles = rafflesLayout.findViewById(R.id.tv_count);
-        txtRaffles.setText(String.valueOf(raffles_count));
+        txtRaffles.setText(String.valueOf(raffles_point));
 
         return true;
     }
@@ -226,9 +224,9 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     @Override
     public void onLoadedUser(User user) {
 
-        raffles_count = AppManager.getSession().getRaffles();
+        raffles_point = AppManager.getSession().getRaffle_point();
         if (txtRaffles != null)
-            txtRaffles.setText(String.valueOf(raffles_count));
+            txtRaffles.setText(String.valueOf(raffles_point));
     }
 
     private ArrayList<String> loadContacts(){

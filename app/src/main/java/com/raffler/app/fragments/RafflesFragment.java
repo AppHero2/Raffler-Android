@@ -2,9 +2,12 @@ package com.raffler.app.fragments;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -44,7 +48,7 @@ import java.util.TimerTask;
  */
 public class RafflesFragment extends Fragment {
 
-    private DatabaseReference rafflesRef;
+    private DatabaseReference rafflesRef, usersRef;
     private ChildEventListener childEventListener;
 
     private List<Raffle> raffles = new ArrayList<>();
@@ -60,6 +64,7 @@ public class RafflesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
+        usersRef = References.getInstance().usersRef;
         rafflesRef = References.getInstance().rafflesRef;
         userId = AppManager.getSession().getIdx();
     }
@@ -87,13 +92,20 @@ public class RafflesFragment extends Fragment {
 
                 Cell cell = (Cell) view.getTag();
                 final Raffle raffle = cell.getData();
-                int raffles_num = raffle.getRaffles_num();
+                final int raffles_num = raffle.getRaffles_num();
                 boolean isExpired = cell.isExpired();
                 if (isExpired) {
                     Util.showAlert(getString(R.string.alert_title_notice),
                             getString(R.string.raffles_alert_expired), getActivity());
                 } else {
-                    if (AppManager.getSession().getRaffles() < raffles_num) {
+                    if (cell.isTakenRaffle) {
+                        Util.showAlert(getString(R.string.alert_title_notice),
+                                getString(R.string.raffles_alert_already), getActivity());
+                        return;
+                    }
+
+                    final int user_raffle_point = AppManager.getSession().getRaffle_point();
+                    if (user_raffle_point < raffles_num) {
                         Util.showAlert(getString(R.string.alert_title_notice),
                                 getString(R.string.raffles_alert_no_enough), getActivity());
                     } else {
@@ -108,13 +120,32 @@ public class RafflesFragment extends Fragment {
                                 if (position != AlertView.CANCELPOSITION) {
                                     Map<String, Object> dicUser = new HashMap<>();
                                     dicUser.put(userId, false);
-                                    rafflesRef.child(raffle.getIdx()).updateChildren(dicUser);
+                                    rafflesRef.child(raffle.getIdx()).child("rafflers").updateChildren(dicUser);
+                                    Map<String, Object> dicRaffle = new HashMap<>();
+                                    dicRaffle.put(raffle.getIdx(), true);
+                                    usersRef.child(userId).child("raffles").updateChildren(dicRaffle);
+                                    usersRef.child(userId).child("raffle_point").setValue(user_raffle_point - raffles_num);
+
+                                    // analysis
+                                    // analysis
+                                    Bundle params = new Bundle();
+                                    params.putString("raffler", userId);
+                                    References.getInstance().analytics.logEvent("enter_raffle", params);
                                 }
                             }
                         });
                         alertView.show();
                     }
                 }
+            }
+        });
+
+
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_contact);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
@@ -134,7 +165,7 @@ public class RafflesFragment extends Fragment {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 if (dataSnapshot.getValue() != null) {
                     Map<String, Object> raffleData = (Map<String, Object>) dataSnapshot.getValue();
-                    updateMessage(raffleData);
+                    updateRaffle(raffleData);
                 }
             }
 
@@ -142,7 +173,7 @@ public class RafflesFragment extends Fragment {
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 if (dataSnapshot.getValue() != null) {
                     Map<String, Object> raffleData = (Map<String, Object>) dataSnapshot.getValue();
-                    updateMessage(raffleData);
+                    updateRaffle(raffleData);
                 }
             }
 
@@ -180,15 +211,15 @@ public class RafflesFragment extends Fragment {
         rafflesRef.removeEventListener(childEventListener);
     }
 
-    private void updateMessage (Map<String, Object> messageData) {
-        Raffle raffle = new Raffle(messageData);
+    private void updateRaffle(Map<String, Object> raffleData) {
+        Raffle raffle = new Raffle(raffleData);
         if (raffle.getIdx() == null)
             return;
 
         boolean isExist = false;
         for (Raffle item : raffles) {
             if (item.getIdx().equals(raffle.getIdx())) {
-                item.updateValue(messageData);
+                item.updateValue(raffleData);
                 isExist = true;
                 break;
             }
@@ -277,13 +308,16 @@ public class RafflesFragment extends Fragment {
         public LabelImageView imgCover;
         public CustomTextView txtTimer;
         public TextView txtDescription;
+        public ImageView imgMarker;
         private Raffle raffle;
+        public boolean isTakenRaffle = false;
         private boolean isExpired = false;
 
         public Cell(View itemView) {
             imgCover = (LabelImageView) itemView.findViewById(R.id.img_cell_cover);
             txtTimer = (CustomTextView) itemView.findViewById(R.id.txt_cell_timer);
             txtDescription = (TextView) itemView.findViewById(R.id.txt_cell_description);
+            imgMarker = (ImageView) itemView.findViewById(R.id.img_cell_marker);
         }
 
         public void setData(Raffle raffle){
@@ -293,6 +327,19 @@ public class RafflesFragment extends Fragment {
             imgCover.setLabelHeight(30);
             imgCover.setLabelText("R"+raffle.getRaffles_num());
             txtDescription.setText(raffle.getDescription());
+            isTakenRaffle = false;
+
+            if (raffle.isExistWinner(userId)) {
+                imgMarker.setVisibility(View.VISIBLE);
+                imgMarker.setImageResource(R.drawable.ic_raffle_winner);
+            } else if (raffle.isExistRaffler(userId)) {
+                imgMarker.setVisibility(View.VISIBLE);
+                imgMarker.setImageResource(R.drawable.ic_raffle_flag);
+                isTakenRaffle = true;
+            } else {
+                imgMarker.setVisibility(View.GONE);
+            }
+
         }
 
         public Raffle getData() {

@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -51,7 +52,7 @@ public class AppManager {
 
     public Chat selectedChat;
     public String userId;
-    public Map<String, String> phoneContacts = new HashMap<>();
+    public Map<String, Contact> phoneContacts = new HashMap<>();
 
     private AppManager() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -165,7 +166,9 @@ public class AppManager {
         editor.putString("chats", chatsDic);
         String lastSeen = gson.toJson(user.getLastseens());
         editor.putString("lastseens", lastSeen);
-        editor.putInt("raffles", user.getRaffles());
+        String raffles = gson.toJson(user.getRaffles());
+        editor.putString("raffles", raffles);
+        editor.putInt("raffle_point", user.getRaffle_point());
         editor.commit();
     }
 
@@ -180,11 +183,13 @@ public class AppManager {
         String pushToken = sharedPreferences.getString("pushToken", "?");
         int userStatus = sharedPreferences.getInt("userStatus", 0);
         int userAction = sharedPreferences.getInt("userAction", 0);
-        int raffles = sharedPreferences.getInt("raffles", 0);
+        int raffle_point = sharedPreferences.getInt("raffle_point", 0);
         String chatsDic = sharedPreferences.getString("chats", null);
         Map<String,Object> chats = new Gson().fromJson(chatsDic, new TypeToken<Map<String, Object>>(){}.getType());
-        String lastSeen = sharedPreferences.getString("lastseens", null);
-        Map<String,Object> lastSeens = new Gson().fromJson(lastSeen, new TypeToken<Map<String, Object>>(){}.getType());
+        String lastSeenDic = sharedPreferences.getString("lastseens", null);
+        Map<String,Object> lastSeens = new Gson().fromJson(lastSeenDic, new TypeToken<Map<String, Object>>(){}.getType());
+        String rafflesDic = sharedPreferences.getString("raffles", null);
+        Map<String,Object> raffles = new Gson().fromJson(rafflesDic, new TypeToken<Map<String, Object>>(){}.getType());
         if (uid != null) {
             Map<String, Object> data = new HashMap<>();
             data.put("uid", uid);
@@ -196,8 +201,9 @@ public class AppManager {
             data.put("userStatus", userStatus);
             data.put("userAction", userAction);
             data.put("chats", (chats != null) ? chats : new HashMap<String, Object>());
-            data.put("lastseens", (chats != null) ? lastSeens : new HashMap<String, Object>());
-            data.put("raffles", raffles);
+            data.put("lastseens", (lastSeens != null) ? lastSeens : new HashMap<String, Object>());
+            data.put("raffles", (raffles != null) ? raffles : new HashMap<String, Object>());
+            data.put("raffle_point", raffle_point);
             User user = new User(data);
             return user;
         } else {
@@ -322,23 +328,26 @@ public class AppManager {
 
     public void updatePhoneContacts(){
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String[] projection    = new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER};
+        String[] projection = new String[] {
+                Phone._ID,
+                Phone.DISPLAY_NAME,
+                Phone.NUMBER
+        };
 
         Cursor people = context.getContentResolver().query(uri, projection, null, null, null);
-
-        int indexName = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-        int indexNumber = people.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+        int indexId = people.getColumnIndex(Phone._ID);
+        int indexName = people.getColumnIndex(Phone.DISPLAY_NAME);
+        int indexNumber = people.getColumnIndex(Phone.NUMBER);
 
         if(people.moveToFirst()) {
             do {
+                String idx = people.getString(indexId);
                 String name   = people.getString(indexName);
                 String number = people.getString(indexNumber);
                 // Do work...
-                if (number != null){
-                    String key = number.replace(" ", "").replace("-", "");
-                    phoneContacts.put(key, name);
-                }
+                String phone = number.replace(" ", "").replace("-", "");
+                Contact contact = new Contact(idx, name, phone);
+                phoneContacts.put(idx, contact);
 
             } while (people.moveToNext());
         }
@@ -346,18 +355,19 @@ public class AppManager {
         Log.d("Contacts", phoneContacts.toString());
     }
 
-    public boolean isExistingPhoneContact(String phonenumber){
-        boolean isExisting = false;
+    public String getPhoneContactId(String phonenumber){
+        String idx = null;
         if (phoneContacts != null){
-            for (Map.Entry<String, String> entry : phoneContacts.entrySet()){
-                String contactPhone = entry.getKey();
-                if (contactPhone.equals(phonenumber)) {
-                    isExisting = true;
+            for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+                String contactId = entry.getKey();
+                Contact contact = entry.getValue();
+                if (contact.getPhone().equals(phonenumber)) {
+                    idx = contactId;
                     break;
                 }
             }
         }
 
-        return isExisting;
+        return idx;
     }
 }
