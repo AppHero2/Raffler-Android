@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -16,6 +17,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
 
 /**
@@ -56,6 +58,13 @@ public class AppSplashActivity extends AppCompatActivity {
 
         // Initialize image loader
         initImageLoader(this);
+
+        AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
+            @Override
+            public void onResult(boolean success) {
+                Log.d("SplashScreen", "didRefresh Contacts");
+            }
+        });
     }
 
     @Override

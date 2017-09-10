@@ -32,11 +32,11 @@
         android:text="@string/register_user_content"
         android:textColor="@color/colorTextDisable"
         android:layout_below="@+id/txtTitle"
-        android:layout_toRightOf="@+id/imgProfile"
-        android:layout_toEndOf="@+id/imgProfile" />
+        android:layout_toRightOf="@+id/layout_profile"
+        android:layout_toEndOf="@+id/layout_profile" />
 
-    <ImageView
-        android:id="@+id/imgProfile"
+    <RelativeLayout
+        android:id="@+id/layout_profile"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginTop="20dp"
@@ -44,8 +44,26 @@
         android:layout_below="@+id/txtTitle"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginStart="23dp"
-        android:src="@drawable/ic_profile_person"/>
+        android:layout_marginStart="23dp">
+
+        <ImageView
+            android:id="@+id/imgProfile"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_profile_person"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:visibility="gone">
+        </ProgressBar>
+
+    </RelativeLayout>
+
     <android.support.design.widget.TextInputLayout
         android:id="@+id/textInputLayout3"
         android:layout_width="match_parent"
@@ -54,7 +72,7 @@
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:theme="@style/AuthEditTextTheme"
-        android:layout_below="@+id/imgProfile"
+        android:layout_below="@+id/layout_profile"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true">
 

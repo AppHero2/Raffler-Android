@@ -5,7 +5,7 @@
         android:title="@string/action_chat"
         android:icon="@drawable/ic_chat"
         app:showAsAction="always"/>-->
-    <item android:id="@+id/action_new_group"
+    <!--<item android:id="@+id/action_new_group"
         android:title="@string/action_new_group"
         app:showAsAction="never"/>
     <item android:id="@+id/action_new_bc"
@@ -13,5 +13,5 @@
         app:showAsAction="never"/>
     <item android:id="@+id/action_star"
         android:title="@string/action_starred_messages"
-        app:showAsAction="never"/>
+        app:showAsAction="never"/>-->
 </menu>

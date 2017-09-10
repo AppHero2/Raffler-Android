@@ -18,6 +18,8 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.raffler.app.country.Country;
+import com.raffler.app.interfaces.ContactFinderListener;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
@@ -28,7 +30,9 @@ import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -238,6 +242,33 @@ public class AppManager {
         return contacts;
     }
 
+    public static Map<String, Contact> getNewContacts(){
+        Map<String, Contact> newContacts = new HashMap<>();
+        Map<String, Contact> phoneContacts = AppManager.getInstance().phoneContacts;
+        for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+            String contactId = entry.getKey();
+            Contact contact = entry.getValue();
+            boolean isExist = AppManager.isExistingContact(contactId);
+            if (!isExist) {
+                newContacts.put(contactId, contact);
+            }
+        }
+        return newContacts;
+    }
+
+    public static boolean isExistingContact(String contactId){
+        boolean isExist = false;
+        Map<String, Contact> savedContacts = AppManager.getContacts();
+        for (Map.Entry<String, Contact> entry : savedContacts.entrySet()){
+            Contact contact = entry.getValue();
+            if (contactId.equals(contact.getIdx())){
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
+    }
+
     public void setContext(Context context) {
         this.context = context;
     }
@@ -323,10 +354,26 @@ public class AppManager {
             }
         });
 
-        updatePhoneContacts();
+        refreshPhoneContacts(null);
     }
 
-    public void updatePhoneContacts(){
+    private List<Contact> newContacts = new ArrayList<>();
+    public String getPhoneContactId(String phonenumber){
+        String idx = null;
+        if (phoneContacts != null){
+            for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+                String contactId = entry.getKey();
+                Contact contact = entry.getValue();
+                if (contact.getPhone().equals(phonenumber)) {
+                    idx = contactId;
+                    break;
+                }
+            }
+        }
+
+        return idx;
+    }
+    public void refreshPhoneContacts(ResultListener listener){
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String[] projection = new String[] {
                 Phone._ID,
@@ -352,22 +399,104 @@ public class AppManager {
             } while (people.moveToNext());
         }
 
-        Log.d("Contacts", phoneContacts.toString());
+        loadNewContacts(listener);
     }
 
-    public String getPhoneContactId(String phonenumber){
-        String idx = null;
-        if (phoneContacts != null){
-            for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
-                String contactId = entry.getKey();
-                Contact contact = entry.getValue();
-                if (contact.getPhone().equals(phonenumber)) {
-                    idx = contactId;
-                    break;
-                }
-            }
+    private void loadNewContacts(final ResultListener listener){
+        Map<String, Contact> contacts = AppManager.getNewContacts();
+        for (Map.Entry<String, Contact> entry: contacts.entrySet()) {
+            Contact contact = entry.getValue();
+            newContacts.add(contact);
         }
 
-        return idx;
+        lookingContacts(0, new ResultListener() {
+            @Override
+            public void onResult(boolean success) {
+                if (listener != null) {
+                    listener.onResult(success);
+                }
+            }
+        });
+    }
+
+    private void lookingContacts(final int index, final ResultListener listener){
+        if (index < newContacts.size()) {
+            Contact contact = newContacts.get(index);
+            AppManager.getInstance().findContactFromServer(contact, new ContactFinderListener() {
+                @Override
+                public void onLoadedContact(boolean success, Contact newContact) {
+                    if (success){
+                        Map<String, Contact> contactMap = AppManager.getContacts();
+                        contactMap.put(newContact.getIdx(), newContact);
+                        AppManager.saveContact(contactMap);
+                    }
+                    if (index < newContacts.size()) {
+                        lookingContacts(index + 1, listener);
+                    } else {
+                        if (listener != null)
+                            listener.onResult(true);
+                    }
+
+                }
+            });
+        } else {
+            if (listener != null) {
+                listener.onResult(true);
+            }
+        }
+    }
+
+    public void findContactFromServer(final Contact contact, final ContactFinderListener listener){
+
+        String contactPhone = contact.getPhone();
+        if (!contactPhone.contains("+")){
+            Country country = Country.getCountryFromSIM(context);
+            String regionCode = country.getDialCode();
+            contactPhone = regionCode + contactPhone;
+        }
+
+        String queryString = contactPhone + "{f8ff}";
+        Query query = References.getInstance().usersRef.orderByChild("phone").equalTo(contactPhone); //.startAt(contactPhone).endAt(queryString);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
+                    for (DataSnapshot child: dataSnapshot.getChildren()) {
+                        String key = child.getKey();
+                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
+                        User user = new User(userData);
+                        contact.setUid(user.getIdx());
+                        contact.setPhoto(user.getPhoto());
+                        if (listener != null) {
+                            listener.onLoadedContact(true, contact);
+                        }
+
+                        /*try {
+                            // phone must begin with '+'
+                            PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                            Phonenumber.PhoneNumber numberProto = phoneUtil.parse(userPhone, "");
+                            int countryCode = numberProto.getCountryCode();
+                            long number = numberProto.getNationalNumber();
+
+                        } catch (NumberParseException e) {
+                            System.err.println("NumberParseException was thrown: " + e.toString());
+                        }*/
+
+                    }
+                } else {
+                    if (listener != null) {
+                        listener.onLoadedContact(false, null);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, databaseError.getDetails());
+                if (listener != null) {
+                    listener.onLoadedContact(false, null);
+                }
+            }
+        });
     }
 }

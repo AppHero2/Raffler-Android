@@ -3,13 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.raffler.app">
 
-    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
-    <uses-permission android:name="android.permission.USE_CREDENTIALS"/>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
@@ -32,15 +33,15 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait" >
-
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.APP_CONTACTS" />
-                <data android:mimeType="vnd.android.cursor.item/com.raffler.app.account"/>
-            </intent-filter>
 
+                <data android:mimeType="vnd.android.cursor.item/com.raffler.app.account" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".RegisterPhoneActivity"
@@ -56,17 +57,21 @@
             android:launchMode="singleTask"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".PrizeWalletActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"/>
 
-        <!--<service-->
-            <!--android:name=".service.SyncService"-->
-            <!--android:exported="true"-->
-            <!--tools:ignore="ExportedService">-->
-            <!--<intent-filter>-->
-                <!--<action android:name="android.content.SyncAdapter"/>-->
-            <!--</intent-filter>-->
-            <!--<meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_adapter"/>-->
-            <!--<meta-data android:name="android.provider.CONTACTS_STRUCTURE" android:resource="@xml/contacts" />-->
-        <!--</service>-->
+        <!-- <service -->
+        <!-- android:name=".service.SyncService" -->
+        <!-- android:exported="true" -->
+        <!-- tools:ignore="ExportedService"> -->
+        <!-- <intent-filter> -->
+        <!-- <action android:name="android.content.SyncAdapter"/> -->
+        <!-- </intent-filter> -->
+        <!-- <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_adapter"/> -->
+        <!-- <meta-data android:name="android.provider.CONTACTS_STRUCTURE" android:resource="@xml/contacts" /> -->
+        <!-- </service> -->
 
     </application>
 

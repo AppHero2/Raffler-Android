@@ -25,6 +25,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.lid.lib.LabelImageView;
+import com.raffler.app.PrizeWalletActivity;
 import com.raffler.app.R;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
@@ -141,11 +142,11 @@ public class RafflesFragment extends Fragment {
         });
 
 
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_contact);
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_wallet);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                startActivity(new Intent(getActivity(), PrizeWalletActivity.class));
             }
         });
 

@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,10 +34,15 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.kaopiz.kprogresshud.KProgressHUD;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.country.Country;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.ContactFinderListener;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.Contact;
@@ -67,9 +73,11 @@ public class ContactsFragment extends Fragment {
     private KProgressHUD hud;
     private FloatingActionButton btnNewContact;
 
-    private List<Contact> contacts = new ArrayList<>();
+    private MenuItem progressBar;
 
+    private List<Contact> contacts = new ArrayList<>();
     private ContactListAdapter adapter;
+
     private ChatItemClickListener listener;
 
     public ContactsFragment() {
@@ -191,6 +199,13 @@ public class ContactsFragment extends Fragment {
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        progressBar = menu.findItem(R.id.action_refresh);
+        refreshContact();
+        super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_contacts_fragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
@@ -208,14 +223,35 @@ public class ContactsFragment extends Fragment {
         }
     }
 
+    private void refreshContact(){
+        progressBar.setVisible(true);
+        AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
+            @Override
+            public void onResult(boolean success) {
+                Log.d(TAG, "didRefresh Contacts");
+                progressBar.setVisible(false);
+                loadContacts();
+            }
+        });
+    }
+
     private void loadContacts(){
         contacts.clear();
         Map<String, Contact> mapData = AppManager.getContacts();
         for (Map.Entry<String, Contact> entry : mapData.entrySet()){
             String contactId = entry.getKey();
             Contact contact = entry.getValue();
-            if (contact.getUid() != null)
-                contacts.add(contact);
+            if (contact.getUid() != null){
+                boolean isExist = false;
+                for (Contact item:contacts){
+                    if (item.getUid().equals(contact.getUid())){
+                        isExist = true;
+                    }
+                }
+
+                if (!isExist)
+                    contacts.add(contact);
+            }
         }
 
         adapter.notifyDataSetChanged();

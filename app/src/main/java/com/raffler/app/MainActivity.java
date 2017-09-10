@@ -1,5 +1,6 @@
 package com.raffler.app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.provider.ContactsContract;
@@ -8,10 +9,12 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -24,10 +27,12 @@ import com.onesignal.OSPermissionStateChanges;
 import com.onesignal.OneSignal;
 import com.raffler.app.adapters.ViewPagerAdapter;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.country.Country;
 import com.raffler.app.fragments.ChatListFragment;
 import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
@@ -37,14 +42,18 @@ import com.raffler.app.utils.References;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener, UserValueListener{
+
+    private static final String TAG = "MainActivity";
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
     private TextView txtRaffles;
+    private MenuItem progressBar;
 
     //Fragments
     private RafflesFragment rafflesFragment;
@@ -62,7 +71,10 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_PROGRESS);
         setContentView(R.layout.activity_main);
+
+        setProgressBarIndeterminateVisibility(true);
 
         userStatusRef = References.getInstance().usersRef.child(AppManager.getInstance().userId).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
@@ -95,7 +107,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
             @Override
             public void onPageSelected(int position) {
                 viewPager.setCurrentItem(position,false);
-
             }
 
             @Override
@@ -104,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
             }
         });
 
-        // TODO: 21/8/2017 save page index
         viewPager.setCurrentItem(0);
 
         OneSignal.startInit(this)
@@ -148,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 database.getReference("Users").child(AppManager.getInstance().userId).updateChildren(pushToken);
             }
         });
+
     }
 
     @Override
@@ -155,10 +166,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         super.onResume();
 
         userStatusRef.setValue(UserStatus.ONLINE.ordinal());
-
-        loadContacts();
-
-        AppManager.getInstance().updatePhoneContacts();
     }
 
     @Override
@@ -183,6 +190,9 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         txtRaffles = rafflesLayout.findViewById(R.id.tv_count);
         txtRaffles.setText(String.valueOf(raffles_point));
+
+        progressBar = menu.findItem(R.id.action_refresh);
+        progressBar.setVisible(false);
 
         return true;
     }
@@ -227,24 +237,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         raffles_point = AppManager.getSession().getRaffle_point();
         if (txtRaffles != null)
             txtRaffles.setText(String.valueOf(raffles_point));
-    }
-
-    private ArrayList<String> loadContacts(){
-        Cursor c = getContentResolver().query(ContactsContract.RawContacts.CONTENT_URI,
-                new String[] { ContactsContract.RawContacts.CONTACT_ID, ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY },
-                ContactsContract.RawContacts.ACCOUNT_TYPE + "= ?",
-                new String[] { "com.raffler.app.Account" }, null);
-
-        ArrayList<String> myContacts = new ArrayList<String>();
-        int contactNameColumn = c.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY);
-        while (c.moveToNext())
-        {
-            // You can also read RawContacts.CONTACT_ID to read the
-            // ContactsContract.Contacts table or any of the other related ones.
-            myContacts.add(c.getString(contactNameColumn));
-        }
-
-        return myContacts;
     }
 
     private void setupViewPager(ViewPager viewPager) {

@@ -39,12 +39,10 @@
     <string name="contact_invite">Invite friends</string>
     <string name="contact_help">Contacts help</string>
 
-    <!-- Find Contact -->
-    <string name="find_contact_title">Find Friends</string>
-    <string name="find_contact_search">Search</string>
-    <string name="find_contact_select_all">Select All</string>
-    <string name="find_contact_button_add">Add to contact list</string>
-    <string name="find_contact_button_invite">Invite as a friend</string>
+    <!-- Prize Wallet -->
+    <string name="wallet_title">Prize Wallet</string>
+    <string name="wallet_inbox">Inbox</string>
+    <string name="wallet_empty">No Prizes</string>
 
     <!-- Country Picker -->
     <string name="country_picker_search">Search</string>

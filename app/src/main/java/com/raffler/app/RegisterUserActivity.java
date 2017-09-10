@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -19,12 +20,14 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +45,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.kaopiz.kprogresshud.KProgressHUD;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppConsts;
@@ -71,15 +76,19 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private EditText etName;
     private ImageView imgProfile;
+    private ProgressBar bar;
     private Button btnNext;
 
     private KProgressHUD hud;
+
+    private Bitmap bitmapProfile;
 
     public static final int MULTIPLE_PERMISSIONS = 10; // code you want.
 
     String[] permissions= new String[]{
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.CAMERA,
@@ -97,7 +106,8 @@ public class RegisterUserActivity extends AppCompatActivity {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         usersRef = database.getReference("Users");
         usersRef.child(userId).child("uid").setValue(userId);
-        usersRef.child(userId).child("phone").setValue(firebaseUser.getPhoneNumber());
+        String phone = firebaseUser.getPhoneNumber();
+        usersRef.child(userId).child("phone").setValue(phone);
 
         hud = KProgressHUD.create(this)
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
@@ -125,6 +135,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             }
         });
 
+        bar = (ProgressBar) this.findViewById(R.id.progressBar);
         imgProfile = (ImageView) findViewById(R.id.imgProfile);
         imgProfile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,7 +151,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 String name = etName.getText().toString();
-                if (name.isEmpty() || name == null) {
+                if (name.isEmpty()) {
                     String alert_title = getString(R.string.alert_title_notice);
                     String alert_message = getString(R.string.register_user_alert_empty);
                     Util.showAlert(alert_title, alert_message, RegisterUserActivity.this);
@@ -151,7 +162,6 @@ public class RegisterUserActivity extends AppCompatActivity {
 
             }
         });
-
 
         // get owner name as dummy data
         loadUserInfoFromPhone();
@@ -168,14 +178,11 @@ public class RegisterUserActivity extends AppCompatActivity {
         } else {
             if (checkPermissions()) {
                 String[] projection = new String[] {
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                        ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER,
-                        ContactsContract.CommonDataKinds.Phone.NUMBER,
-                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+                        Phone.DISPLAY_NAME,
+                        Phone.HAS_PHONE_NUMBER,
+                        Phone.NUMBER,
+                        Phone.CONTACT_ID};
 
-                /*Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        projection, ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER + "=?", new String[] { "1" },
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);*/
                 Cursor cursor = getApplication().getContentResolver().query(ContactsContract.Profile.CONTENT_URI, null, null, null, null);
                 if (cursor.moveToFirst()){
                     etName.setText(cursor.getString(cursor.getColumnIndex("display_name")));
@@ -241,9 +248,9 @@ public class RegisterUserActivity extends AppCompatActivity {
             }
             else if (requestCode == RESULT_CROP){
                 Bitmap bitmap = getBitmapFromData(data);
-                Bitmap resizedBitmap =  Bitmap.createScaledBitmap(bitmap, AppConsts.profile_size, AppConsts.profile_size, false);
+                bitmapProfile =  Bitmap.createScaledBitmap(bitmap, AppConsts.profile_size, AppConsts.profile_size, false);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                resizedBitmap.compress(Bitmap.CompressFormat.PNG, 90, baos);
+                bitmapProfile.compress(Bitmap.CompressFormat.PNG, 90, baos);
                 final byte[] imgData = baos.toByteArray();
                 try{
                     File profile = new File(this.getCacheDir(), "profile.png");
@@ -382,6 +389,8 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private void uploadProfilePhoto(File file){
 
+        bar.setVisibility(View.VISIBLE);
+
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
         StorageReference profileRef = storageRef.child("profile");
@@ -395,20 +404,44 @@ public class RegisterUserActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     e.printStackTrace();
+                    bar.setVisibility(View.GONE);
                 }
 
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
+                    bar.setVisibility(View.GONE);
                     final Uri profileURL = taskSnapshot.getDownloadUrl();
                     usersRef.child(userId).child("photo").setValue(profileURL.toString());
 
-                    Util.setProfileImage(profileURL.toString(), imgProfile);
+
+                    Util.setProfileImage(profileURL.toString(), imgProfile, new ImageLoadingListener() {
+                        @Override
+                        public void onLoadingStarted(String s, View view) {
+                            bar.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onLoadingFailed(String s, View view, FailReason failReason) {
+                            bar.setVisibility(View.GONE);
+                        }
+
+                        @Override
+                        public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                            bar.setVisibility(View.GONE);
+                            bitmapProfile = bitmap;
+                        }
+
+                        @Override
+                        public void onLoadingCancelled(String s, View view) {
+                            bar.setVisibility(View.GONE);
+                        }
+                    });
                 }
             });
         }catch (FileNotFoundException e){
             e.printStackTrace();
+            bar.setVisibility(View.GONE);
         }
 
     }
@@ -427,7 +460,28 @@ public class RegisterUserActivity extends AppCompatActivity {
                         Map<String, Object> userData = (Map<String, Object>) child.getValue();
                         User user = new User(userData);
                         etName.setText(user.getName());
-                        Util.setProfileImage(user.getPhoto(), imgProfile);
+                        Util.setProfileImage(user.getPhoto(), imgProfile, new ImageLoadingListener() {
+                            @Override
+                            public void onLoadingStarted(String s, View view) {
+                                bar.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onLoadingFailed(String s, View view, FailReason failReason) {
+                                bar.setVisibility(View.GONE);
+                            }
+
+                            @Override
+                            public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                                bitmapProfile = bitmap;
+                                bar.setVisibility(View.GONE);
+                            }
+
+                            @Override
+                            public void onLoadingCancelled(String s, View view) {
+                                bar.setVisibility(View.GONE);
+                            }
+                        });
                         AppManager.saveSession(user);
                     }
                 }

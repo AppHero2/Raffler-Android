@@ -16,6 +16,7 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.display.CircleBitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 import com.raffler.app.R;
 import com.raffler.app.alertView.AlertView;
@@ -74,16 +75,18 @@ public class Util {
     public static void setProfileImage(String url, ImageView imgView){
         if (url != null) {
             ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, new Util.AnimateFirstDisplayListener());
-        } else {
-            //imgView.setImageDrawable(R.drawable.ic_profile_person);
+        }
+    }
+
+    public static void setProfileImage(String url, ImageView imgView, ImageLoadingListener listener) {
+        if (url != null) {
+            ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, listener);
         }
     }
 
     public static void setURLImage(String url, ImageView imgView){
         if (url != null) {
             ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_original, new Util.AnimateFirstDisplayListener());
-        } else {
-            //imgView.setImageDrawable(R.drawable.ic_profile_person);
         }
     }
 
