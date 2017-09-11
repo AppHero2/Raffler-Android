@@ -18,7 +18,7 @@ public class References {
     private Context context;
     public FirebaseAnalytics analytics;
 
-    public DatabaseReference usersRef, contactsRef, chatsRef, messagesRef, rafflesRef;
+    public DatabaseReference usersRef, contactsRef, chatsRef, messagesRef, rafflesRef, prizesRef;
 
     public static void init(Context context, FirebaseDatabase database) {
         instance = new References(context, database);
@@ -40,6 +40,7 @@ public class References {
         chatsRef = database.getReference(Constant.CHAT);
         messagesRef = database.getReference(Constant.MESSAGES);
         rafflesRef = database.getReference(Constant.RAFFLES);
+        prizesRef = database.getReference(Constant.PRIZES);
 
         analytics = FirebaseAnalytics.getInstance(context);
     }

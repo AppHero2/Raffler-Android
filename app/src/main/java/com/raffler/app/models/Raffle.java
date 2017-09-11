@@ -15,11 +15,12 @@ public class Raffle {
     private String idx, description, imageLink;
     private Date endingAt;
     private boolean isClosed = false;
-    private int raffles_num = 0;
-    private int winners_num = 0;
+    private long raffles_num = 0;
+    private long winners_num = 0;
 
     private Map<String, Object> rafflers = new HashMap<>();
     private Map<String, Object> winners = new HashMap<>();
+    private Map<String, Object> deliveredUsers = new HashMap<>();
 
     public Raffle(Map<String, Object> data){
         updateValue(data);
@@ -29,24 +30,25 @@ public class Raffle {
         this.idx = Util.getStringFromData("idx", data);
         this.description = Util.getStringFromData("description", data);
         this.imageLink = Util.getStringFromData("imageLink", data);
-        this.raffles_num = Integer.parseInt(Util.getStringFromData("raffles_num", data));
-        this.winners_num = Integer.parseInt(Util.getStringFromData("winners_num", data));
+        this.raffles_num = Util.getLongFromData("raffles_num", data);
+        this.winners_num = Util.getLongFromData("winners_num", data);
         this.isClosed = Util.getBooleanFromData("isClosed", data);
-        String ending_date =  Util.getStringFromData("ending_date", data);
-        long a = Long.parseLong(ending_date) * 1000;
-        this.endingAt = new Date(a);
+        long ending_date =  Util.getLongFromData("ending_date", data);
+        this.endingAt = new Date(ending_date);
         this.rafflers = Util.getMapDataFromData("rafflers", data);
         this.winners = Util.getMapDataFromData("winners", data);
+        this.deliveredUsers = Util.getMapDataFromData("deliveredUsers", data);
     }
+
     public Date getEndingAt() {
         return endingAt;
     }
 
-    public int getRaffles_num() {
+    public long getRaffles_num() {
         return raffles_num;
     }
 
-    public int getWinners_num() {
+    public long getWinners_num() {
         return winners_num;
     }
 
@@ -70,6 +72,10 @@ public class Raffle {
         return winners;
     }
 
+    public Map<String, Object> getDeliveredUsers() {
+        return deliveredUsers;
+    }
+
     public boolean isExistRaffler(String uid){
         boolean isExist = false;
         for (Map.Entry<String, Object> entry : rafflers.entrySet()){
@@ -85,6 +91,18 @@ public class Raffle {
     public boolean isExistWinner(String uid){
         boolean isExist = false;
         for (Map.Entry<String, Object> entry : winners.entrySet()){
+            String rafflerId = entry.getKey();
+            if (rafflerId.equals(uid)) {
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
+    }
+
+    public boolean isExistDelivered(String uid){
+        boolean isExist = false;
+        for (Map.Entry<String, Object> entry : deliveredUsers.entrySet()){
             String rafflerId = entry.getKey();
             if (rafflerId.equals(uid)) {
                 isExist = true;

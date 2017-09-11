@@ -31,6 +31,7 @@ import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.Raffle;
+import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.TimeUtil;
 import com.raffler.app.utils.Util;
@@ -67,7 +68,8 @@ public class RafflesFragment extends Fragment {
 
         usersRef = References.getInstance().usersRef;
         rafflesRef = References.getInstance().rafflesRef;
-        userId = AppManager.getSession().getIdx();
+        User user = AppManager.getSession();
+        userId = user.getIdx();
     }
 
     @Override
@@ -93,7 +95,7 @@ public class RafflesFragment extends Fragment {
 
                 Cell cell = (Cell) view.getTag();
                 final Raffle raffle = cell.getData();
-                final int raffles_num = raffle.getRaffles_num();
+                final long raffles_num = raffle.getRaffles_num();
                 boolean isExpired = cell.isExpired();
                 if (isExpired) {
                     Util.showAlert(getString(R.string.alert_title_notice),
@@ -127,7 +129,6 @@ public class RafflesFragment extends Fragment {
                                     usersRef.child(userId).child("raffles").updateChildren(dicRaffle);
                                     usersRef.child(userId).child("raffle_point").setValue(user_raffle_point - raffles_num);
 
-                                    // analysis
                                     // analysis
                                     Bundle params = new Bundle();
                                     params.putString("raffler", userId);
@@ -356,6 +357,7 @@ public class RafflesFragment extends Fragment {
             if (timeDiff > 0) {
                 String remaining = TimeUtil.formatHMSM(timeDiff);
                 txtTimer.setText(remaining);
+                this.isExpired = false;
             } else {
                 txtTimer.setText("Expired!!");
                 this.isExpired = true;

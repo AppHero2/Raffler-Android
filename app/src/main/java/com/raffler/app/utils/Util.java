@@ -282,6 +282,16 @@ public class Util {
         return value;
     }
 
+    public static long getLongFromData(String key, Map<String, Object> data){
+        long value = 0;
+        try{
+            value = (long)data.get(key);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return value;
+    }
+
     public static String getStringFromData(String key, Map<String, Object> data){
         String value = "?";
         try{
@@ -301,6 +311,8 @@ public class Util {
         }
         return  value;
     }
+
+
 
     public static Map<String, Object> getMapDataFromData(String key, Map<String, Object> data){
         Map<String, Object> value = new HashMap<>();

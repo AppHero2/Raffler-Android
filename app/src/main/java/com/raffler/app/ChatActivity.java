@@ -176,7 +176,6 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
             @Override
             public void afterTextChanged(Editable editable) {
-
             }
         });
 
