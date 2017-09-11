@@ -358,10 +358,11 @@ public class AppManager {
     }
 
     private List<Contact> newContacts = new ArrayList<>();
-    public String getPhoneContactId(String phonenumber){
+    public static String getPhoneContactId(String phonenumber){
+        Map<String, Contact> contacts = AppManager.getContacts();
         String idx = null;
-        if (phoneContacts != null){
-            for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+        if (contacts != null){
+            for (Map.Entry<String, Contact> entry : contacts.entrySet()){
                 String contactId = entry.getKey();
                 Contact contact = entry.getValue();
                 if (contact.getPhone().equals(phonenumber)) {

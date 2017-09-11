@@ -101,14 +101,14 @@ public class RafflesFragment extends Fragment {
                     Util.showAlert(getString(R.string.alert_title_notice),
                             getString(R.string.raffles_alert_expired), getActivity());
                 } else {
-                    if (cell.isTakenRaffle) {
+                    /*if (cell.isTakenRaffle) {
                         Util.showAlert(getString(R.string.alert_title_notice),
                                 getString(R.string.raffles_alert_already), getActivity());
                         return;
-                    }
+                    }*/
 
                     final int user_raffle_point = AppManager.getSession().getRaffle_point();
-                    if (user_raffle_point < raffles_num) {
+                    if (user_raffle_point < 1) {
                         Util.showAlert(getString(R.string.alert_title_notice),
                                 getString(R.string.raffles_alert_no_enough), getActivity());
                     } else {
@@ -121,13 +121,13 @@ public class RafflesFragment extends Fragment {
                             @Override
                             public void onItemClick(Object o, int position) {
                                 if (position != AlertView.CANCELPOSITION) {
-                                    Map<String, Object> dicUser = new HashMap<>();
-                                    dicUser.put(userId, false);
-                                    rafflesRef.child(raffle.getIdx()).child("rafflers").updateChildren(dicUser);
+                                    List<String> rafflers = raffle.getRafflers();
+                                    rafflers.add(userId);
+                                    rafflesRef.child(raffle.getIdx()).child("rafflers").setValue(rafflers);
                                     Map<String, Object> dicRaffle = new HashMap<>();
                                     dicRaffle.put(raffle.getIdx(), true);
                                     usersRef.child(userId).child("raffles").updateChildren(dicRaffle);
-                                    usersRef.child(userId).child("raffle_point").setValue(user_raffle_point - raffles_num);
+                                    usersRef.child(userId).child("raffle_point").setValue(user_raffle_point - 1);
 
                                     // analysis
                                     Bundle params = new Bundle();
@@ -308,7 +308,7 @@ public class RafflesFragment extends Fragment {
 
     private class Cell {
         public LabelImageView imgCover;
-        public CustomTextView txtTimer;
+        public TextView txtTimer;
         public TextView txtDescription;
         public ImageView imgMarker;
         private Raffle raffle;
@@ -317,7 +317,7 @@ public class RafflesFragment extends Fragment {
 
         public Cell(View itemView) {
             imgCover = (LabelImageView) itemView.findViewById(R.id.img_cell_cover);
-            txtTimer = (CustomTextView) itemView.findViewById(R.id.txt_cell_timer);
+            txtTimer = (TextView) itemView.findViewById(R.id.txt_cell_timer);
             txtDescription = (TextView) itemView.findViewById(R.id.txt_cell_description);
             imgMarker = (ImageView) itemView.findViewById(R.id.img_cell_marker);
         }

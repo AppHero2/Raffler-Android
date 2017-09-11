@@ -113,10 +113,10 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                             }
 
                             mPhoneContactNumber = (String) phones.get(contactId);
-                            String phoneContactId = AppManager.getInstance().getPhoneContactId(mPhoneContactNumber);
+                            String phoneContactId = AppManager.getPhoneContactId(mPhoneContactNumber);
                             if (phoneContactId != null){
                                 mPhoneContactId = phoneContactId;
-                                Contact contact = AppManager.getInstance().phoneContacts.get(phoneContactId);
+                                Contact contact = AppManager.getContacts().get(phoneContactId);
                                 mPhoneContactName = contact.getName();
                                 mIdView.setText(mPhoneContactName);
                             } else {
@@ -166,20 +166,20 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                     mUser = user;
 
                     if (mPhoneContactId != null) {
-                        boolean isSavedContactInfo = false;
-                        Map<String, Contact> contacts = AppManager.getContacts();
-                        for (Map.Entry<String, Contact> entry : contacts.entrySet()){
-                            String contactId = entry.getKey();
-                            if (contactId.equals(mPhoneContactId)) {
-                                isSavedContactInfo = true;
-                                break;
-                            }
-                        }
+//                        boolean isSavedContactInfo = false;
+//                        Map<String, Contact> contacts = AppManager.getContacts();
+//                        for (Map.Entry<String, Contact> entry : contacts.entrySet()){
+//                            String contactId = entry.getKey();
+//                            if (contactId.equals(mPhoneContactId)) {
+//                                isSavedContactInfo = true;
+//                                break;
+//                            }
+//                        }
 
 //                        if (!isSavedContactInfo) {
-                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
-                            contacts.put(mPhoneContactId, contact);
-                            AppManager.saveContact(contacts);
+//                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
+//                            contacts.put(mPhoneContactId, contact);
+//                            AppManager.saveContact(contacts);
 //                        }
                     }
                 }

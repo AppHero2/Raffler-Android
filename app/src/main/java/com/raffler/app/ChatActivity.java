@@ -121,7 +121,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         layoutTopBanner = (LinearLayout) findViewById(R.id.layout_top_banner);
         layoutTopBanner.setVisibility(View.GONE);
-        btnBlock = (AppCompatButton) findViewById(R.id.btnBlock);
+        /*btnBlock = (AppCompatButton) findViewById(R.id.btnBlock);
         btnBlock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -140,7 +140,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 intent.putExtra(ContactsContract.Intents.Insert.PHONE, receiver.getPhone());
                 startActivityForResult(intent, REQUEST_CONTACT);
             }
-        });
+        });*/
 
         titleToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_title);
         descToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
@@ -252,22 +252,18 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     }
 
     private void checkContactStatus() {
+
         String receiverPhone = receiver.getPhone();
-        String phoneContactId = AppManager.getInstance().getPhoneContactId(receiverPhone);
+        String phoneContactId = AppManager.getPhoneContactId(receiverPhone);
         if (phoneContactId == null) {
-            if (receiverPhone == null)
-                titleToolbarTextView.setText(receiver.getName());
-            else
                 titleToolbarTextView.setText(receiverPhone);
-            layoutTopBanner.setVisibility(View.VISIBLE);
         } else {
-            Contact contact = AppManager.getInstance().phoneContacts.get(phoneContactId);
+            Contact contact = AppManager.getContacts().get(phoneContactId);
             String contactName = contact.getName();
             if (contactName == null)
                 titleToolbarTextView.setText(receiverPhone);
             else
                 titleToolbarTextView.setText(contactName);
-            layoutTopBanner.setVisibility(View.GONE);
         }
     }
 

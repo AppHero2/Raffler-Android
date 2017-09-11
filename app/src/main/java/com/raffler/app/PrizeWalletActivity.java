@@ -27,6 +27,8 @@ import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 import com.raffler.app.widgets.CustomTextView;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +79,6 @@ public class PrizeWalletActivity extends AppCompatActivity {
 
         User user = AppManager.getSession();
         userId = user.getIdx();
-
 
         updateStatus();
 
@@ -172,14 +173,14 @@ public class PrizeWalletActivity extends AppCompatActivity {
 
     private class Cell {
         public LabelImageView imgCover;
-        public CustomTextView txtTimer;
+        public TextView txtTimer;
         public TextView txtDescription;
         public ImageView imgMarker;
         private Raffle raffle;
 
         public Cell(View itemView) {
             imgCover = (LabelImageView) itemView.findViewById(R.id.img_cell_cover);
-            txtTimer = (CustomTextView) itemView.findViewById(R.id.txt_cell_timer);
+            txtTimer = (TextView) itemView.findViewById(R.id.txt_cell_timer);
             txtDescription = (TextView) itemView.findViewById(R.id.txt_cell_description);
             imgMarker = (ImageView) itemView.findViewById(R.id.img_cell_marker);
         }

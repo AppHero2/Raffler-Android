@@ -185,7 +185,7 @@ public class ContactsFragment extends Fragment {
             AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
                 @Override
                 public void onResult(boolean success) {
-                    //TODO: reload data
+                    refreshContact();
                 }
             });
         }

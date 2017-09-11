@@ -2,8 +2,10 @@ package com.raffler.app.models;
 
 import com.raffler.app.utils.Util;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,7 +20,7 @@ public class Raffle {
     private long raffles_num = 0;
     private long winners_num = 0;
 
-    private Map<String, Object> rafflers = new HashMap<>();
+    private List<String> rafflers = new ArrayList<>();
     private Map<String, Object> winners = new HashMap<>();
     private Map<String, Object> deliveredUsers = new HashMap<>();
 
@@ -35,7 +37,12 @@ public class Raffle {
         this.isClosed = Util.getBooleanFromData("isClosed", data);
         long ending_date =  Util.getLongFromData("ending_date", data);
         this.endingAt = new Date(ending_date);
-        this.rafflers = Util.getMapDataFromData("rafflers", data);
+        Map<String, Object> rafflersMap = Util.getMapDataFromData("rafflers", data);
+        for (Map.Entry<String, Object> entry : rafflersMap.entrySet()) {
+            String key = entry.getKey();
+            String value = (String) entry.getValue();
+            rafflers.add(value);
+        }
         this.winners = Util.getMapDataFromData("winners", data);
         this.deliveredUsers = Util.getMapDataFromData("deliveredUsers", data);
     }
@@ -64,7 +71,7 @@ public class Raffle {
         return imageLink;
     }
 
-    public Map<String, Object> getRafflers() {
+    public List<String> getRafflers() {
         return rafflers;
     }
 
@@ -78,8 +85,14 @@ public class Raffle {
 
     public boolean isExistRaffler(String uid){
         boolean isExist = false;
-        for (Map.Entry<String, Object> entry : rafflers.entrySet()){
+        /*for (Map.Entry<String, Object> entry : rafflers.entrySet()){
             String rafflerId = entry.getKey();
+            if (rafflerId.equals(uid)) {
+                isExist = true;
+                break;
+            }
+        }*/
+        for (String rafflerId : rafflers){
             if (rafflerId.equals(uid)) {
                 isExist = true;
                 break;

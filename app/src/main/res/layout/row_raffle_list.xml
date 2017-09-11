@@ -30,7 +30,7 @@
             android:layout_toEndOf="@+id/img_cell_cover"
             android:layout_above="@+id/txt_cell_timer" />
 
-        <com.raffler.app.widgets.CustomTextView
+        <!--<com.raffler.app.widgets.CustomTextView
             android:id="@+id/txt_cell_timer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -43,6 +43,20 @@
             app:strokeColor="@color/colorWhite"
             app:strokeJoinStyle="miter"
             app:strokeWidth="1px"
+            android:layout_marginBottom="10dp"
+            android:layout_alignParentBottom="true"
+            android:layout_toRightOf="@+id/img_cell_cover"
+            android:layout_toEndOf="@+id/img_cell_cover" />-->
+
+        <TextView
+            android:id="@+id/txt_cell_timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="02:05:12 remaining"
+            android:textColor="@color/colorAccent"
+            android:textStyle="bold"
+            android:textSize="16sp"
             android:layout_marginBottom="10dp"
             android:layout_alignParentBottom="true"
             android:layout_toRightOf="@+id/img_cell_cover"
