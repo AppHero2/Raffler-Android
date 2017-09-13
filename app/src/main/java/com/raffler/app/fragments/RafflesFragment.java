@@ -315,6 +315,7 @@ public class RafflesFragment extends Fragment {
     private class Cell {
         public LabelImageView imgCover;
         public TextView txtTimer;
+        public TextView txtTitle;
         public TextView txtDescription;
         public ImageView imgMarker;
         private Raffle raffle;
@@ -323,6 +324,7 @@ public class RafflesFragment extends Fragment {
         public Cell(View itemView) {
             imgCover = (LabelImageView) itemView.findViewById(R.id.img_cell_cover);
             txtTimer = (TextView) itemView.findViewById(R.id.txt_cell_timer);
+            txtTitle = (TextView) itemView.findViewById(R.id.txt_cell_title);
             txtDescription = (TextView) itemView.findViewById(R.id.txt_cell_description);
             imgMarker = (ImageView) itemView.findViewById(R.id.img_cell_marker);
         }
@@ -333,6 +335,7 @@ public class RafflesFragment extends Fragment {
             imgCover.setLabelDistance(20);
             imgCover.setLabelHeight(30);
             imgCover.setLabelText("R" + 0);
+            txtTitle.setText(raffle.getTitle());
             txtDescription.setText(raffle.getDescription());
 
             if (user.isExistRaffle(raffle.getIdx())){

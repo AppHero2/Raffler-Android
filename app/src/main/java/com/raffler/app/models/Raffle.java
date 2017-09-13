@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class Raffle {
 
-    private String idx, description, imageLink;
+    private String idx, title, description, imageLink;
     private Date endingAt;
     private boolean isClosed = false;
     private long raffles_num = 0;
@@ -29,6 +29,7 @@ public class Raffle {
 
     public void updateValue(Map<String, Object> data) {
         this.idx = Util.getStringFromData("idx", data);
+        this.title = Util.getStringFromData("title", data);
         this.description = Util.getStringFromData("description", data);
         this.imageLink = Util.getStringFromData("imageLink", data);
         this.raffles_num = Util.getLongFromData("raffles_num", data);
@@ -50,6 +51,10 @@ public class Raffle {
 
     public long getWinners_num() {
         return winners_num;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public String getDescription() {
