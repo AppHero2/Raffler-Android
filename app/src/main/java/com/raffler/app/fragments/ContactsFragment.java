@@ -122,10 +122,10 @@ public class ContactsFragment extends Fragment {
                     sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Awesome Raffler app");
                     sendIntent.putExtra(Intent.EXTRA_TEXT,
                             "Hey,\n\n " +
-                                    "I just downloaded Raffler app on my Android\n" +
-                                    "It's smartphone raffle app I have seen ever.\n\n" +
-                                    "Get it now from\n" +
-                                    " https://play.google.com/store/apps/details?id=com.raffler.app");
+                                    "I'm trying this new texting app called Raffler.\n" +
+                                    "You get raffle points for each text, and you can win free prizes.\n\n" +
+                                    "https://play.google.com/apps/testing/com.raffler.app");
+                                    //"https://play.google.com/store/apps/details?id=com.raffler.app");
                     sendIntent.setType("text/plain");
                     startActivity(sendIntent);
                 } else {

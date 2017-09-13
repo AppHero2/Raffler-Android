@@ -1,15 +1,11 @@
 package com.raffler.app;
 
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,7 +23,6 @@ import com.onesignal.OSPermissionStateChanges;
 import com.onesignal.OneSignal;
 import com.raffler.app.adapters.ViewPagerAdapter;
 import com.raffler.app.classes.AppManager;
-import com.raffler.app.country.Country;
 import com.raffler.app.fragments.ChatListFragment;
 import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
@@ -40,9 +35,7 @@ import com.raffler.app.models.User;
 import com.raffler.app.models.UserStatus;
 import com.raffler.app.utils.References;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener, UserValueListener{
@@ -159,6 +152,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
             }
         });
 
+        // firebase crash reporting
+        // FirebaseCrash.report(new Exception("My first Android non-fatal error"));
     }
 
     @Override
@@ -172,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     protected void onPause() {
         super.onPause();
 
-//        userStatusRef.setValue(UserStatus.AWAY.ordinal());
+        userStatusRef.setValue(UserStatus.OFFLINE.ordinal());
     }
 
     @Override
@@ -240,7 +235,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     }
 
     private void setupViewPager(ViewPager viewPager) {
-
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         chatFragment = new ChatListFragment();
         chatFragment.setUnreadMessageListener(this);
@@ -267,7 +261,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         }
         else
             tv_count.setVisibility(View.GONE);
-
 
         return view;
     }

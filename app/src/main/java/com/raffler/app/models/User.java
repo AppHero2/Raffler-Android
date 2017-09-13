@@ -105,4 +105,16 @@ public class User {
     public int getRaffle_point() {
         return raffle_point;
     }
+
+    public boolean isExistRaffle(String raffleId){
+        boolean isExist = false;
+        for (Map.Entry<String, Object> entry : raffles.entrySet()){
+            String key = entry.getKey();
+            if (key.equals(raffleId)) {
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
+    }
 }

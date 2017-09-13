@@ -26,6 +26,7 @@ import com.raffler.app.models.User;
 
 public class AppSplashActivity extends AppCompatActivity {
 
+    private static final String TAG = "AppSplashActivity";
     private static final long SPLASH_DURATION = 2500L;
 
     private Handler handler;
@@ -58,13 +59,6 @@ public class AppSplashActivity extends AppCompatActivity {
 
         // Initialize image loader
         initImageLoader(this);
-
-        AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
-            @Override
-            public void onResult(boolean success) {
-                Log.d("SplashScreen", "didRefresh Contacts");
-            }
-        });
     }
 
     @Override
@@ -72,6 +66,14 @@ public class AppSplashActivity extends AppCompatActivity {
         super.onResume();
 
         handler.postDelayed(runnable, SPLASH_DURATION);
+        if (AppManager.getSession() != null) {
+            AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
+                @Override
+                public void onResult(boolean success) {
+                    Log.d(TAG, "didRefresh Contacts");
+                }
+            });
+        }
     }
 
     @Override

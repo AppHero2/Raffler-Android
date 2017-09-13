@@ -15,7 +15,7 @@ android {
         applicationId "com.raffler.app"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 33
+        versionCode 34
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",
@@ -66,6 +66,7 @@ dependencies {
     compile 'com.google.firebase:firebase-storage:11.0.4'
     compile 'com.google.firebase:firebase-database:11.0.4'
     compile 'com.google.firebase:firebase-auth:11.0.4'
+    compile 'com.google.firebase:firebase-crash:11.0.4'
     compile 'com.android.support:appcompat-v7:26.0.1'
     compile 'com.android.support:design:26.0.1'
     compile 'com.android.support:support-v4:26.0.1'

@@ -20,7 +20,6 @@ public class Raffle {
     private long raffles_num = 0;
     private long winners_num = 0;
 
-    private List<String> rafflers = new ArrayList<>();
     private Map<String, Object> winners = new HashMap<>();
     private Map<String, Object> deliveredUsers = new HashMap<>();
 
@@ -37,12 +36,6 @@ public class Raffle {
         this.isClosed = Util.getBooleanFromData("isClosed", data);
         long ending_date =  Util.getLongFromData("ending_date", data);
         this.endingAt = new Date(ending_date);
-        Map<String, Object> rafflersMap = Util.getMapDataFromData("rafflers", data);
-        for (Map.Entry<String, Object> entry : rafflersMap.entrySet()) {
-            String key = entry.getKey();
-            String value = (String) entry.getValue();
-            rafflers.add(value);
-        }
         this.winners = Util.getMapDataFromData("winners", data);
         this.deliveredUsers = Util.getMapDataFromData("deliveredUsers", data);
     }
@@ -71,34 +64,12 @@ public class Raffle {
         return imageLink;
     }
 
-    public List<String> getRafflers() {
-        return rafflers;
-    }
-
     public Map<String, Object> getWinners() {
         return winners;
     }
 
     public Map<String, Object> getDeliveredUsers() {
         return deliveredUsers;
-    }
-
-    public boolean isExistRaffler(String uid){
-        boolean isExist = false;
-        /*for (Map.Entry<String, Object> entry : rafflers.entrySet()){
-            String rafflerId = entry.getKey();
-            if (rafflerId.equals(uid)) {
-                isExist = true;
-                break;
-            }
-        }*/
-        for (String rafflerId : rafflers){
-            if (rafflerId.equals(uid)) {
-                isExist = true;
-                break;
-            }
-        }
-        return isExist;
     }
 
     public boolean isExistWinner(String uid){

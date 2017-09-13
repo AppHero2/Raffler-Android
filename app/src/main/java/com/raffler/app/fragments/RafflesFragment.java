@@ -30,6 +30,7 @@ import com.raffler.app.R;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.models.Holder;
 import com.raffler.app.models.Raffle;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
@@ -50,12 +51,12 @@ import java.util.TimerTask;
  */
 public class RafflesFragment extends Fragment {
 
-    private DatabaseReference rafflesRef, usersRef;
+    private DatabaseReference rafflesRef, usersRef, holdersRef;
     private ChildEventListener childEventListener;
 
     private List<Raffle> raffles = new ArrayList<>();
     private RafflesAdapter adapter;
-    private String userId;
+    private User user;
 
     public RafflesFragment() {
         // Required empty public constructor
@@ -66,10 +67,10 @@ public class RafflesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
+        user = AppManager.getSession();
         usersRef = References.getInstance().usersRef;
         rafflesRef = References.getInstance().rafflesRef;
-        User user = AppManager.getSession();
-        userId = user.getIdx();
+        holdersRef = References.getInstance().holdersRef;
     }
 
     @Override
@@ -121,17 +122,23 @@ public class RafflesFragment extends Fragment {
                             @Override
                             public void onItemClick(Object o, int position) {
                                 if (position != AlertView.CANCELPOSITION) {
-                                    List<String> rafflers = raffle.getRafflers();
-                                    rafflers.add(userId);
-                                    rafflesRef.child(raffle.getIdx()).child("rafflers").setValue(rafflers);
+
+                                    Map<String, Object> holder = new HashMap<>();
+                                    holder.put("uid", user.getIdx());
+                                    holder.put("pushToken", user.getPushToken());
+                                    holdersRef.child(raffle.getIdx()).push().setValue(holder);
                                     Map<String, Object> dicRaffle = new HashMap<>();
-                                    dicRaffle.put(raffle.getIdx(), true);
-                                    usersRef.child(userId).child("raffles").updateChildren(dicRaffle);
-                                    usersRef.child(userId).child("raffle_point").setValue(user_raffle_point - 1);
+                                    double holding_count = 1;
+                                    if (user.isExistRaffle(raffle.getIdx())){
+                                        holding_count = (double)user.getRaffles().get(raffle.getIdx()) + 1;
+                                    }
+                                    dicRaffle.put(raffle.getIdx(), holding_count);
+                                    usersRef.child(user.getIdx()).child("raffles").updateChildren(dicRaffle);
+                                    usersRef.child(user.getIdx()).child("raffle_point").setValue(user_raffle_point - 1);
 
                                     // analysis
                                     Bundle params = new Bundle();
-                                    params.putString("raffler", userId);
+                                    params.putString("raffler", user.getIdx());
                                     References.getInstance().analytics.logEvent("enter_raffle", params);
                                 }
                             }
@@ -231,7 +238,6 @@ public class RafflesFragment extends Fragment {
             raffles.add(raffle);
         }
         adapter.notifyDataSetChanged();
-
     }
 
     private class RafflesAdapter extends BaseAdapter {
@@ -312,7 +318,6 @@ public class RafflesFragment extends Fragment {
         public TextView txtDescription;
         public ImageView imgMarker;
         private Raffle raffle;
-        public boolean isTakenRaffle = false;
         private boolean isExpired = false;
 
         public Cell(View itemView) {
@@ -327,17 +332,17 @@ public class RafflesFragment extends Fragment {
             Util.setURLImage(raffle.getImageLink(), imgCover);
             imgCover.setLabelDistance(20);
             imgCover.setLabelHeight(30);
-            imgCover.setLabelText("R"+raffle.getRaffles_num());
+            imgCover.setLabelText("R" + 0);
             txtDescription.setText(raffle.getDescription());
-            isTakenRaffle = false;
 
-            if (raffle.isExistWinner(userId)) {
-                imgMarker.setVisibility(View.VISIBLE);
-                imgMarker.setImageResource(R.drawable.ic_raffle_winner);
-            } else if (raffle.isExistRaffler(userId)) {
+            if (user.isExistRaffle(raffle.getIdx())){
+                double holding_count = (double) user.getRaffles().get(raffle.getIdx());
+                imgCover.setLabelText("R" + (int) holding_count);
                 imgMarker.setVisibility(View.VISIBLE);
                 imgMarker.setImageResource(R.drawable.ic_raffle_flag);
-                isTakenRaffle = true;
+            } else if (raffle.isExistWinner(user.getIdx())) {
+                imgMarker.setVisibility(View.VISIBLE);
+                imgMarker.setImageResource(R.drawable.ic_raffle_winner);
             } else {
                 imgMarker.setVisibility(View.GONE);
             }
