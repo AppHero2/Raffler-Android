@@ -52,7 +52,7 @@ public class AppManager {
     private Context context;
     private DatabaseReference usersRef;
     private ValueEventListener trackUserListener;
-    private UserValueListener userValueListener, userValueListenerForChat;
+    private UserValueListener userValueListenerMain, userValueListenerForChat, uservalueListenerForRaffles;
 
     public Chat selectedChat;
     public String userId;
@@ -77,11 +77,14 @@ public class AppManager {
                     Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
                     User user = new User(userData);
                     AppManager.saveSession(user);
-                    if (userValueListener != null) {
-                        userValueListener.onLoadedUser(user);
+                    if (userValueListenerMain != null) {
+                        userValueListenerMain.onLoadedUser(user);
                     }
                     if (userValueListenerForChat != null) {
                         userValueListenerForChat.onLoadedUser(user);
+                    }
+                    if (uservalueListenerForRaffles != null) {
+                        uservalueListenerForRaffles.onLoadedUser(user);
                     }
                 }
             }
@@ -273,12 +276,16 @@ public class AppManager {
         this.context = context;
     }
 
-    public void setUserValueListener(UserValueListener userValueListener) {
-        this.userValueListener = userValueListener;
+    public void setUserValueListenerMain(UserValueListener userValueListenerMain) {
+        this.userValueListenerMain = userValueListenerMain;
     }
 
     public void setUserValueListenerForChat(UserValueListener userValueListenerForChat) {
         this.userValueListenerForChat = userValueListenerForChat;
+    }
+
+    public void setUservalueListenerForRaffles(UserValueListener uservalueListenerForRaffles) {
+        this.uservalueListenerForRaffles = uservalueListenerForRaffles;
     }
 
     public void addNewContact(Uri contactUri, final ResultListener listener){

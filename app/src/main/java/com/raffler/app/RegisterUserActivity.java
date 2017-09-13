@@ -83,7 +83,7 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private Bitmap bitmapProfile;
 
-    public static final int MULTIPLE_PERMISSIONS = 10; // code you want.
+    public static final int MULTIPLE_PERMISSIONS = 989;
 
     String[] permissions= new String[]{
             Manifest.permission.READ_CONTACTS,

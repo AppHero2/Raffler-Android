@@ -12,6 +12,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
@@ -123,6 +126,19 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                                 mPhoneContactId = null;
                                 mPhoneContactName = null;
                                 mIdView.setText(mPhoneContactNumber);
+
+                                try {
+                                    // phone must begin with '+'
+                                    PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                                    PhoneNumber numberProto = phoneUtil.parse(mPhoneContactNumber, "");
+                                    /*int countryCode = numberProto.getCountryCode();
+                                    long number = numberProto.getNationalNumber();*/
+                                    String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+                                    mIdView.setText(formatedPhoneNumber);
+
+                                } catch (NumberParseException e) {
+                                    System.err.println("NumberParseException was thrown: " + e.toString());
+                                }
                             }
 
                             updateData(message, contactId);
@@ -175,7 +191,6 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 //                                break;
 //                            }
 //                        }
-
 //                        if (!isSavedContactInfo) {
 //                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
 //                            contacts.put(mPhoneContactId, contact);

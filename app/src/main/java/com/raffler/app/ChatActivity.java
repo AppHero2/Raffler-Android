@@ -27,6 +27,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.onesignal.OneSignal;
 import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
@@ -256,7 +259,19 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         String receiverPhone = receiver.getPhone();
         String phoneContactId = AppManager.getPhoneContactId(receiverPhone);
         if (phoneContactId == null) {
-                titleToolbarTextView.setText(receiverPhone);
+            titleToolbarTextView.setText(receiverPhone);
+            try {
+                // phone must begin with '+'
+                PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                Phonenumber.PhoneNumber numberProto = phoneUtil.parse(receiverPhone, "");
+                                    /*int countryCode = numberProto.getCountryCode();
+                                    long number = numberProto.getNationalNumber();*/
+                String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+                titleToolbarTextView.setText(formatedPhoneNumber);
+
+            } catch (NumberParseException e) {
+                System.err.println("NumberParseException was thrown: " + e.toString());
+            }
         } else {
             Contact contact = AppManager.getContacts().get(phoneContactId);
             String contactName = contact.getName();

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -30,13 +29,12 @@ import com.raffler.app.R;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
-import com.raffler.app.models.Holder;
+import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Raffle;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.TimeUtil;
 import com.raffler.app.utils.Util;
-import com.raffler.app.widgets.CustomTextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,7 +54,7 @@ public class RafflesFragment extends Fragment {
 
     private List<Raffle> raffles = new ArrayList<>();
     private RafflesAdapter adapter;
-    private User user;
+    private User mUser;
 
     public RafflesFragment() {
         // Required empty public constructor
@@ -67,7 +65,7 @@ public class RafflesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        user = AppManager.getSession();
+        mUser = AppManager.getSession();
         usersRef = References.getInstance().usersRef;
         rafflesRef = References.getInstance().rafflesRef;
         holdersRef = References.getInstance().holdersRef;
@@ -124,21 +122,23 @@ public class RafflesFragment extends Fragment {
                                 if (position != AlertView.CANCELPOSITION) {
 
                                     Map<String, Object> holder = new HashMap<>();
-                                    holder.put("uid", user.getIdx());
-                                    holder.put("pushToken", user.getPushToken());
+                                    holder.put("uid", mUser.getIdx());
+                                    holder.put("pushToken", mUser.getPushToken());
                                     holdersRef.child(raffle.getIdx()).push().setValue(holder);
                                     Map<String, Object> dicRaffle = new HashMap<>();
-                                    double holding_count = 1;
-                                    if (user.isExistRaffle(raffle.getIdx())){
-                                        holding_count = (double)user.getRaffles().get(raffle.getIdx()) + 1;
+                                    long holding_count = 1;
+                                    if (mUser.isExistRaffle(raffle.getIdx())){
+                                        String strValue = (String) mUser.getRaffles().get(raffle.getIdx());
+                                        holding_count = Integer.valueOf(strValue) + 1;
                                     }
-                                    dicRaffle.put(raffle.getIdx(), holding_count);
-                                    usersRef.child(user.getIdx()).child("raffles").updateChildren(dicRaffle);
-                                    usersRef.child(user.getIdx()).child("raffle_point").setValue(user_raffle_point - 1);
+                                    String strHoldNum = String.valueOf(holding_count);
+                                    dicRaffle.put(raffle.getIdx(), strHoldNum);
+                                    usersRef.child(mUser.getIdx()).child("raffles").updateChildren(dicRaffle);
+                                    usersRef.child(mUser.getIdx()).child("raffle_point").setValue((user_raffle_point - 1));
 
                                     // analysis
                                     Bundle params = new Bundle();
-                                    params.putString("raffler", user.getIdx());
+                                    params.putString("raffler", mUser.getIdx());
                                     References.getInstance().analytics.logEvent("enter_raffle", params);
                                 }
                             }
@@ -159,6 +159,15 @@ public class RafflesFragment extends Fragment {
         });
 
         startTrackingRaffles();
+
+        AppManager.getInstance().setUservalueListenerForRaffles(new UserValueListener() {
+            @Override
+            public void onLoadedUser(User user) {
+                mUser = user;
+                adapter.notifyDataSetChanged();
+            }
+        });
+
         return view;
     }
 
@@ -338,12 +347,25 @@ public class RafflesFragment extends Fragment {
             txtTitle.setText(raffle.getTitle());
             txtDescription.setText(raffle.getDescription());
 
-            if (user.isExistRaffle(raffle.getIdx())){
-                double holding_count = (double) user.getRaffles().get(raffle.getIdx());
-                imgCover.setLabelText("R" + (int) holding_count);
+            if (mUser.isExistRaffle(raffle.getIdx())){
+                /*try{
+                    long holding_count = (long) mUser.getRaffles().get(raffle.getIdx());
+                    imgCover.setLabelText("R" + holding_count);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+                try{
+                    double holding_count = (double) mUser.getRaffles().get(raffle.getIdx());
+                    imgCover.setLabelText("R" + (int)holding_count);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }*/
+                String holding_count = (String) mUser.getRaffles().get(raffle.getIdx());
+                imgCover.setLabelText("R" + holding_count);
                 imgMarker.setVisibility(View.VISIBLE);
                 imgMarker.setImageResource(R.drawable.ic_raffle_flag);
-            } else if (raffle.isExistWinner(user.getIdx())) {
+            } else if (raffle.isExistWinner(mUser.getIdx())) {
                 imgMarker.setVisibility(View.VISIBLE);
                 imgMarker.setImageResource(R.drawable.ic_raffle_winner);
             } else {

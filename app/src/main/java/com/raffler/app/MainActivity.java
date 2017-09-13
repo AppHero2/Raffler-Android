@@ -27,7 +27,6 @@ import com.raffler.app.fragments.ChatListFragment;
 import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
 import com.raffler.app.interfaces.ChatItemClickListener;
-import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
@@ -161,6 +160,9 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         super.onResume();
 
         userStatusRef.setValue(UserStatus.ONLINE.ordinal());
+
+        // Clear all notification
+        OneSignal.clearOneSignalNotifications();
     }
 
     @Override

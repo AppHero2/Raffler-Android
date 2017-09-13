@@ -2,7 +2,6 @@ package com.raffler.app.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -98,7 +97,7 @@ public class ChatListFragment extends Fragment {
             }
         };
 
-        AppManager.getInstance().setUserValueListener(listener);
+        AppManager.getInstance().setUserValueListenerMain(listener);
 
         return view;
     }
