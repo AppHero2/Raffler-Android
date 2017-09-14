@@ -24,6 +24,14 @@
         <item name="colorControlHighlight">@color/colorAccent</item>
     </style>
 
+    <style name="PointsEditTextTheme">
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textColorHint">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+        <item name="colorControlNormal">@color/colorPrimary</item>
+        <item name="colorControlActivated">@color/colorPrimary</item>
+    </style>
+
     <style name="CircleIconStyle">
         <item name="android:layout_width">48dp</item>
         <item name="android:layout_height">48dp</item>

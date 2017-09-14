@@ -10,6 +10,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatButton;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -111,7 +114,7 @@ public class RafflesFragment extends Fragment {
                                 getString(R.string.raffles_alert_no_enough), getActivity());
                     } else {
 
-                        AlertView alertView = new AlertView("Please enter points", null, "Cancel", new String[]{"Okay"}, null, getActivity(), AlertView.Style.Alert, new OnItemClickListener() {
+                        AlertView alertView = new AlertView(getString(R.string.raffles_alert_entering), null, "Cancel", new String[]{"Okay"}, null, getActivity(), AlertView.Style.Alert, new OnItemClickListener() {
                             @Override
                             public void onItemClick(Object o, int position) {
                                 if (position != AlertView.CANCELPOSITION) {
@@ -145,7 +148,38 @@ public class RafflesFragment extends Fragment {
                         alertView.setCancelable(false);
 
                         ViewGroup extView = (ViewGroup) LayoutInflater.from(getActivity()).inflate(R.layout.layout_input_points, null);
-                        final TextView txtPoint = (TextView) extView.findViewById(R.id.txt_points); txtPoint.setText(String.valueOf(entering_point));
+                        final EditText etPoint = (EditText) extView.findViewById(R.id.et_points);
+                        etPoint.setText(String.valueOf(entering_point));
+                        etPoint.addTextChangedListener(new TextWatcher() {
+                            @Override
+                            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                            }
+
+                            @Override
+                            public void afterTextChanged(Editable editable) {
+                                String value = etPoint.getText().toString();
+                                if (value != null)
+                                    entering_point = Integer.valueOf(value);
+                                else
+                                    entering_point = 0;
+
+                                if (entering_point > user_raffle_point) {
+                                    Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.raffles_alert_no_enough), getActivity());
+                                    entering_point = user_raffle_point;
+                                    etPoint.setText(String.valueOf(entering_point));
+                                } else if (entering_point <= 0) {
+                                    Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.raffles_alert_minimum), getActivity());
+                                    entering_point = 1;
+                                    etPoint.setText(String.valueOf(entering_point));
+                                }
+                            }
+                        });
                         ColorStateList csl_default = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffffd700});
                         AppCompatButton btnMinus = (AppCompatButton) extView.findViewById(R.id.btn_minus); btnMinus.setSupportBackgroundTintList(csl_default);
                         AppCompatButton btnPlus = (AppCompatButton) extView.findViewById(R.id.btn_plus); btnPlus.setSupportBackgroundTintList(csl_default);
@@ -156,7 +190,7 @@ public class RafflesFragment extends Fragment {
                                     entering_point -= 1;
                                 }
 
-                                txtPoint.setText(String.valueOf(entering_point));
+                                etPoint.setText(String.valueOf(entering_point));
                             }
                         });
                         btnPlus.setOnClickListener(new View.OnClickListener() {
@@ -166,7 +200,7 @@ public class RafflesFragment extends Fragment {
                                     entering_point += 1;
                                 }
 
-                                txtPoint.setText(String.valueOf(entering_point));
+                                etPoint.setText(String.valueOf(entering_point));
                             }
                         });
 
@@ -375,19 +409,6 @@ public class RafflesFragment extends Fragment {
             txtDescription.setText(raffle.getDescription());
 
             if (mUser.isExistRaffle(raffle.getIdx())){
-                /*try{
-                    long holding_count = (long) mUser.getRaffles().get(raffle.getIdx());
-                    imgCover.setLabelText("R" + holding_count);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-
-                try{
-                    double holding_count = (double) mUser.getRaffles().get(raffle.getIdx());
-                    imgCover.setLabelText("R" + (int)holding_count);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }*/
                 String holding_count = (String) mUser.getRaffles().get(raffle.getIdx());
                 imgCover.setLabelText("R" + holding_count);
                 imgMarker.setVisibility(View.VISIBLE);

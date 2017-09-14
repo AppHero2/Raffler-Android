@@ -13,18 +13,26 @@
         android:layout_width="match_parent"
         android:layout_height="50dp">
 
-        <TextView
-            android:id="@+id/txt_points"
+        <EditText
+            android:id="@+id/et_points"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
             android:text="35"
             android:textStyle="bold"
             android:textSize="20dp"
-            android:textColor="@color/colorAccent"
+            android:inputType="number"
+            style="@style/PointsEditTextTheme"
+            android:theme="@style/PointsEditTextTheme"
             android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_toLeftOf="@+id/linearLayout"
+            android:layout_toStartOf="@+id/linearLayout" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -35,7 +43,8 @@
             android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_marginEnd="14dp">
+            android:layout_marginEnd="14dp"
+            android:id="@+id/linearLayout">
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/btn_minus"
                 android:layout_width="40dp"

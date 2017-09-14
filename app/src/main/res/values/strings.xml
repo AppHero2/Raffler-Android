@@ -32,6 +32,7 @@
     <string name="raffles_alert_expired">This raffle is already expired.</string>
     <string name="raffles_alert_already">You\'ve got already this one.</string>
     <string name="raffles_alert_no_enough">Sorry! You don\'t have enough points. Chat with friends to get points and win!</string>
+    <string name="raffles_alert_minimum">Sorry! You should enter at least a point. Please try again!</string>
     <string name="raffles_alert_entering">Please enter raffle points</string>
     <string name="raffles_alert_good_luck">Good luck!</string>
 
