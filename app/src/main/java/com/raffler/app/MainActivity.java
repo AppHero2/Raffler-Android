@@ -1,7 +1,9 @@
 package com.raffler.app;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -11,11 +13,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.matrixxun.starry.badgetextview.MenuItemBadge;
 import com.onesignal.OSNotification;
 import com.onesignal.OSNotificationOpenResult;
 import com.onesignal.OSPermissionObserver;
@@ -44,8 +47,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    private TextView txtRaffles;
-    private MenuItem progressBar;
+    private MenuItem menuItemRefresh, menuItemNews, menuItemPoints;
 
     //Fragments
     private RafflesFragment rafflesFragment;
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            FirebaseCrash.report(e);
         }
 
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -115,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 .setNotificationOpenedHandler(new OneSignal.NotificationOpenedHandler() {
                     @Override
                     public void notificationOpened(OSNotificationOpenResult result) {
-                        // TODO: 7/28/2017 open an activity
+
                     }
                 })
                 .setNotificationReceivedHandler(new OneSignal.NotificationReceivedHandler() {
@@ -151,8 +153,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
             }
         });
 
-        // firebase crash reporting
-        // FirebaseCrash.report(new Exception("My first Android non-fatal error"));
     }
 
     @Override
@@ -183,13 +183,29 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.menu_home, menu);
         // Associate searchable configuration with the SearchView
-        RelativeLayout rafflesLayout = (RelativeLayout) menu.findItem(R.id.action_raffles).getActionView();
+//        RelativeLayout rafflesLayout = (RelativeLayout) menu.findItem(R.id.menu_raffles).getActionView();
+//
+//        txtRaffles = rafflesLayout.findViewById(R.id.tv_count);
+//        txtRaffles.setText(String.valueOf(raffles_point));
 
-        txtRaffles = rafflesLayout.findViewById(R.id.tv_count);
-        txtRaffles.setText(String.valueOf(raffles_point));
+        menuItemRefresh = menu.findItem(R.id.menu_refresh);
+        menuItemRefresh.setVisible(false);
 
-        progressBar = menu.findItem(R.id.action_refresh);
-        progressBar.setVisible(false);
+        menuItemNews = menu.findItem(R.id.menu_notification);
+        MenuItemBadge.update(this, menuItemNews, new MenuItemBadge.Builder()
+            .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_notification_md))
+            .iconTintColor(Color.WHITE)
+            .textBackgroundColor(Color.parseColor("#FB8C00"))
+            .textColor(Color.WHITE));
+        MenuItemBadge.getBadgeTextView(menuItemNews).setBadgeCount(0);
+
+        menuItemPoints = menu.findItem(R.id.menu_points);
+        MenuItemBadge.update(this, menuItemPoints, new MenuItemBadge.Builder()
+                .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_sack_md))
+                .iconTintColor(Color.WHITE)
+                .textBackgroundColor(Color.parseColor("#FB8C00"))
+                .textColor(Color.WHITE));
+        MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
 
         return true;
     }
@@ -198,12 +214,15 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            /*case R.id.action_status:
-                Toast.makeText(this, "Home Status Click", Toast.LENGTH_SHORT).show();
+            case R.id.menu_points:
+                startActivity(new Intent(this, WalletActivity.class));
                 return true;
-            case R.id.action_settings:
-                Toast.makeText(this, "Home Settings Click", Toast.LENGTH_SHORT).show();
-                return true;*/
+            case R.id.menu_notification:
+                startActivity(new Intent(this, NewsActivity.class));
+                return true;
+            case R.id.menu_settings:
+                // TODO: 9/14/2017 Settings
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -232,8 +251,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     public void onLoadedUser(User user) {
 
         raffles_point = AppManager.getSession().getRaffle_point();
-        if (txtRaffles != null)
-            txtRaffles.setText(String.valueOf(raffles_point));
+        if (menuItemPoints != null)
+            MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
     }
 
     private void setupViewPager(ViewPager viewPager) {

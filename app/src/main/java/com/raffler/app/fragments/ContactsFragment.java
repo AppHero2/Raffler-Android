@@ -190,7 +190,7 @@ public class ContactsFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        progressBar = menu.findItem(R.id.action_refresh);
+        progressBar = menu.findItem(R.id.menu_refresh);
         refreshContact();
         super.onPrepareOptionsMenu(menu);
     }
@@ -205,7 +205,7 @@ public class ContactsFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.action_refresh:
+            case R.id.menu_refresh:
 
                 return true;
             default:

@@ -11,6 +11,7 @@ public class Constant {
     public static final String RAFFLES = "Raffles";
     public static final String Holders = "Holders";
     public static final String PRIZES = "Prizes";
+    public static final String NEWS = "News";
     public static final String MESSAGES = "messages";
     public static final String META = "meta";
     public static final String INFORMATION = "information";

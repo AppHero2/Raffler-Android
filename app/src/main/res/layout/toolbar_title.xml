@@ -5,27 +5,13 @@
     android:layout_height="?attr/actionBarSize"
     android:background="@color/colorPrimaryDark">
 
-    <EditText
-        android:id="@+id/et_search"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:textColor="@color/colorAccent"
-        android:inputType="textFilter|textNoSuggestions"
-        android:imeOptions="actionDone"
-        android:visibility="invisible"
-        android:layout_marginLeft="30dp"
-        android:layout_marginStart="30dp"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"/>
-
     <TextView
         android:id="@+id/txtTitle"
         android:layout_width="wrap_content"
         android:layout_height="30dp"
         android:layout_gravity="center_horizontal|top"
         android:text="@string/wallet_title"
-        android:textSize="20dp"
-        android:textStyle="bold"
+        android:textSize="18sp"
         android:gravity="center"
         android:textColor="@color/colorAccent"
         android:layout_centerVertical="true"
@@ -35,7 +21,7 @@
         android:id="@+id/btnBack"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:padding="4dp"
+        android:padding="8dp"
         android:layout_gravity="left|center_vertical"
         android:src="@drawable/btn_back"
         android:tint="@color/colorAccent"
@@ -44,7 +30,7 @@
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"/>
 
-    <RelativeLayout
+    <!--<RelativeLayout
         android:id="@+id/layout_inbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -70,6 +56,6 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:background="@drawable/badge_round_yellow"/>
-    </RelativeLayout>
+    </RelativeLayout>-->
 
 </RelativeLayout>

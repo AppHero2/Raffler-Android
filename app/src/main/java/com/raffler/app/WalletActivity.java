@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -25,21 +24,14 @@ import com.raffler.app.models.Raffle;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
-import com.raffler.app.widgets.CustomTextView;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Handler;
 
-public class PrizeWalletActivity extends AppCompatActivity {
+public class WalletActivity extends AppCompatActivity {
 
-    private static final String TAG = "PrizeWalletActivity";
-
-    private RelativeLayout layout_inbox;
-    private TextView tvBadge;
+    private static final String TAG = "WalletActivity";
 
     private String userId;
     private int badgeCount = 0;
@@ -53,7 +45,7 @@ public class PrizeWalletActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_prize_wallet);
+        setContentView(R.layout.activity_wallet);
 
         hud = KProgressHUD.create(this)
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
@@ -67,8 +59,6 @@ public class PrizeWalletActivity extends AppCompatActivity {
         adapter = new PrizesAdapter(this, prizes);
         lstPrize.setAdapter(adapter);
 
-        layout_inbox = (RelativeLayout) findViewById(R.id.layout_inbox);
-        tvBadge = (TextView) findViewById(R.id.tv_badge);
         ImageView btnBack = (ImageView) findViewById(R.id.btnBack);
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,12 +77,7 @@ public class PrizeWalletActivity extends AppCompatActivity {
 
     private void updateStatus(){
         badgeCount = prizes.size();
-        tvBadge.setText(String.valueOf(badgeCount));
-        if (badgeCount == 0) {
-            tvBadge.setVisibility(View.GONE);
-        } else {
-            tvBadge.setVisibility(View.VISIBLE);
-        }
+
     }
 
     private void refreshData(){
@@ -158,7 +143,7 @@ public class PrizeWalletActivity extends AppCompatActivity {
             Cell cell;
             View cellView = convertView;
             if (convertView == null) {
-                cellView = this.layoutInflater.inflate(R.layout.row_raffle_list, null);
+                cellView = this.layoutInflater.inflate(R.layout.row_raffle, null);
                 cell = new Cell(cellView);
                 cellView.setTag(cell);
             } else {

@@ -96,6 +96,7 @@ public class AppSplashActivity extends AppCompatActivity {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null){
             AppManager.getInstance().startTrackingUser(firebaseUser.getUid());
+            AppManager.getInstance().startTrackingNews(firebaseUser.getUid());
             User user = AppManager.getSession();
             if (user != null) {
                 startActivity(new Intent(this, MainActivity.class));

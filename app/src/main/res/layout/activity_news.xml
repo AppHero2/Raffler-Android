@@ -4,22 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raffler.app.PrizeWalletActivity"
-    android:background="@color/colorPrimary">
+    tools:context="com.raffler.app.NewsActivity">
 
     <include
         android:id="@+id/toolbar"
-        layout="@layout/toolbar_wallet"
+        layout="@layout/toolbar_title"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize" />
 
     <ListView
-        android:id="@+id/lst_prize"
+        android:id="@+id/lst_notification"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:divider="@color/colorPrimaryDark"
         android:dividerHeight="1dp"
-        tools:listitem="@layout/row_raffle_list"
+        tools:listitem="@layout/row_news"
         android:layout_below="@+id/toolbar">
     </ListView>
 
@@ -28,7 +27,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="@string/wallet_empty"
+        android:text="@string/notification_empty"
         android:textSize="@dimen/large_text"
         android:textColor="@color/colorAccent"/>
+
 </RelativeLayout>

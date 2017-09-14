@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_raffles"
+    <!--<item
+        android:id="@+id/menu_raffles"
         android:menuCategory="secondary"
         android:orderInCategory="1"
         android:title="@string/raffles_title"
         app:actionLayout="@layout/item_actionbar_raffles"
-        app:showAsAction="always" />
-    <item android:id="@+id/action_refresh"
+        app:showAsAction="always" />-->
+
+    <item android:id="@+id/menu_refresh"
         android:title="@string/action_refresh"
         app:actionLayout="@layout/item_actionbar_refresh"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/menu_notification"
+        android:title="Notification"
+        app:actionLayout="@layout/menu_action_item_badge"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/menu_points"
+        android:title="Points"
+        app:actionLayout="@layout/menu_action_item_badge"
         app:showAsAction="always"/>
     <!--<item android:id="@+id/action_status"
         android:orderInCategory="10"
@@ -20,4 +31,8 @@
         android:orderInCategory="11"
         android:title="@string/action_settings"
         app:showAsAction="never"/>-->
+    <item android:id="@+id/menu_settings"
+        android:orderInCategory="11"
+        android:title="@string/action_settings"
+        app:showAsAction="never"/>
 </menu>

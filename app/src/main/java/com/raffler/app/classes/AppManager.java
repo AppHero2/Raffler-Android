@@ -10,9 +10,9 @@ import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -50,13 +50,14 @@ public class AppManager {
     }
 
     private Context context;
-    private DatabaseReference usersRef;
     private ValueEventListener trackUserListener;
+    private ChildEventListener trackNewsListener;
     private UserValueListener userValueListenerMain, userValueListenerForChat, uservalueListenerForRaffles;
 
     public Chat selectedChat;
     public String userId;
     public Map<String, Contact> phoneContacts = new HashMap<>();
+    public List<Message> messageList = new ArrayList<>();
 
     private AppManager() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -64,7 +65,6 @@ public class AppManager {
         if (firebaseUser != null) {
             userId = firebaseUser.getUid();
         }
-        usersRef = database.getReference("Users");
     }
 
     public void startTrackingUser(String uid) {
@@ -94,11 +94,49 @@ public class AppManager {
                 Log.d("TrackUser", databaseError.toString());
             }
         };
-        usersRef.child(uid).addValueEventListener(trackUserListener);
+        References.getInstance().usersRef.child(uid).addValueEventListener(trackUserListener);
     }
 
     public void stopTrackingUser(String uid){
-        usersRef.child(uid).removeEventListener(trackUserListener);
+        References.getInstance().usersRef.child(uid).removeEventListener(trackUserListener);
+    }
+
+    public void startTrackingNews(String uid){
+        if (trackNewsListener != null)
+            return;
+
+        trackNewsListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        References.getInstance().newsRef.child(uid).addChildEventListener(trackNewsListener);
+    }
+
+    public void stopTrackingNews(String uid){
+        References.getInstance().newsRef.child(uid).removeEventListener(trackNewsListener);
     }
 
     public static void getUser(String userId, final UserValueListener listener) {
@@ -332,7 +370,7 @@ public class AppManager {
         final String name = contactName;
         final String phone = contactNumber.replace(" ", "").replace("-", "");
 
-        Query query = usersRef.orderByChild("phone").equalTo(phone);
+        Query query = References.getInstance().usersRef.orderByChild("phone").equalTo(phone);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -444,7 +482,6 @@ public class AppManager {
                         if (listener != null)
                             listener.onResult(true);
                     }
-
                 }
             });
         } else {

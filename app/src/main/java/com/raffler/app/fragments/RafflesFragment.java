@@ -3,11 +3,13 @@ package com.raffler.app.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.AppCompatButton;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,7 +26,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.lid.lib.LabelImageView;
-import com.raffler.app.PrizeWalletActivity;
+import com.raffler.app.WalletActivity;
 import com.raffler.app.R;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
@@ -55,6 +57,8 @@ public class RafflesFragment extends Fragment {
     private List<Raffle> raffles = new ArrayList<>();
     private RafflesAdapter adapter;
     private User mUser;
+
+    private int entering_point = 1;
 
     public RafflesFragment() {
         // Required empty public constructor
@@ -100,41 +104,36 @@ public class RafflesFragment extends Fragment {
                     Util.showAlert(getString(R.string.alert_title_notice),
                             getString(R.string.raffles_alert_expired), getActivity());
                 } else {
-                    /*if (cell.isTakenRaffle) {
-                        Util.showAlert(getString(R.string.alert_title_notice),
-                                getString(R.string.raffles_alert_already), getActivity());
-                        return;
-                    }*/
 
                     final int user_raffle_point = AppManager.getSession().getRaffle_point();
                     if (user_raffle_point < 1) {
                         Util.showAlert(getString(R.string.alert_title_notice),
                                 getString(R.string.raffles_alert_no_enough), getActivity());
                     } else {
-                        AlertView alertView = new AlertView(getString(R.string.alert_title_notice),
-                                getString(R.string.raffles_alert_make_sure),
-                                getString(R.string.alert_button_cancel),
-                                new String[]{getString(R.string.alert_button_okay)}, null,
-                                getActivity(),
-                                AlertView.Style.Alert, new OnItemClickListener() {
+
+                        AlertView alertView = new AlertView("Please enter points", null, "Cancel", new String[]{"Okay"}, null, getActivity(), AlertView.Style.Alert, new OnItemClickListener() {
                             @Override
                             public void onItemClick(Object o, int position) {
                                 if (position != AlertView.CANCELPOSITION) {
 
-                                    Map<String, Object> holder = new HashMap<>();
-                                    holder.put("uid", mUser.getIdx());
-                                    holder.put("pushToken", mUser.getPushToken());
-                                    holdersRef.child(raffle.getIdx()).push().setValue(holder);
+                                    for (int i=0; i<entering_point; i++){
+                                        Map<String, Object> holder = new HashMap<>();
+                                        holder.put("uid", mUser.getIdx());
+                                        holder.put("pushToken", mUser.getPushToken());
+                                        holdersRef.child(raffle.getIdx()).push().setValue(holder);
+                                    }
+
                                     Map<String, Object> dicRaffle = new HashMap<>();
                                     long holding_count = 1;
                                     if (mUser.isExistRaffle(raffle.getIdx())){
                                         String strValue = (String) mUser.getRaffles().get(raffle.getIdx());
-                                        holding_count = Integer.valueOf(strValue) + 1;
+                                        holding_count = Integer.valueOf(strValue) + entering_point;
                                     }
+
                                     String strHoldNum = String.valueOf(holding_count);
                                     dicRaffle.put(raffle.getIdx(), strHoldNum);
                                     usersRef.child(mUser.getIdx()).child("raffles").updateChildren(dicRaffle);
-                                    usersRef.child(mUser.getIdx()).child("raffle_point").setValue((user_raffle_point - 1));
+                                    usersRef.child(mUser.getIdx()).child("raffle_point").setValue((user_raffle_point - entering_point));
 
                                     // analysis
                                     Bundle params = new Bundle();
@@ -143,18 +142,46 @@ public class RafflesFragment extends Fragment {
                                 }
                             }
                         });
+                        alertView.setCancelable(false);
+
+                        ViewGroup extView = (ViewGroup) LayoutInflater.from(getActivity()).inflate(R.layout.layout_input_points, null);
+                        final TextView txtPoint = (TextView) extView.findViewById(R.id.txt_points); txtPoint.setText(String.valueOf(entering_point));
+                        ColorStateList csl_default = new ColorStateList(new int[][]{new int[0]}, new int[]{0xffffd700});
+                        AppCompatButton btnMinus = (AppCompatButton) extView.findViewById(R.id.btn_minus); btnMinus.setSupportBackgroundTintList(csl_default);
+                        AppCompatButton btnPlus = (AppCompatButton) extView.findViewById(R.id.btn_plus); btnPlus.setSupportBackgroundTintList(csl_default);
+                        btnMinus.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if (entering_point > 1) {
+                                    entering_point -= 1;
+                                }
+
+                                txtPoint.setText(String.valueOf(entering_point));
+                            }
+                        });
+                        btnPlus.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if (entering_point < user_raffle_point) {
+                                    entering_point += 1;
+                                }
+
+                                txtPoint.setText(String.valueOf(entering_point));
+                            }
+                        });
+
+                        alertView.addExtView(extView);
                         alertView.show();
                     }
                 }
             }
         });
 
-
         FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_wallet);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getActivity(), PrizeWalletActivity.class));
+                startActivity(new Intent(getActivity(), WalletActivity.class));
             }
         });
 
@@ -304,7 +331,7 @@ public class RafflesFragment extends Fragment {
             Cell cell;
             View cellView = convertView;
             if (convertView == null) {
-                cellView = this.layoutInflater.inflate(R.layout.row_raffle_list, null);
+                cellView = this.layoutInflater.inflate(R.layout.row_raffle, null);
                 cell = new Cell(cellView);
                 cellView.setTag(cell);
                 cellView.requestLayout();

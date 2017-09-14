@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:divider="@color/colorPrimaryDark"
         android:dividerHeight="1px"
-        tools:listitem="@layout/row_raffle_list">
+        tools:listitem="@layout/row_raffle">
     </ListView>
 
     <android.support.design.widget.FloatingActionButton

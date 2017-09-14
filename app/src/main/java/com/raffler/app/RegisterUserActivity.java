@@ -149,7 +149,6 @@ public class RegisterUserActivity extends AppCompatActivity {
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 String name = etName.getText().toString();
                 if (name.isEmpty()) {
                     String alert_title = getString(R.string.alert_title_notice);
@@ -159,7 +158,6 @@ public class RegisterUserActivity extends AppCompatActivity {
                     startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
                     RegisterUserActivity.this.finish();
                 }
-
             }
         });
 
