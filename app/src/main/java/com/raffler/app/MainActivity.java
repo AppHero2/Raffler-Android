@@ -30,17 +30,20 @@ import com.raffler.app.fragments.ChatListFragment;
 import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.NewsValueListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
+import com.raffler.app.models.News;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserStatus;
 import com.raffler.app.utils.References;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener, UserValueListener{
+public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener, UserValueListener, NewsValueListener{
 
     private static final String TAG = "MainActivity";
 
@@ -111,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         viewPager.setCurrentItem(0);
 
+        AppManager.getInstance().setNewsValueListenerMain(this);
+
+        // push notification part
         OneSignal.startInit(this)
                 .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
                 .unsubscribeWhenNotificationsAreDisabled(false)
@@ -195,16 +201,16 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         MenuItemBadge.update(this, menuItemNews, new MenuItemBadge.Builder()
             .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_notification_md))
             .iconTintColor(Color.WHITE)
-            .textBackgroundColor(Color.parseColor("#FB8C00"))
-            .textColor(Color.WHITE));
-        MenuItemBadge.getBadgeTextView(menuItemNews).setBadgeCount(0);
+            .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
+            .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
+        updateNewsBadgeCount(AppManager.getInstance().newsList);
 
         menuItemPoints = menu.findItem(R.id.menu_points);
         MenuItemBadge.update(this, menuItemPoints, new MenuItemBadge.Builder()
                 .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_sack_md))
                 .iconTintColor(Color.WHITE)
-                .textBackgroundColor(Color.parseColor("#FB8C00"))
-                .textColor(Color.WHITE));
+                .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
+                .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
         MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
 
         return true;
@@ -236,6 +242,11 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     }
 
     @Override
+    public void onUpdatedNewsList(List<News> newsList) {
+        updateNewsBadgeCount(newsList);
+    }
+
+    @Override
     public void onUnreadMessages(String chatId, int count) {
         unreadCount.put(chatId, count);
         int total_unread_count = 0;
@@ -253,6 +264,17 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         raffles_point = AppManager.getSession().getRaffle_point();
         if (menuItemPoints != null)
             MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
+    }
+
+    private void updateNewsBadgeCount(List<News> newsList){
+        int numberOfnews = 0;
+        for (News news : newsList){
+            if (!news.isRead()) {
+                numberOfnews += 1;
+            }
+        }
+        if (menuItemNews != null)
+            MenuItemBadge.getBadgeTextView(menuItemNews).setBadgeCount(numberOfnews);
     }
 
     private void setupViewPager(ViewPager viewPager) {

@@ -5,5 +5,5 @@ package com.raffler.app.models;
  */
 
 public enum NewsType {
-    GENERAL, NOTIFICATION, OTHER
+    LOSER, WINNER, NOTIFICATION, OTHER
 }

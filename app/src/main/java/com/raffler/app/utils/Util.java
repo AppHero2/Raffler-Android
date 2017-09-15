@@ -312,8 +312,6 @@ public class Util {
         return  value;
     }
 
-
-
     public static Map<String, Object> getMapDataFromData(String key, Map<String, Object> data){
         Map<String, Object> value = new HashMap<>();
         try{

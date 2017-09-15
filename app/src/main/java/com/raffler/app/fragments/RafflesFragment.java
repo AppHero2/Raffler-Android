@@ -17,17 +17,20 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
 import com.lid.lib.LabelImageView;
 import com.raffler.app.WalletActivity;
 import com.raffler.app.R;
@@ -48,12 +51,15 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
+
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class RafflesFragment extends Fragment {
 
+    private Query query;
     private DatabaseReference rafflesRef, usersRef, holdersRef;
     private ChildEventListener childEventListener;
 
@@ -76,6 +82,7 @@ public class RafflesFragment extends Fragment {
         usersRef = References.getInstance().usersRef;
         rafflesRef = References.getInstance().rafflesRef;
         holdersRef = References.getInstance().holdersRef;
+        query = rafflesRef.orderByChild("isClosed").equalTo(false);
     }
 
     @Override
@@ -142,6 +149,10 @@ public class RafflesFragment extends Fragment {
                                     Bundle params = new Bundle();
                                     params.putString("raffler", mUser.getIdx());
                                     References.getInstance().analytics.logEvent("enter_raffle", params);
+
+                                    hideSoftKeyboard();
+
+                                    Toast.makeText(getActivity(), getString(R.string.raffles_alert_good_luck), Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });
@@ -164,7 +175,7 @@ public class RafflesFragment extends Fragment {
                             @Override
                             public void afterTextChanged(Editable editable) {
                                 String value = etPoint.getText().toString();
-                                if (value != null)
+                                if (!value.isEmpty())
                                     entering_point = Integer.valueOf(value);
                                 else
                                     entering_point = 0;
@@ -270,7 +281,6 @@ public class RafflesFragment extends Fragment {
 
                     adapter.notifyDataSetChanged();
                 }
-
             }
 
             @Override
@@ -283,11 +293,30 @@ public class RafflesFragment extends Fragment {
 
             }
         };
-        rafflesRef.addChildEventListener(childEventListener);
+        query.addChildEventListener(childEventListener);
     }
 
     private void stopTrackingRaffles(){
-        rafflesRef.removeEventListener(childEventListener);
+        query.removeEventListener(childEventListener);
+    }
+
+    /**
+     * Hides the soft keyboard
+     */
+    public void hideSoftKeyboard() {
+        if(getActivity().getCurrentFocus()!=null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+        }
+    }
+
+    /**
+     * Shows the soft keyboard
+     */
+    public void showSoftKeyboard(View view) {
+        InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(INPUT_METHOD_SERVICE);
+        view.requestFocus();
+        inputMethodManager.showSoftInput(view, 0);
     }
 
     private void updateRaffle(Map<String, Object> raffleData) {

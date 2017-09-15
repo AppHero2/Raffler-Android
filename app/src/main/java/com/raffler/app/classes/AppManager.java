@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.raffler.app.country.Country;
 import com.raffler.app.interfaces.ContactFinderListener;
+import com.raffler.app.interfaces.NewsValueListener;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
@@ -27,6 +28,7 @@ import com.raffler.app.models.Chat;
 import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
+import com.raffler.app.models.News;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 
@@ -53,11 +55,12 @@ public class AppManager {
     private ValueEventListener trackUserListener;
     private ChildEventListener trackNewsListener;
     private UserValueListener userValueListenerMain, userValueListenerForChat, uservalueListenerForRaffles;
+    private NewsValueListener newsValueListenerMain, newsValueListenerForNews;
 
     public Chat selectedChat;
     public String userId;
     public Map<String, Contact> phoneContacts = new HashMap<>();
-    public List<Message> messageList = new ArrayList<>();
+    public List<News> newsList = new ArrayList<>();
 
     private AppManager() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -108,17 +111,40 @@ public class AppManager {
         trackNewsListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
+                if (dataSnapshot.getValue() != null) {
+                    Map<String, Object> newsData = (Map<String, Object>) dataSnapshot.getValue();
+                    updateNewsData(newsData);
+                }
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+                if (dataSnapshot.getValue() != null) {
+                    Map<String, Object> newsData = (Map<String, Object>) dataSnapshot.getValue();
+                    updateNewsData(newsData);
+                }
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
+                    Map<String, Object> newsData = (Map<String, Object>) dataSnapshot.getValue();
+                    News raffle = new News(newsData);
+                    for (News item : newsList) {
+                        if (item.getIdx().equals(raffle.getIdx())) {
+                            newsList.remove(item);
+                            break;
+                        }
+                    }
 
+                    if (newsValueListenerMain != null) {
+                        newsValueListenerMain.onUpdatedNewsList(newsList);
+                    }
+
+                    if (newsValueListenerForNews != null) {
+                        newsValueListenerForNews.onUpdatedNewsList(newsList);
+                    }
+                }
             }
 
             @Override
@@ -137,6 +163,33 @@ public class AppManager {
 
     public void stopTrackingNews(String uid){
         References.getInstance().newsRef.child(uid).removeEventListener(trackNewsListener);
+    }
+
+    private void updateNewsData(Map<String, Object> data){
+        News news = new News(data);
+        if (news.getIdx() == null)
+            return;
+
+        boolean isExist = false;
+        for (News item : newsList) {
+            if (item.getIdx().equals(news.getIdx())) {
+                item.updateData(data);
+                isExist = true;
+                break;
+            }
+        }
+
+        if (!isExist) {
+            newsList.add(news);
+        }
+
+        if (newsValueListenerMain != null) {
+            newsValueListenerMain.onUpdatedNewsList(newsList);
+        }
+
+        if (newsValueListenerForNews != null) {
+            newsValueListenerForNews.onUpdatedNewsList(newsList);
+        }
     }
 
     public static void getUser(String userId, final UserValueListener listener) {
@@ -324,6 +377,14 @@ public class AppManager {
 
     public void setUservalueListenerForRaffles(UserValueListener uservalueListenerForRaffles) {
         this.uservalueListenerForRaffles = uservalueListenerForRaffles;
+    }
+
+    public void setNewsValueListenerMain(NewsValueListener newsValueListenerMain) {
+        this.newsValueListenerMain = newsValueListenerMain;
+    }
+
+    public void setNewsValueListenerForNews(NewsValueListener newsValueListenerForNews) {
+        this.newsValueListenerForNews = newsValueListenerForNews;
     }
 
     public void addNewContact(Uri contactUri, final ResultListener listener){

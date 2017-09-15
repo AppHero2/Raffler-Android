@@ -17,6 +17,7 @@ public class Raffle {
     private String idx, title, description, imageLink;
     private Date endingAt;
     private boolean isClosed = false;
+    private boolean isPublished = false;
     private long raffles_num = 0;
     private long winners_num = 0;
 
@@ -35,6 +36,7 @@ public class Raffle {
         this.raffles_num = Util.getLongFromData("raffles_num", data);
         this.winners_num = Util.getLongFromData("winners_num", data);
         this.isClosed = Util.getBooleanFromData("isClosed", data);
+        this.isPublished = Util.getBooleanFromData("isPublished", data);
         long ending_date =  Util.getLongFromData("ending_date", data);
         this.endingAt = new Date(ending_date);
         this.winners = Util.getMapDataFromData("winners", data);
@@ -75,6 +77,14 @@ public class Raffle {
 
     public Map<String, Object> getDeliveredUsers() {
         return deliveredUsers;
+    }
+
+    public boolean isClosed() {
+        return isClosed;
+    }
+
+    public boolean isPublished() {
+        return isPublished;
     }
 
     public boolean isExistWinner(String uid){

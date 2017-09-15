@@ -45,10 +45,12 @@
     <string name="wallet_title">Prize Wallet</string>
     <string name="wallet_inbox">Inbox</string>
     <string name="wallet_empty">No Prizes</string>
+    <string name="wallet_winner">Winner</string>
+    <string name="wallet_loser">Loser</string>
 
-    <!-- Notification -->
-    <string name="notification_title">Notification</string>
-    <string name="notification_empty">No News</string>
+    <!-- News -->
+    <string name="news_title">News</string>
+    <string name="news_empty">No News</string>
 
     <!-- Country Picker -->
     <string name="country_picker_search">Search</string>

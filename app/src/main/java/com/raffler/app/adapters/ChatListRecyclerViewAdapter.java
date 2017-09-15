@@ -70,7 +70,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
         public final View mView;
         public final TextView mIdView;
         public final TextView mContentView;
-        public final TextView typeView;
+        public final TextView dateView;
         private final TextView countView;
         private final View countLayout;
         private final ImageView countImageView;
@@ -87,13 +87,13 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             mView = view;
             mIdView = (TextView) view.findViewById(R.id.id);
             mContentView = (TextView) view.findViewById(R.id.content);
-            typeView = (TextView) view.findViewById(R.id.type);
+            dateView = (TextView) view.findViewById(R.id.tv_date);
             countView = (TextView) view.findViewById(R.id.count);
             countImageView = (ImageView) view.findViewById(R.id.imageView_count);
             countLayout = view.findViewById(R.id.layout_count);
             imgProfile = (ImageView) view.findViewById(R.id.imgProfile);
 
-            typeTextColor = typeView.getCurrentTextColor();
+            typeTextColor = dateView.getCurrentTextColor();
         }
 
         public void loadDataFromId(final String idx) {
@@ -157,11 +157,11 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
             int count = mBadges.get(idx);
             if(count == 0){
-                typeView.setTextColor(typeTextColor);
+                dateView.setTextColor(typeTextColor);
                 countLayout.setVisibility(View.GONE);
             } else {
-                int color = typeView.getResources().getColor(R.color.colorEmerland);
-                typeView.setTextColor(color);
+                int color = dateView.getResources().getColor(R.color.colorEmerland);
+                dateView.setTextColor(color);
                 countView.setText(String.valueOf(count));
                 countLayout.setVisibility(View.VISIBLE);
                 countImageView.setColorFilter(color);
@@ -182,20 +182,20 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                     mUser = user;
 
                     if (mPhoneContactId != null) {
-//                        boolean isSavedContactInfo = false;
-//                        Map<String, Contact> contacts = AppManager.getContacts();
-//                        for (Map.Entry<String, Contact> entry : contacts.entrySet()){
-//                            String contactId = entry.getKey();
-//                            if (contactId.equals(mPhoneContactId)) {
-//                                isSavedContactInfo = true;
-//                                break;
-//                            }
-//                        }
-//                        if (!isSavedContactInfo) {
-//                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
-//                            contacts.put(mPhoneContactId, contact);
-//                            AppManager.saveContact(contacts);
-//                        }
+                        /*boolean isSavedContactInfo = false;
+                        Map<String, Contact> contacts = AppManager.getContacts();
+                        for (Map.Entry<String, Contact> entry : contacts.entrySet()){
+                            String contactId = entry.getKey();
+                            if (contactId.equals(mPhoneContactId)) {
+                                isSavedContactInfo = true;
+                                break;
+                            }
+                        }
+                        if (!isSavedContactInfo) {
+                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
+                            contacts.put(mPhoneContactId, contact);
+                            AppManager.saveContact(contacts);
+                        }*/
                     }
                 }
             });
@@ -214,9 +214,9 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             String todayDate = Util.getDateString(System.currentTimeMillis());
 
             if (todayDate.compareTo(date) == 0) {
-                typeView.setText(Util.getUserTime(message.getUpdatedAt()));
+                dateView.setText(Util.getUserTime(message.getUpdatedAt()));
             } else {
-                typeView.setText(Util.getUserFriendlyDate(
+                dateView.setText(Util.getUserFriendlyDate(
                         mView.getContext(),
                         message.getUpdatedAt().getTime()
                 ));
