@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raffler.app.WalletActivity"
-    android:background="@color/colorPrimary">
+    tools:context="com.raffler.app.WalletActivity">
 
     <include
         android:id="@+id/toolbar"
@@ -30,5 +29,5 @@
         android:gravity="center"
         android:text="@string/wallet_empty"
         android:textSize="@dimen/large_text"
-        android:textColor="@color/colorAccent"/>
+        android:textColor="@color/colorPrimary"/>
 </RelativeLayout>

@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
     tools:context="com.raffler.app.NewsActivity">
 
     <include
@@ -17,7 +16,7 @@
         android:id="@+id/lst_notification"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="@color/colorPrimaryDark"
+        android:divider="@color/colorRafflesTextTrans"
         android:dividerHeight="1px"
         tools:listitem="@layout/row_news"
         android:layout_below="@+id/toolbar">
@@ -30,6 +29,6 @@
         android:gravity="center"
         android:text="@string/news_empty"
         android:textSize="@dimen/large_text"
-        android:textColor="@color/colorAccent"/>
+        android:textColor="@color/colorPrimary"/>
 
 </RelativeLayout>

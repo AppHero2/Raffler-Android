@@ -17,6 +17,26 @@
     <color name="colorTextPrimary">#FFFFFF</color>
     <color name="colorTextDisable">#66FFFFFF</color>
 
+    <!-- Phone Verification -->
+    <color name="colorPhoneVerificationText">#202020</color>
+    <color name="colorPhoneVerificationTextTrans">#a0202020</color>
+
+    <!-- Color ChatList -->
+    <color name="colorChatListText">#202020</color>
+    <color name="colorChatListTextTrans">#a0202020</color>
+
+    <!-- Color Contacts -->
+    <color name="colorContactsText">#202020</color>
+    <color name="colorContactsTextTrans">#a0202020</color>
+
+    <!-- Color Raffles -->
+    <color name="colorRafflesText">#202020</color>
+    <color name="colorRafflesTextTrans">#a0202020</color>
+
+    <!-- Color Chat -->
+    <color name="colorChatBackground">#dfe3ee</color>
+
+
     <!--AlertView-->
     <color name="bgColor_overlay">#60000000</color>
     <color name="bgColor_alertview_alert">#3d3d3d</color>

@@ -84,8 +84,6 @@ public class ChatListFragment extends Fragment {
             adapter.setChatItemClickListener(chatItemClickListener);
         }
 
-        loadData();
-
         UserValueListener listener = new UserValueListener() {
             @Override
             public void onLoadedUser(User user) {
@@ -105,6 +103,11 @@ public class ChatListFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 
@@ -115,6 +118,8 @@ public class ChatListFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_chat_fragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
+
+        loadData();
     }
 
     private void loadData(){

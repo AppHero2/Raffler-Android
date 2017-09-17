@@ -2,14 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
     tools:context="com.raffler.app.fragments.RafflesFragment">
 
     <ListView
         android:id="@+id/list_raffles"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="@color/colorPrimaryDark"
+        android:divider="@color/colorRafflesTextTrans"
         android:dividerHeight="1px"
         tools:listitem="@layout/row_raffle">
     </ListView>

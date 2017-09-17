@@ -6,8 +6,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary">
+        android:layout_height="wrap_content">
 
         <LinearLayout
             android:id="@+id/layout_title"
@@ -38,7 +37,7 @@
                 android:text="Title"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/colorAccent"
+                android:textColor="@color/colorRafflesText"
                 android:gravity="center_vertical"
                 />
         </LinearLayout>
@@ -54,7 +53,7 @@
             android:layout_marginBottom="8dp"
             android:text="This is description."
             android:textSize="14sp"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/colorRafflesTextTrans"
             android:layout_below="@+id/layout_title" />
 
         <TextView
@@ -65,7 +64,7 @@
             android:layout_marginEnd="20dp"
             android:gravity="center"
             android:text="@string/yesterday"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/colorRafflesTextTrans"
             android:textSize="12sp"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />
@@ -74,6 +73,7 @@
             android:layout_width="20dp"
             android:layout_height="30dp"
             android:src="@drawable/btn_next"
+            android:tint="@color/colorPrimary"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />
 

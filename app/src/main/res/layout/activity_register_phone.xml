@@ -5,7 +5,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimaryDark"
     tools:context="com.raffler.app.RegisterPhoneActivity">
 
     <TextView
@@ -16,7 +15,7 @@
         android:gravity="center"
         android:text="@string/register_verify_phone"
         android:textSize="16sp"
-        android:textColor="@color/colorTextDisable"
+        android:textColor="@color/colorPhoneVerificationTextTrans"
         android:textStyle="bold"/>
 
     <TextView
@@ -26,7 +25,7 @@
         android:layout_marginTop="10dp"
         android:gravity="center"
         android:text="@string/register_verify_content"
-        android:textColor="@color/colorTextDisable"
+        android:textColor="@color/colorPhoneVerificationTextTrans"
         android:layout_below="@+id/txtTitle"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -60,7 +59,7 @@
                     android:layout_height="30dp"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text=" VE +58 ▾ "
-                    android:textColor="@color/colorAccent"
+                    android:textColor="@color/colorPhoneVerificationText"
                     android:textSize="22dp"
                     android:gravity="center"
                     android:layout_alignParentBottom="true" />
@@ -72,7 +71,7 @@
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:textSize="22sp"
                     android:inputType="phone"
-                    android:textColor="@color/colorAccent"
+                    android:textColor="@color/colorPhoneVerificationText"
                     android:background="@android:color/transparent"
                     android:layout_alignParentBottom="true"
                     android:layout_toRightOf="@+id/txtCountryCode"
@@ -83,7 +82,7 @@
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:src="@drawable/ic_false"
-                    android:tint="@color/colorAccent"
+                    android:tint="@color/colorPhoneVerificationText"
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentRight="true"
                     android:layout_marginBottom="5dp"/>
@@ -92,7 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_alignParentBottom="true"
-                    android:background="@color/colorAccent"/>
+                    android:background="@color/colorPhoneVerificationTextTrans"/>
             </RelativeLayout>
 
             <com.raycoarana.codeinputview.CodeInputView
@@ -100,10 +99,10 @@
                 android:layout_marginTop="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:underline_color="@color/colorAccent"
-                app:underline_selected_color="@color/colorAccent"
-                app:code_text_color="@color/colorAccent"
-                app:error_color="@color/colorAccent"
+                app:underline_color="@color/colorPhoneVerificationTextTrans"
+                app:underline_selected_color="@color/colorPhoneVerificationTextTrans"
+                app:code_text_color="@color/colorPhoneVerificationText"
+                app:error_color="@color/colorPhoneVerificationText"
                 app:input_type="numeric"
                 app:length_of_code="6"
                 />
@@ -117,7 +116,7 @@
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:text="@string/button_next"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/colorPhoneVerificationText"
         android:layout_below="@+id/layout_auth"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp" />
@@ -127,7 +126,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Resend in 00:58"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/colorPhoneVerificationTextTrans"
         android:layout_below="@+id/btnNext"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
@@ -139,7 +138,7 @@
         android:layout_height="40dp"
         android:gravity="center"
         android:text="@string/register_verify_note"
-        android:textColor="@color/colorTextDisable"
+        android:textColor="@color/colorPhoneVerificationTextTrans"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />

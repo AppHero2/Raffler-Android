@@ -51,6 +51,7 @@ import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppConsts;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
@@ -449,49 +450,56 @@ public class RegisterUserActivity extends AppCompatActivity {
         if (!checkPermissions()) return;
 
         hud.show();
-        Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(userId);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null) {
-                    for (DataSnapshot child: dataSnapshot.getChildren()) {
-                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
-                        User user = new User(userData);
-                        etName.setText(user.getName());
-                        Util.setProfileImage(user.getPhoto(), imgProfile, new ImageLoadingListener() {
-                            @Override
-                            public void onLoadingStarted(String s, View view) {
-                                bar.setVisibility(View.VISIBLE);
-                            }
+            public void onResult(boolean success) {
+                Log.d(TAG, "didRefresh Contacts");
+                Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(userId);
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.getValue() != null) {
+                            for (DataSnapshot child: dataSnapshot.getChildren()) {
+                                Map<String, Object> userData = (Map<String, Object>) child.getValue();
+                                User user = new User(userData);
+                                etName.setText(user.getName());
+                                Util.setProfileImage(user.getPhoto(), imgProfile, new ImageLoadingListener() {
+                                    @Override
+                                    public void onLoadingStarted(String s, View view) {
+                                        bar.setVisibility(View.VISIBLE);
+                                    }
 
-                            @Override
-                            public void onLoadingFailed(String s, View view, FailReason failReason) {
-                                bar.setVisibility(View.GONE);
-                            }
+                                    @Override
+                                    public void onLoadingFailed(String s, View view, FailReason failReason) {
+                                        bar.setVisibility(View.GONE);
+                                    }
 
-                            @Override
-                            public void onLoadingComplete(String s, View view, Bitmap bitmap) {
-                                bitmapProfile = bitmap;
-                                bar.setVisibility(View.GONE);
-                            }
+                                    @Override
+                                    public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                                        bitmapProfile = bitmap;
+                                        bar.setVisibility(View.GONE);
+                                    }
 
-                            @Override
-                            public void onLoadingCancelled(String s, View view) {
-                                bar.setVisibility(View.GONE);
+                                    @Override
+                                    public void onLoadingCancelled(String s, View view) {
+                                        bar.setVisibility(View.GONE);
+                                    }
+                                });
+                                AppManager.saveSession(user);
                             }
-                        });
-                        AppManager.saveSession(user);
+                        }
+
+                        hud.dismiss();
                     }
-                }
 
-                hud.dismiss();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(RegisterUserActivity.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
-                hud.dismiss();
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Toast.makeText(RegisterUserActivity.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
+                        hud.dismiss();
+                    }
+                });
             }
         });
+
     }
 }

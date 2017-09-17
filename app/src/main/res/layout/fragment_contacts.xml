@@ -2,8 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raffler.app.fragments.ContactsFragment"
-    android:background="@color/colorPrimary">
+    tools:context="com.raffler.app.fragments.ContactsFragment">
 
     <TextView
         android:id="@+id/txtNoData"
