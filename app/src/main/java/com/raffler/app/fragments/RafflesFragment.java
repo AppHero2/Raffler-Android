@@ -235,8 +235,10 @@ public class RafflesFragment extends Fragment {
         AppManager.getInstance().setUservalueListenerForRaffles(new UserValueListener() {
             @Override
             public void onLoadedUser(User user) {
-                mUser = user;
-                adapter.notifyDataSetChanged();
+                if (user != null) {
+                    mUser = user;
+                    adapter.notifyDataSetChanged();
+                }
             }
         });
 

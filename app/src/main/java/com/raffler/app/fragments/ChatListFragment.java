@@ -89,10 +89,12 @@ public class ChatListFragment extends Fragment {
         UserValueListener listener = new UserValueListener() {
             @Override
             public void onLoadedUser(User user) {
-                loadData();
+                if (user != null) {
+                    loadData();
 
-                if (userValueListener != null) {
-                    userValueListener.onLoadedUser(user);
+                    if (userValueListener != null) {
+                        userValueListener.onLoadedUser(user);
+                    }
                 }
             }
         };

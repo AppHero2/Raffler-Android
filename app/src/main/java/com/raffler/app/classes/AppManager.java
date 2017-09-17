@@ -193,24 +193,30 @@ public class AppManager {
     }
 
     public static void getUser(String userId, final UserValueListener listener) {
-        Query query = References.getInstance().usersRef.child(userId);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null){
-                    Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
-                    User user = new User(userData);
-                    if (listener != null) {
-                        listener.onLoadedUser(user);
+        if (userId != null) {
+            Query query = References.getInstance().usersRef.child(userId);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue() != null){
+                        Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
+                        User user = new User(userData);
+                        if (listener != null) {
+                            listener.onLoadedUser(user);
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.d("TrackUser", databaseError.toString());
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.d("TrackUser", databaseError.toString());
+                }
+            });
+        } else {
+            if (listener != null) {
+                listener.onLoadedUser(null);
             }
-        });
+        }
     }
 
     public static void getUnreadMessageCount(final String chatId, final UnreadMessageListener listener){

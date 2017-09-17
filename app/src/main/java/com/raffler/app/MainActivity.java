@@ -260,10 +260,11 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     @Override
     public void onLoadedUser(User user) {
-
-        raffles_point = AppManager.getSession().getRaffle_point();
-        if (menuItemPoints != null)
-            MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
+        if (user != null) {
+            raffles_point = AppManager.getSession().getRaffle_point();
+            if (menuItemPoints != null)
+                MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
+        }
     }
 
     private void updateNewsBadgeCount(List<News> newsList){

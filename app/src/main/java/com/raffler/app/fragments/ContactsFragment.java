@@ -226,21 +226,28 @@ public class ContactsFragment extends Fragment {
     }
 
     private void loadContacts(){
+        User session = AppManager.getSession();
         contacts.clear();
         Map<String, Contact> mapData = AppManager.getContacts();
         for (Map.Entry<String, Contact> entry : mapData.entrySet()){
             String contactId = entry.getKey();
             Contact contact = entry.getValue();
-            if (contact.getUid() != null){
-                boolean isExist = false;
-                for (Contact item:contacts){
-                    if (item.getUid().equals(contact.getUid())){
-                        isExist = true;
+            if (session != null && contact != null){
+                if (contact.getPhone().equals(session.getPhone())){
+
+                } else {
+                    if (contact.getUid() != null){
+                        boolean isExist = false;
+                        for (Contact item:contacts){
+                            if (item.getUid().equals(contact.getUid())){
+                                isExist = true;
+                            }
+                        }
+
+                        if (!isExist)
+                            contacts.add(contact);
                     }
                 }
-
-                if (!isExist)
-                    contacts.add(contact);
             }
         }
 
