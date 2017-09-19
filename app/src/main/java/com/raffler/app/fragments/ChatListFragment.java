@@ -22,8 +22,10 @@ import com.raffler.app.R;
 import com.raffler.app.adapters.ChatListRecyclerViewAdapter;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.ContactUpdatedListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
+import com.raffler.app.models.Contact;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 
@@ -98,6 +100,17 @@ public class ChatListFragment extends Fragment {
         };
 
         AppManager.getInstance().setUserValueListenerMain(listener);
+        AppManager.getInstance().setContactUpdatedListener(new ContactUpdatedListener() {
+            @Override
+            public void onUpdatedContacts(List<Contact> contacts) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadData();
+                    }
+                });
+            }
+        });
 
         return view;
     }
@@ -118,8 +131,6 @@ public class ChatListFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_chat_fragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
-
-        loadData();
     }
 
     private void loadData(){

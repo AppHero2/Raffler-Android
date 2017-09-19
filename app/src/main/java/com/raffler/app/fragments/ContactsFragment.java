@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
@@ -114,8 +115,7 @@ public class ContactsFragment extends Fragment {
                             "Hey,\n\n " +
                                     "I'm trying this new texting app called Raffler.\n" +
                                     "You get raffle points for each text, and you can win free prizes.\n\n" +
-                                    "https://play.google.com/apps/testing/com.raffler.app");
-                                    //"https://play.google.com/store/apps/details?id=com.raffler.app");
+                                    "https://play.google.com/store/apps/details?id=com.raffler.app");
                     sendIntent.setType("text/plain");
                     startActivity(sendIntent);
                 } else {
@@ -213,16 +213,42 @@ public class ContactsFragment extends Fragment {
         }
     }
 
+    private class LoadContactsTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            if (progressBar != null) progressBar.setVisible(true);
+            AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
+                @Override
+                public void onResult(boolean success) {
+                    Log.d(TAG, "didRefresh Contacts");
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (progressBar != null) progressBar.setVisible(false);
+                            loadContacts();
+                        }
+                    });
+
+                }
+            });
+            return "Executed";
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+        }
+
+        @Override
+        protected void onPreExecute() {}
+
+        @Override
+        protected void onProgressUpdate(Void... values) {}
+    }
+
     private void refreshContact(){
-        progressBar.setVisible(true);
-        AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
-            @Override
-            public void onResult(boolean success) {
-                Log.d(TAG, "didRefresh Contacts");
-                progressBar.setVisible(false);
-                loadContacts();
-            }
-        });
+        new LoadContactsTask().execute("");
     }
 
     private void loadContacts(){

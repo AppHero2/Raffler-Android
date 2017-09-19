@@ -35,6 +35,7 @@
     <string name="raffles_alert_minimum">Sorry! You should enter at least a point. Please try again!</string>
     <string name="raffles_alert_entering">Please enter raffle points</string>
     <string name="raffles_alert_good_luck">Good luck!</string>
+    <string name="raffles_empty_data">No Raffles</string>
 
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>

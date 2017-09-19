@@ -11,7 +11,7 @@
         android:gravity="center"
         android:text="@string/contact_no_data"
         android:textSize="@dimen/large_text"
-        android:textColor="@color/colorAccent"/>
+        android:textColor="@color/colorPrimary"/>
 
     <ListView
         android:id="@+id/list_contacts"

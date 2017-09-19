@@ -173,6 +173,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
             mMessage = message;
 
+            imgProfile.setImageResource(R.drawable.ic_profile_person);
             AppManager.getUser(contactId, new UserValueListener() {
                 @Override
                 public void onLoadedUser(final User user) {
@@ -181,25 +182,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                             mIdView.setText(user.getName());
                         Util.setProfileImage(user.getPhoto(), imgProfile);
                         mUser = user;
-
-                        if (mPhoneContactId != null) {
-                        /*boolean isSavedContactInfo = false;
-                        Map<String, Contact> contacts = AppManager.getContacts();
-                        for (Map.Entry<String, Contact> entry : contacts.entrySet()){
-                            String contactId = entry.getKey();
-                            if (contactId.equals(mPhoneContactId)) {
-                                isSavedContactInfo = true;
-                                break;
-                            }
-                        }
-                        if (!isSavedContactInfo) {
-                            Contact contact = new Contact(mPhoneContactId, mPhoneContactName, mPhoneContactNumber, mUser.getIdx(), mUser.getPhoto());
-                            contacts.put(mPhoneContactId, contact);
-                            AppManager.saveContact(contacts);
-                        }*/
-                        }
                     }
-
                 }
             });
             String lastMessage = message.getText();

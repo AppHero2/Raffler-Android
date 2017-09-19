@@ -3,6 +3,7 @@ package com.raffler.app;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -63,9 +64,6 @@ public class AppSplashActivity extends AppCompatActivity {
                 dismissSplash();
             }
         });
-
-        // Initialize image loader
-        initImageLoader(this);
     }
 
     @Override
@@ -73,16 +71,11 @@ public class AppSplashActivity extends AppCompatActivity {
         super.onResume();
 
         handler.postDelayed(runnable, SPLASH_DURATION);
-        if (AppManager.getSession() != null) {
+        /*if (AppManager.getSession() != null) {
             if (checkPermissions()) {
-                AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
-                    @Override
-                    public void onResult(boolean success) {
-                        Log.d(TAG, "didRefresh Contacts");
-                    }
-                });
+                new LoadContactsTask().execute("");
             }
-        }
+        }*/
     }
 
     @Override
@@ -107,18 +100,6 @@ public class AppSplashActivity extends AppCompatActivity {
             startActivity(new Intent(this, RegisterPhoneActivity.class));
         }
         this.finish();
-    }
-
-    public static void initImageLoader(Context context) {
-
-        ImageLoaderConfiguration.Builder config = new ImageLoaderConfiguration.Builder(context);
-        config.threadPriority(Thread.NORM_PRIORITY - 2);
-        config.denyCacheImageMultipleSizesInMemory();
-        config.diskCacheFileNameGenerator(new Md5FileNameGenerator());
-        config.diskCacheSize(50 * 1024 * 1024); // 50 MiB
-        config.tasksProcessingOrder(QueueProcessingType.LIFO);
-        //config.writeDebugLogs(); // Remove for release app
-        ImageLoader.getInstance().init(config.build());
     }
 
     String[] permissions= new String[]{

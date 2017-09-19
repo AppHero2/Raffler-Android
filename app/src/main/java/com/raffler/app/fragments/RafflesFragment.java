@@ -98,7 +98,9 @@ public class RafflesFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_raffles, container, false);
 
+        TextView emptyView = (TextView) view.findViewById(R.id.tv_empty);
         ListView listView = (ListView) view.findViewById(R.id.list_raffles);
+        listView.setEmptyView(emptyView);
         adapter = new RafflesAdapter(getActivity(), raffles);
         adapter.startUpdateTimer();
         listView.setAdapter(adapter);
@@ -129,6 +131,7 @@ public class RafflesFragment extends Fragment {
                                     for (int i=0; i<entering_point; i++){
                                         Map<String, Object> holder = new HashMap<>();
                                         holder.put("uid", mUser.getIdx());
+                                        holder.put("phone", mUser.getPhone());
                                         holder.put("pushToken", mUser.getPushToken());
                                         holdersRef.child(raffle.getIdx()).push().setValue(holder);
                                     }

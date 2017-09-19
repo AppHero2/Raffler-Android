@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.raffler.app.country.Country;
 import com.raffler.app.interfaces.ContactFinderListener;
+import com.raffler.app.interfaces.ContactUpdatedListener;
 import com.raffler.app.interfaces.NewsValueListener;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
@@ -56,6 +57,7 @@ public class AppManager {
     private ChildEventListener trackNewsListener;
     private UserValueListener userValueListenerMain, userValueListenerForChat, uservalueListenerForRaffles;
     private NewsValueListener newsValueListenerMain, newsValueListenerForNews;
+    private ContactUpdatedListener contactUpdatedListener;
 
     public Chat selectedChat;
     public String userId;
@@ -369,30 +371,6 @@ public class AppManager {
         return isExist;
     }
 
-    public void setContext(Context context) {
-        this.context = context;
-    }
-
-    public void setUserValueListenerMain(UserValueListener userValueListenerMain) {
-        this.userValueListenerMain = userValueListenerMain;
-    }
-
-    public void setUserValueListenerForChat(UserValueListener userValueListenerForChat) {
-        this.userValueListenerForChat = userValueListenerForChat;
-    }
-
-    public void setUservalueListenerForRaffles(UserValueListener uservalueListenerForRaffles) {
-        this.uservalueListenerForRaffles = uservalueListenerForRaffles;
-    }
-
-    public void setNewsValueListenerMain(NewsValueListener newsValueListenerMain) {
-        this.newsValueListenerMain = newsValueListenerMain;
-    }
-
-    public void setNewsValueListenerForNews(NewsValueListener newsValueListenerForNews) {
-        this.newsValueListenerForNews = newsValueListenerForNews;
-    }
-
     public void addNewContact(Uri contactUri, final ResultListener listener){
         String contactID = null;
         String contactNumber = null;
@@ -487,6 +465,11 @@ public class AppManager {
         return idx;
     }
     public void refreshPhoneContacts(ResultListener listener){
+        long startnow;
+        long endnow;
+
+        startnow = android.os.SystemClock.uptimeMillis();
+
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String[] projection = new String[] {
                 Phone._ID,
@@ -507,10 +490,21 @@ public class AppManager {
                 // Do work...
                 String phone = number.replace(" ", "").replace("-", "");
                 Contact contact = new Contact(idx, name, phone);
-                phoneContacts.put(idx, contact);
+                boolean isExist = false;
+                for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+                    if (entry.getKey().equals(contact.getIdx())){
+                        isExist = true;
+                        break;
+                    }
+                }
+                if (!isExist)
+                    phoneContacts.put(idx, contact);
 
             } while (people.moveToNext());
         }
+
+        endnow = android.os.SystemClock.uptimeMillis();
+        Log.d("AppManager", "TimeForContacts " + (endnow - startnow) + " ms");
 
         loadNewContacts(listener);
     }
@@ -519,7 +513,16 @@ public class AppManager {
         Map<String, Contact> contacts = AppManager.getNewContacts();
         for (Map.Entry<String, Contact> entry: contacts.entrySet()) {
             Contact contact = entry.getValue();
-            newContacts.add(contact);
+            boolean isExist = false;
+            for (Contact newContact : newContacts){
+                if (newContact.getIdx().equals(contact.getIdx())){
+                    isExist = true;
+                    break;
+                }
+            }
+            if (!isExist){
+                newContacts.add(contact);
+            }
         }
 
         lookingContacts(0, new ResultListener() {
@@ -543,17 +546,22 @@ public class AppManager {
                         contactMap.put(newContact.getIdx(), newContact);
                         AppManager.saveContact(contactMap);
                     }
-                    if (index < newContacts.size()) {
-                        lookingContacts(index + 1, listener);
-                    } else {
-                        if (listener != null)
-                            listener.onResult(true);
-                    }
+
+                    lookingContacts(index + 1, listener);
                 }
             });
         } else {
+
             if (listener != null) {
                 listener.onResult(true);
+            }
+
+            if (contactUpdatedListener!= null) {
+                List<Contact> contactList = new ArrayList<>();
+                for (Map.Entry<String, Contact> entry: getContacts().entrySet()) {
+                    contactList.add(entry.getValue());
+                }
+                contactUpdatedListener.onUpdatedContacts(contactList);
             }
         }
     }
@@ -610,5 +618,33 @@ public class AppManager {
                 }
             }
         });
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public void setUserValueListenerMain(UserValueListener userValueListenerMain) {
+        this.userValueListenerMain = userValueListenerMain;
+    }
+
+    public void setUserValueListenerForChat(UserValueListener userValueListenerForChat) {
+        this.userValueListenerForChat = userValueListenerForChat;
+    }
+
+    public void setUservalueListenerForRaffles(UserValueListener uservalueListenerForRaffles) {
+        this.uservalueListenerForRaffles = uservalueListenerForRaffles;
+    }
+
+    public void setNewsValueListenerMain(NewsValueListener newsValueListenerMain) {
+        this.newsValueListenerMain = newsValueListenerMain;
+    }
+
+    public void setNewsValueListenerForNews(NewsValueListener newsValueListenerForNews) {
+        this.newsValueListenerForNews = newsValueListenerForNews;
+    }
+
+    public void setContactUpdatedListener(ContactUpdatedListener contactUpdatedListener) {
+        this.contactUpdatedListener = contactUpdatedListener;
     }
 }

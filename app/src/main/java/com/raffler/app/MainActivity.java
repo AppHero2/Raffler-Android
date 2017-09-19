@@ -236,6 +236,10 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     @Override
     public void onSelectedChat(Chat chat) {
+        if (chat.getUser() == null ){
+            return;
+        }
+
         AppManager.getInstance().selectedChat = chat;
         Intent intent = new Intent(this, ChatActivity.class);
         startActivity(intent);

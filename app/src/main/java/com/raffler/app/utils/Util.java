@@ -80,7 +80,9 @@ public class Util {
 
     public static void setProfileImage(String url, ImageView imgView, ImageLoadingListener listener) {
         if (url != null) {
-            ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, listener);
+            if (ImageLoader.getInstance() != null) {
+                ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_circluar, listener);
+            }
         }
     }
 
