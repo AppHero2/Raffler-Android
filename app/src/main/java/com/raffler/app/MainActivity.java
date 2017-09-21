@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     private String[] tabTitle={"CHAT", "RAFFLES", "CONTACTS"};
     int[] unreadData ={0, 0, 0};
-    Map<String, Integer> unreadCount = new HashMap<>();
+    Map<String, Long> unreadCount = new HashMap<>();
 
     private int raffles_point = 0;
 
@@ -115,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         viewPager.setCurrentItem(0);
 
         AppManager.getInstance().setNewsValueListenerMain(this);
+
+        AppManager.getInstance().setUserValueListenerMain(this);
 
         // push notification part
         OneSignal.startInit(this)
@@ -251,12 +253,12 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     }
 
     @Override
-    public void onUnreadMessages(String chatId, int count) {
+    public void onUnreadMessages(String chatId, long count) {
         unreadCount.put(chatId, count);
         int total_unread_count = 0;
-        for (Map.Entry<String, Integer> entry : unreadCount.entrySet()){
+        for (Map.Entry<String, Long> entry : unreadCount.entrySet()){
             String key = entry.getKey();
-            Integer value = entry.getValue();
+            long value = entry.getValue();
             total_unread_count += value;
         }
         updateTabBadgeCount(0, total_unread_count);
@@ -287,7 +289,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         chatFragment = new ChatListFragment();
         chatFragment.setUnreadMessageListener(this);
         chatFragment.setChatItemClickListener(this);
-        chatFragment.setUserValueListener(this);
         rafflesFragment = new RafflesFragment();
         contactsFragment = new ContactsFragment();
         contactsFragment.setListener(this);

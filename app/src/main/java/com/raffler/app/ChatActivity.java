@@ -22,10 +22,12 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -93,7 +95,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         usersRef = References.getInstance().usersRef;
         Chat chat = AppManager.getInstance().selectedChat;
         chatId = Util.generateChatKeyFrom(AppManager.getInstance().userId, chat.getUser().getIdx());
-        lastMessageId = chat.getMessage() == null ? "" : chat.getMessage().getIdx();
+        lastMessageId = chat.getMessageId() == null ? "" : chat.getMessageId();
         messagesRef = References.getInstance().messagesRef.child(chatId);
         chatsRef = References.getInstance().chatsRef.child(chatId);
         connnectedUsersRef = chatsRef.child("connectedUser");
@@ -288,6 +290,8 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         if (receiver == null)
             finish();
+
+        usersRef.child(sender.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(0);
     }
 
     private void startTrackingReceiver(){
@@ -388,14 +392,18 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         }
 
         final DatabaseReference reference = messagesRef.push();
-
+        String messageId = reference.getKey();
         long currentTime = System.currentTimeMillis();
         final Map<String, Object> messageData = new HashMap<>();
         Map<String, Object> phones = new HashMap<>();
         phones.put(sender.getIdx(), sender.getPhone());
         phones.put(receiver.getIdx(), receiver.getPhone());
+        Map<String, Object> photos = new HashMap<>();
+        photos.put(sender.getIdx(), sender.getPhoto()==null?"":sender.getPhoto());
+        photos.put(receiver.getIdx(), receiver.getPhoto()==null?"":receiver.getPhoto());
         messageData.put("text", text);
         messageData.put("phones", phones);
+        messageData.put("photos", photos);
         messageData.put("senderId", sender.getIdx());
         messageData.put("senderName", sender.getName());
         messageData.put("senderPhoto", sender.getPhoto());
@@ -404,7 +412,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         messageData.put("status", MessageStatus.SENDING.ordinal());
         messageData.put("createdAt", currentTime);
         messageData.put("updatedAt", currentTime);
-        messageData.put("idx", reference.getKey());
+        messageData.put("idx", messageId);
 
         final Message message = new Message(messageData);
         if (newMessageListener != null) {
@@ -421,8 +429,38 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         });
 
-        // send push notification
+        Map<String, Object> chatInfo = new HashMap<>();
+        chatInfo.put("phones", phones);
+        chatInfo.put("photos", photos);
+        chatInfo.put("lastSender", sender.getPhone());
+        chatInfo.put("lastMessage", text);
+        chatInfo.put("lastMessageId", messageId);
+        chatInfo.put("updatedAt", currentTime);
+        usersRef.child(sender.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+        usersRef.child(receiver.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+
         if (!connectedUsers.contains(receiver.getIdx())) {
+
+            // update unread message count
+            Query query = usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount");
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getValue() != null) {
+                        long unreadCount = (long)dataSnapshot.getValue();
+                        usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(unreadCount+1);
+                    } else {
+                        usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(1);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    FirebaseCrash.report(databaseError.toException());
+                }
+            });
+
+            // send push notification
             try {
                 JSONArray receivers = new JSONArray();
                 receivers.put(receiver.getPushToken());
@@ -430,7 +468,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 JSONObject contents = new JSONObject();
                 contents.put("en", message.getText());
                 JSONObject headings = new JSONObject();
-                headings.put("en", sender.getName());
+                headings.put("en", sender.getName()==null?sender.getPhone():sender.getName());
                 pushObject.put("headings", headings);
                 pushObject.put("contents", contents);
                 pushObject.put("include_player_ids", receivers);
@@ -441,11 +479,6 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         }
 
         chatsRef.updateChildren(messageData);
-
-        Map<String, Object> chat = new HashMap<>();
-        chat.put(chatId, currentTime);
-        usersRef.child(sender.getIdx()).child("chats").updateChildren(chat);
-        usersRef.child(receiver.getIdx()).child("chats").updateChildren(chat);
 
         messageEditText.setText(null);
 

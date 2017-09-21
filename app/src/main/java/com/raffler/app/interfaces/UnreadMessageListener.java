@@ -5,5 +5,5 @@ package com.raffler.app.interfaces;
  */
 
 public interface UnreadMessageListener {
-    void onUnreadMessages(String chatId, int count);
+    void onUnreadMessages(String chatId, long count);
 }

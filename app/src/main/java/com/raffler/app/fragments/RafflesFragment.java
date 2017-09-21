@@ -65,9 +65,9 @@ public class RafflesFragment extends Fragment {
 
     private List<Raffle> raffles = new ArrayList<>();
     private RafflesAdapter adapter;
-    private User mUser;
 
     private int entering_point = 1;
+    private User mUser;
 
     public RafflesFragment() {
         // Required empty public constructor
@@ -78,11 +78,12 @@ public class RafflesFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        mUser = AppManager.getSession();
         usersRef = References.getInstance().usersRef;
         rafflesRef = References.getInstance().rafflesRef;
         holdersRef = References.getInstance().holdersRef;
         query = rafflesRef.orderByChild("isClosed").equalTo(false);
+
+        mUser = AppManager.getSession();
     }
 
     @Override
@@ -128,29 +129,30 @@ public class RafflesFragment extends Fragment {
                             public void onItemClick(Object o, int position) {
                                 if (position != AlertView.CANCELPOSITION) {
 
+                                    User user = AppManager.getSession();
                                     for (int i=0; i<entering_point; i++){
                                         Map<String, Object> holder = new HashMap<>();
-                                        holder.put("uid", mUser.getIdx());
-                                        holder.put("phone", mUser.getPhone());
-                                        holder.put("pushToken", mUser.getPushToken());
+                                        holder.put("uid", user.getIdx());
+                                        holder.put("phone", user.getPhone());
+                                        holder.put("pushToken", user.getPushToken());
                                         holdersRef.child(raffle.getIdx()).push().setValue(holder);
                                     }
 
                                     Map<String, Object> dicRaffle = new HashMap<>();
                                     long holding_count = 1;
-                                    if (mUser.isExistRaffle(raffle.getIdx())){
-                                        String strValue = (String) mUser.getRaffles().get(raffle.getIdx());
+                                    if (user.isExistRaffle(raffle.getIdx())){
+                                        String strValue = (String) user.getRaffles().get(raffle.getIdx());
                                         holding_count = Integer.valueOf(strValue) + entering_point;
                                     }
 
                                     String strHoldNum = String.valueOf(holding_count);
                                     dicRaffle.put(raffle.getIdx(), strHoldNum);
-                                    usersRef.child(mUser.getIdx()).child("raffles").updateChildren(dicRaffle);
-                                    usersRef.child(mUser.getIdx()).child("raffle_point").setValue((user_raffle_point - entering_point));
+                                    usersRef.child(user.getIdx()).child("raffles").updateChildren(dicRaffle);
+                                    usersRef.child(user.getIdx()).child("raffle_point").setValue((user_raffle_point - entering_point));
 
                                     // analysis
                                     Bundle params = new Bundle();
-                                    params.putString("raffler", mUser.getIdx());
+                                    params.putString("raffler", user.getIdx());
                                     References.getInstance().analytics.logEvent("enter_raffle", params);
 
                                     hideSoftKeyboard();

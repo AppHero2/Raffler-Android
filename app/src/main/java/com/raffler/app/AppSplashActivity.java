@@ -1,32 +1,28 @@
 package com.raffler.app;
 
-import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.raffler.app.alertView.AlertView;
+import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
-import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
+import com.raffler.app.utils.References;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Ghost on 14/8/2017.
@@ -35,7 +31,7 @@ import java.util.List;
 public class AppSplashActivity extends AppCompatActivity {
 
     private static final String TAG = "AppSplashActivity";
-    private static final long SPLASH_DURATION = 2500L;
+    private static final long SPLASH_DURATION = 2000L;
 
     private Handler handler;
     private Runnable runnable;
@@ -70,12 +66,7 @@ public class AppSplashActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        handler.postDelayed(runnable, SPLASH_DURATION);
-        /*if (AppManager.getSession() != null) {
-            if (checkPermissions()) {
-                new LoadContactsTask().execute("");
-            }
-        }*/
+        checkVersionNumber();
     }
 
     @Override
@@ -83,6 +74,44 @@ public class AppSplashActivity extends AppCompatActivity {
         super.onPause();
 
         handler.removeCallbacks(runnable);
+    }
+
+    private void checkVersionNumber(){
+        Query query = References.getInstance().versionRef.child("android");
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null){
+                    long serverVersion = (long)dataSnapshot.getValue();
+                    try {
+                        PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                        int versionCode = pInfo.versionCode;
+                        if (serverVersion > versionCode){
+                            AlertView alertView = new AlertView(getString(R.string.alert_title_notice), "You must update this app to the latest version", getResources().getString(R.string.alert_button_okay), null, null, AppSplashActivity.this, AlertView.Style.Alert, new OnItemClickListener() {
+                                @Override
+                                public void onItemClick(Object o, int position) {
+                                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/apps/com.raffler.app"));
+                                    startActivity(browserIntent);
+                                }
+                            });
+                            alertView.show();
+                        } else {
+                            handler.postDelayed(runnable, SPLASH_DURATION);
+                        }
+
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    handler.postDelayed(runnable, SPLASH_DURATION);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                handler.postDelayed(runnable, SPLASH_DURATION);
+            }
+        });
     }
 
     private void dismissSplash(){
@@ -100,51 +129,5 @@ public class AppSplashActivity extends AppCompatActivity {
             startActivity(new Intent(this, RegisterPhoneActivity.class));
         }
         this.finish();
-    }
-
-    String[] permissions= new String[]{
-            android.Manifest.permission.READ_CONTACTS,
-            android.Manifest.permission.WRITE_CONTACTS
-    };
-    public static final int MULTIPLE_PERMISSIONS = 989;
-    private  boolean checkPermissions() {
-        int result;
-        List<String> listPermissionsNeeded = new ArrayList<>();
-        for (String p:permissions) {
-            result = ContextCompat.checkSelfPermission(this,p);
-            if (result != PackageManager.PERMISSION_GRANTED) {
-                listPermissionsNeeded.add(p);
-            }
-        }
-        if (!listPermissionsNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), MULTIPLE_PERMISSIONS );
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MULTIPLE_PERMISSIONS:{
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    // permissions granted.
-                    AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
-                        @Override
-                        public void onResult(boolean success) {
-                            Log.d(TAG, "didRefresh Contacts");
-                        }
-                    });
-                } else {
-                    String permissionList = "";
-                    for (String per : permissions) {
-                        permissionList += "\n" + per;
-                    }
-                    // permissions list of don't granted permission
-                    Toast.makeText(this, permissionList + "not granted.", Toast.LENGTH_SHORT).show();
-                }
-                return;
-            }
-        }
     }
 }

@@ -137,7 +137,7 @@ public class RegisterUserActivity extends AppCompatActivity {
         });
 
         bar = (ProgressBar) this.findViewById(R.id.progressBar);
-        imgProfile = (ImageView) findViewById(R.id.imgProfile);
+        imgProfile = (ImageView) findViewById(R.id.img_profile);
         imgProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

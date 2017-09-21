@@ -20,6 +20,7 @@ import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
+import com.raffler.app.models.ChatInfo;
 import com.raffler.app.models.ChatType;
 import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
@@ -27,6 +28,7 @@ import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,17 +36,15 @@ import static com.raffler.app.utils.Util.getMapDataFromData;
 
 public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRecyclerViewAdapter.ViewHolder> {
 
-    private final List<String> mValues;
-    private final Map<String, Integer> mBadges;
+    private final List<ChatInfo> mValues;
     private ChatItemClickListener chatItemClickListener;
 
     public void setChatItemClickListener(ChatItemClickListener chatItemClickListener) {
         this.chatItemClickListener = chatItemClickListener;
     }
 
-    public ChatListRecyclerViewAdapter(List<String> items, Map<String, Integer> badges) {
+    public ChatListRecyclerViewAdapter(List<ChatInfo> items) {
         mValues = items;
-        mBadges = badges;
     }
 
     @Override
@@ -58,7 +58,11 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
 
-        holder.loadDataFromId(holder.mItem);
+        if (holder.mItem.getLastMessage() == null) {
+            holder.loadDataFromId(holder.mItem.getIdx());
+        } else {
+            holder.updateInfo(holder.mItem);
+        }
     }
 
     @Override
@@ -68,32 +72,73 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
-        public final TextView mIdView;
-        public final TextView mContentView;
-        public final TextView dateView;
-        private final TextView countView;
+        public final TextView tvUsername;
+        public final TextView tvMessage;
+        public final TextView tvDate;
+        private final TextView tvUnreadCount;
         private final View countLayout;
         private final ImageView countImageView;
         private ImageView imgProfile;
-        public String mItem;
+
+        public ChatInfo mItem;
         public User mUser;
-        public Message mMessage;
+        public String mMessageId;
         public String mPhoneContactId, mPhoneContactName, mPhoneContactNumber;
-        public int mUnreadCount;
+        public long mUnreadCount = 0;
         public int typeTextColor;
 
         public ViewHolder(View view) {
             super(view);
             mView = view;
-            mIdView = (TextView) view.findViewById(R.id.id);
-            mContentView = (TextView) view.findViewById(R.id.content);
-            dateView = (TextView) view.findViewById(R.id.tv_date);
-            countView = (TextView) view.findViewById(R.id.count);
+            tvUsername = (TextView) view.findViewById(R.id.tv_username);
+            tvMessage = (TextView) view.findViewById(R.id.tv_message);
+            tvDate = (TextView) view.findViewById(R.id.tv_date);
+            tvUnreadCount = (TextView) view.findViewById(R.id.tv_unreadcount);
             countImageView = (ImageView) view.findViewById(R.id.imageView_count);
             countLayout = view.findViewById(R.id.layout_count);
-            imgProfile = (ImageView) view.findViewById(R.id.imgProfile);
+            imgProfile = (ImageView) view.findViewById(R.id.img_profile);
 
-            typeTextColor = dateView.getCurrentTextColor();
+            typeTextColor = tvDate.getCurrentTextColor();
+        }
+
+        public void updateInfo(ChatInfo info){
+
+            String idx = info.getIdx();
+            String[] userIds = Util.getUserIdsFrom(idx);
+            String contactId = null;
+            for (String userId : userIds) {
+                if (!userId.equals(AppManager.getInstance().userId)) {
+                    contactId = userId;
+                }
+            }
+
+            String userPhoto = (String) info.getPhotos().get(contactId);
+            String userPhone = (String) info.getPhones().get(contactId);
+            String lastMessage = info.getLastMessage();
+            mMessageId = info.getLastMessageId();
+            long unreadCount = info.getUnreadCount();
+            Date updatedAt = info.getUpdatedAt();
+
+            updateDate(updatedAt);
+
+            updateContactName(userPhone);
+
+            updateUnreadCount(unreadCount);
+
+            updateLastMessage(lastMessage);
+
+            updateContactPhoto(userPhoto);
+
+            AppManager.getUser(contactId, new UserValueListener() {
+                @Override
+                public void onLoadedUser(final User user) {
+                    if (user != null) {
+                        mUser = user;
+                    }
+                }
+            });
+
+            updateOnClickListener();
         }
 
         public void loadDataFromId(final String idx) {
@@ -116,30 +161,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                             }
 
                             mPhoneContactNumber = (String) phones.get(contactId);
-                            String phoneContactId = AppManager.getPhoneContactId(mPhoneContactNumber);
-                            if (phoneContactId != null){
-                                mPhoneContactId = phoneContactId;
-                                Contact contact = AppManager.getContacts().get(phoneContactId);
-                                mPhoneContactName = contact.getName();
-                                mIdView.setText(mPhoneContactName);
-                            } else {
-                                mPhoneContactId = null;
-                                mPhoneContactName = null;
-                                mIdView.setText(mPhoneContactNumber);
-
-                                try {
-                                    // phone must begin with '+'
-                                    PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-                                    PhoneNumber numberProto = phoneUtil.parse(mPhoneContactNumber, "");
-                                    /*int countryCode = numberProto.getCountryCode();
-                                    long number = numberProto.getNationalNumber();*/
-                                    String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
-                                    mIdView.setText(formatedPhoneNumber);
-
-                                } catch (NumberParseException e) {
-                                    System.err.println("NumberParseException was thrown: " + e.toString());
-                                }
-                            }
+                            updateContactName(mPhoneContactNumber);
 
                             updateData(message, contactId);
 
@@ -155,37 +177,11 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 }
             });
 
-            int count = mBadges.get(idx);
-            if(count == 0){
-                dateView.setTextColor(typeTextColor);
-                countLayout.setVisibility(View.GONE);
-            } else {
-                int color = dateView.getResources().getColor(R.color.colorEmerland);
-                dateView.setTextColor(color);
-                countView.setText(String.valueOf(count));
-                countLayout.setVisibility(View.VISIBLE);
-                countImageView.setColorFilter(color);
-            }
-
+            updateUnreadCount(0);
         }
 
-        private void updateData(final Message message, String contactId) {
-
-            mMessage = message;
-
-            imgProfile.setImageResource(R.drawable.ic_profile_person);
-            AppManager.getUser(contactId, new UserValueListener() {
-                @Override
-                public void onLoadedUser(final User user) {
-                    if (user != null) {
-                        if (mPhoneContactNumber == null)
-                            mIdView.setText(user.getName());
-                        Util.setProfileImage(user.getPhoto(), imgProfile);
-                        mUser = user;
-                    }
-                }
-            });
-            String lastMessage = message.getText();
+        private void updateLastMessage(String message){
+            String lastMessage = message;
             String[] lastMessages = lastMessage.split("\n");
             if (lastMessages.length > 1) {
                 if (lastMessages[0].length() > 25)
@@ -195,33 +191,106 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             } else if (lastMessage.length() > 25) {
                 lastMessage = lastMessage.substring(0, 25).concat("...");
             }
-            mContentView.setText(lastMessage);
-            String date = Util.getDateString(message.getUpdatedAt());
-            String todayDate = Util.getDateString(System.currentTimeMillis());
 
-            if (todayDate.compareTo(date) == 0) {
-                dateView.setText(Util.getUserTime(message.getUpdatedAt()));
+            tvMessage.setText(lastMessage);
+        }
+
+        private void updateDate(Date date){
+            String dateString = Util.getDateString(date);
+            String todayDate = Util.getDateString(System.currentTimeMillis());
+            if (todayDate.compareTo(dateString) == 0) {
+                tvDate.setText(Util.getUserTime(date));
             } else {
-                dateView.setText(Util.getUserFriendlyDate(
+                tvDate.setText(Util.getUserFriendlyDate(
                         mView.getContext(),
-                        message.getUpdatedAt().getTime()
+                        date.getTime()
                 ));
             }
+        }
 
+        private void updateUnreadCount(long count){
+            mUnreadCount = count;
+            if(mUnreadCount == 0){
+                tvDate.setTextColor(typeTextColor);
+                countLayout.setVisibility(View.GONE);
+            } else {
+                int color = tvDate.getResources().getColor(R.color.colorEmerland);
+                tvDate.setTextColor(color);
+                tvUnreadCount.setText(String.valueOf(mUnreadCount));
+                countLayout.setVisibility(View.VISIBLE);
+                countImageView.setColorFilter(color);
+            }
+        }
+
+        private void updateContactName(String phone) {
+            mPhoneContactNumber = phone;
+            String phoneContactId = AppManager.getPhoneContactId(phone);
+            if (phoneContactId != null){
+                mPhoneContactId = phoneContactId;
+                Contact contact = AppManager.getContacts().get(phoneContactId);
+                mPhoneContactName = contact.getName();
+                tvUsername.setText(mPhoneContactName);
+            } else {
+                mPhoneContactId = null;
+                mPhoneContactName = null;
+                tvUsername.setText(phone);
+
+                try {
+                    // phone must begin with '+'
+                    PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                    PhoneNumber numberProto = phoneUtil.parse(phone, "");
+                    String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+                    tvUsername.setText(formatedPhoneNumber);
+
+                } catch (NumberParseException e) {
+                    System.err.println("NumberParseException was thrown: " + e.toString());
+                }
+            }
+        }
+
+        private void updateContactPhoto(String photo) {
+            Util.setProfileImage(photo, imgProfile);
+        }
+
+        private void updateOnClickListener(){
             mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (chatItemClickListener != null) {
-                        Chat chat = new Chat(mUser, mMessage, mUnreadCount);
+                        Chat chat = new Chat(mUser, mMessageId, mUnreadCount);
                         chatItemClickListener.onSelectedChat(chat);
                     }
                 }
             });
         }
 
+        private void updateData(final Message message, String contactId) {
+
+            mMessageId = message.getIdx();
+
+            imgProfile.setImageResource(R.drawable.ic_profile_person);
+            AppManager.getUser(contactId, new UserValueListener() {
+                @Override
+                public void onLoadedUser(final User user) {
+                    if (user != null) {
+                        if (mPhoneContactNumber == null)
+                            tvUsername.setText(user.getName());
+                        Util.setProfileImage(user.getPhoto(), imgProfile);
+                        mUser = user;
+                    }
+                }
+            });
+            String lastMessage = message.getText();
+            updateLastMessage(lastMessage);
+
+            updateDate(message.getUpdatedAt());
+
+            updateOnClickListener();
+        }
+
         @Override
         public String toString() {
-            return super.toString() + " '" + mContentView.getText() + "'";
+            return super.toString() + " '" + tvMessage.getText() + "'";
         }
     }
 }

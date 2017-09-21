@@ -8,7 +8,7 @@
 
     <ImageView
         style="@style/CircleIconStyle"
-        android:id="@+id/imgProfile"
+        android:id="@+id/img_profile"
         android:src="@drawable/ic_profile_person"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -33,9 +33,9 @@
         android:textColor="@color/colorContactsText"
         android:maxLines="1"
         android:ellipsize="end"
-        android:layout_alignTop="@+id/imgProfile"
-        android:layout_toRightOf="@+id/imgProfile"
-        android:layout_toEndOf="@+id/imgProfile" />
+        android:layout_alignTop="@+id/img_profile"
+        android:layout_toRightOf="@+id/img_profile"
+        android:layout_toEndOf="@+id/img_profile" />
 
     <TextView
         android:id="@+id/txtBio"
@@ -50,6 +50,6 @@
         android:layout_marginRight="5dp"
         android:layout_marginEnd="5dp"
         android:layout_below="@+id/txtName"
-        android:layout_toRightOf="@+id/imgProfile"
-        android:layout_toEndOf="@+id/imgProfile" />
+        android:layout_toRightOf="@+id/img_profile"
+        android:layout_toEndOf="@+id/img_profile" />
 </RelativeLayout>

@@ -46,7 +46,7 @@
         android:layout_marginStart="23dp">
 
         <ImageView
-            android:id="@+id/imgProfile"
+            android:id="@+id/img_profile"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:src="@drawable/ic_profile_person"/>

@@ -5,6 +5,7 @@ package com.raffler.app.utils;
  */
 public class Constant {
 
+    public static final String VERSION = "AppVersion";
     public static final String USER = "Users";
     public static final String CONTACTS = "Contacts";
     public static final String CHAT = "Chats";

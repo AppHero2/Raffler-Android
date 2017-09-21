@@ -56,6 +56,8 @@ import static android.app.Activity.RESULT_OK;
 public class ContactsFragment extends Fragment {
 
     private static final int REQUEST_CONTACT = 711;
+    private static final int REQUEST_INVITE = 712;
+
     private static final String TAG = "ContactsFragment";
 
     private DatabaseReference usersRef, contactsRef;
@@ -117,7 +119,8 @@ public class ContactsFragment extends Fragment {
                                     "You get raffle points for each text, and you can win free prizes.\n\n" +
                                     "https://play.google.com/store/apps/details?id=com.raffler.app");
                     sendIntent.setType("text/plain");
-                    startActivity(sendIntent);
+                    //startActivity(sendIntent);
+                    startActivityForResult(sendIntent, REQUEST_INVITE);
                 } else {
                     Toast.makeText(getActivity(), "This feature is coming soon.", Toast.LENGTH_SHORT).show();
                 }
@@ -178,6 +181,11 @@ public class ContactsFragment extends Fragment {
                     refreshContact();
                 }
             });
+        } else if (requestCode == REQUEST_INVITE && resultCode == RESULT_OK) {
+            User user = AppManager.getSession();
+            long raffles_point = user.getRaffle_point();
+            usersRef.child(user.getIdx()).child("raffle_point").setValue(raffles_point + 5);
+            Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.contact_alert_earning_extra), getActivity());
         }
     }
 
@@ -217,7 +225,6 @@ public class ContactsFragment extends Fragment {
 
         @Override
         protected String doInBackground(String... params) {
-            if (progressBar != null) progressBar.setVisible(true);
             AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
                 @Override
                 public void onResult(boolean success) {
@@ -241,7 +248,9 @@ public class ContactsFragment extends Fragment {
         }
 
         @Override
-        protected void onPreExecute() {}
+        protected void onPreExecute() {
+            if (progressBar != null) progressBar.setVisible(true);
+        }
 
         @Override
         protected void onProgressUpdate(Void... values) {}
@@ -392,7 +401,7 @@ public class ContactsFragment extends Fragment {
         public User user;
 
         public Cell(View view){
-            this.imgProfile = (ImageView)view.findViewById(R.id.imgProfile);
+            this.imgProfile = (ImageView)view.findViewById(R.id.img_profile);
             this.txtName = (TextView) view.findViewById(R.id.txtName);
             this.txtBio = (TextView) view.findViewById(R.id.txtBio);
         }

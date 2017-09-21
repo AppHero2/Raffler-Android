@@ -6,21 +6,21 @@ package com.raffler.app.models;
 
 public class Chat {
     private User user;
-    private Message message;
-    private int unreadCount;
+    private String messageId;
+    private long unreadCount;
 
-    public Chat(User user, Message message, int unreadCount) {
+    public Chat(User user, String messageId, long unreadCount) {
         this.user = user;
-        this.message = message;
+        this.messageId = messageId;
         this.unreadCount = unreadCount;
     }
 
-    public int getUnreadCount() {
+    public long getUnreadCount() {
         return unreadCount;
     }
 
-    public Message getMessage() {
-        return message;
+    public String getMessageId() {
+        return messageId;
     }
 
     public User getUser() {
