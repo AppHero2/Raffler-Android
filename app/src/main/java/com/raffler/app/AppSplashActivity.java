@@ -90,7 +90,7 @@ public class AppSplashActivity extends AppCompatActivity {
                             AlertView alertView = new AlertView(getString(R.string.alert_title_notice), "You must update this app to the latest version", getResources().getString(R.string.alert_button_okay), null, null, AppSplashActivity.this, AlertView.Style.Alert, new OnItemClickListener() {
                                 @Override
                                 public void onItemClick(Object o, int position) {
-                                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/apps/com.raffler.app"));
+                                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.raffler.app"));
                                     startActivity(browserIntent);
                                 }
                             });
