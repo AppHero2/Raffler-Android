@@ -42,9 +42,6 @@ public class ChatListFragment extends Fragment {
     private Query queryChatList;
 
     private List<ChatInfo> chatInfoList = new ArrayList<>();
-    private Map<String, Integer> badges = new HashMap<>();
-    private List<Query> queryList = new ArrayList<>();
-    private List<ValueEventListener> listeners = new ArrayList<>();
     private ValueEventListener valueEventListener;
 
     private TextView txtNodata;
@@ -89,32 +86,6 @@ public class ChatListFragment extends Fragment {
             adapter.setChatItemClickListener(chatItemClickListener);
         }
 
-        /*UserValueListener listener = new UserValueListener() {
-            @Override
-            public void onLoadedUser(User user) {
-                if (user != null) {
-                    loadData();
-
-                    if (userValueListener != null) {
-                        userValueListener.onLoadedUser(user);
-                    }
-                }
-            }
-        };
-
-        AppManager.getInstance().setUserValueListenerMain(listener);
-        AppManager.getInstance().setContactUpdatedListener(new ContactUpdatedListener() {
-            @Override
-            public void onUpdatedContacts(List<Contact> contacts) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        loadData();
-                    }
-                });
-            }
-        });*/
-
         startTrackingUserChatList();
 
         return view;
@@ -129,7 +100,6 @@ public class ChatListFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
 
-//        stopTrackingChat();
         stopTrackingUserChatList();
     }
 
@@ -138,22 +108,6 @@ public class ChatListFragment extends Fragment {
         inflater.inflate(R.menu.menu_chat_fragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
-
-    /*private void loadData(){
-        User user = AppManager.getSession();
-        if (user.getChats() != null){
-            for (Map.Entry<String, Object> entry : user.getChats().entrySet()){
-                final String chatId = entry.getKey();
-                if (!chatInfoList.contains(chatId)) {
-                    chatInfoList.add(chatId);
-                    badges.put(chatId, 0);
-                    startTrackingChat(chatId);
-                }
-            }
-            adapter.notifyDataSetChanged();
-        }
-        updateStatus();
-    }*/
 
     private void updateStatus(){
         if (chatInfoList.size() == 0) {
@@ -184,7 +138,7 @@ public class ChatListFragment extends Fragment {
                             if (unreadMessageListener != null) {
                                 unreadMessageListener.onUnreadMessages(idx, chatInfo.getUnreadCount());
                             }
-                        }catch (Exception e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
 

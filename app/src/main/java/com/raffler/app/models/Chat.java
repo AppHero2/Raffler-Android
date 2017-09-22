@@ -5,12 +5,14 @@ package com.raffler.app.models;
  */
 
 public class Chat {
-    private User user;
+    private String title;
+    private String userId;
     private String messageId;
     private long unreadCount;
 
-    public Chat(User user, String messageId, long unreadCount) {
-        this.user = user;
+    public Chat(String title, String userId, String messageId, long unreadCount) {
+        this.title = title;
+        this.userId = userId;
         this.messageId = messageId;
         this.unreadCount = unreadCount;
     }
@@ -23,7 +25,11 @@ public class Chat {
         return messageId;
     }
 
-    public User getUser() {
-        return user;
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }

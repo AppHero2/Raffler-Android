@@ -15,10 +15,10 @@
         android:scaleType="fitXY"/>
 
     <com.raffler.app.widgets.CustomTextView
+        android:id="@+id/tv_copyright"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/menu_copyright"
         android:textColor="@color/colorBlack"
         android:textStyle="bold"
         android:layout_alignParentBottom="true"

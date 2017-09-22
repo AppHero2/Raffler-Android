@@ -7,15 +7,19 @@
     <string name="button_cancel">Cancel</string>
     <string name="button_save">Save</string>
 
+    <string name="tab_title_chats">CHATS</string>
+    <string name="tab_title_raffles">RAFFLES</string>
+    <string name="tab_title_contacts">CONTACTS</string>
+
     <!-- Register Phone -->
     <string name="register_verify_phone">Verify your phone number</string>
-    <string name="register_verify_content">Raffler Chat will send SMS message to verify your phone\nnumber.Enter your country code and phone number.</string>
+    <string name="register_verify_content">Raffler will send SMS message to verify your phone\nnumber.Enter your country code and phone number.</string>
     <string name="register_verify_note">Carrier SMS charges may apply</string>
     <string name="register_verify_sent">Verification code sent</string>
 
     <!-- Register User -->
     <string name="register_user_title">Edit your profile</string>
-    <string name="register_user_content">Enter your name and add an optional profile picture.</string>
+    <string name="register_user_content">Enter your name for push notification and add an optional profile picture.</string>
     <string name="register_user_name">Your name</string>
     <string name="register_user_alert_empty">Your name should not be empty!</string>
 
@@ -70,7 +74,8 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_contacts">Contacts</string>
 
-    <string name="menu_copyright">Raffler version 1.0(Beta version).\n2017. All Rights Reserved Raffler LLC</string>
+    <string name="copyright_version">Raffler version&#160;</string>
+    <string name="copyright_company">\n2017. All Rights Reserved Raffler LLC</string>
 
     <!-- Alert View -->
     <string name="alert_title_notice">Notice</string>

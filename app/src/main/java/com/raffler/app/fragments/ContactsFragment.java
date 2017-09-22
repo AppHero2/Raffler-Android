@@ -2,12 +2,9 @@ package com.raffler.app.fragments;
 
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -26,6 +23,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -44,11 +42,11 @@ import com.raffler.app.utils.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static android.app.Activity.RESULT_OK;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -60,6 +58,7 @@ public class ContactsFragment extends Fragment {
 
     private static final String TAG = "ContactsFragment";
 
+    private User mUser;
     private DatabaseReference usersRef, contactsRef;
 
     private ListView listView;
@@ -88,6 +87,7 @@ public class ContactsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contacts, container, false);
 
+        mUser = AppManager.getSession();
         usersRef = References.getInstance().usersRef;
         contactsRef = References.getInstance().contactsRef.child(AppManager.getInstance().userId);
 
@@ -104,8 +104,8 @@ public class ContactsFragment extends Fragment {
                 if (i < contacts.size()) {
                     Cell cell = (Cell) view.getTag();
                     if (listener != null) {
-                        if (cell.user != null){
-                            Chat chat = new Chat(cell.user, null, 0);
+                        if (cell.userId != null){
+                            Chat chat = new Chat(cell.userName, cell.userId, null, 0);
                             listener.onSelectedChat(chat);
                         }
                     }
@@ -119,7 +119,6 @@ public class ContactsFragment extends Fragment {
                                     "You get raffle points for each text, and you can win free prizes.\n\n" +
                                     "https://play.google.com/store/apps/details?id=com.raffler.app");
                     sendIntent.setType("text/plain");
-                    //startActivity(sendIntent);
                     startActivityForResult(sendIntent, REQUEST_INVITE);
                 } else {
                     Toast.makeText(getActivity(), "This feature is coming soon.", Toast.LENGTH_SHORT).show();
@@ -132,33 +131,38 @@ public class ContactsFragment extends Fragment {
                 .setWindowColor(ContextCompat.getColor(getActivity(), R.color.colorTransparency))
                 .setDimAmount(0.5f);
 
-        btnNewContact = (FloatingActionButton) view.findViewById(R.id.fab_contact);
+        /*btnNewContact = (FloatingActionButton) view.findViewById(R.id.fab_contact);
         btnNewContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*  set profile photo
+                *//*  set profile photo
                 ArrayList<ContentValues> data = new ArrayList<ContentValues>();
                 Bitmap bit = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
                 ContentValues row = new ContentValues();
                 row.put(ContactsContract.Contacts.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE);
                 row.put(ContactsContract.CommonDataKinds.Photo.PHOTO, bitmapToByteArray(bit));
-                data.add(row);*/
+                data.add(row);*//*
 
                 Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION, ContactsContract.Contacts.CONTENT_URI);
                 // Sets the MIME type to match the Contacts Provider
                 intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
                 // Inserts a Phone number
-                /*intent.putExtra(ContactsContract.Intents.Insert.PHONE, mPhoneNumber.getText())*/
+                *//*intent.putExtra(ContactsContract.Intents.Insert.PHONE, mPhoneNumber.getText())*//*
 
-                /* set profile photo
-                intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, data);*/
+                *//* set profile photo
+                intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, data);*//*
 
                 startActivityForResult(intent, REQUEST_CONTACT);
             }
-        });
+        });*/
         return view;
     }
 
+    /**
+     * This function is prepared for update contact profile
+     * @param bitmap
+     * @return
+     */
     private byte[] bitmapToByteArray(Bitmap bitmap){
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -178,9 +182,10 @@ public class ContactsFragment extends Fragment {
             AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
                 @Override
                 public void onResult(boolean success) {
-                    refreshContact();
+                    // ???
                 }
             });
+
         } else if (requestCode == REQUEST_INVITE && resultCode == RESULT_OK) {
             User user = AppManager.getSession();
             long raffles_point = user.getRaffle_point();
@@ -193,13 +198,12 @@ public class ContactsFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        loadContacts();
+        findContactsInLocal();
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         progressBar = menu.findItem(R.id.menu_refresh);
-        refreshContact();
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -221,11 +225,52 @@ public class ContactsFragment extends Fragment {
         }
     }
 
-    private class LoadContactsTask extends AsyncTask<String, Void, String> {
+    private void findContactsInLocal(){
+        Query query = References.getInstance().contactListRef;
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
+                    Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
+                    for (Map.Entry<String, Object> entry : userData.entrySet()) {
+                        String key = entry.getKey();
+                        Map<String, Object> data = (Map<String, Object>) entry.getValue();
+                        String phone = (String) data.get("phone");
+                        String photo = (String) data.get("photo");
+
+                        Contact contact = AppManager.getInstance().getPhoneContact(phone);
+                        if (contact != null) {
+                            contact.setUid(key);
+                            contact.setPhoto(photo);
+                            boolean isExist = false;
+                            for (Contact c : contacts) {
+                                if (c.getPhone().equals(contact.getPhone())){
+                                    isExist = true;
+                                    break;
+                                }
+                            }
+                            if (!isExist) {
+                                if (!mUser.getPhone().equals(contact.getPhone())) contacts.add(contact);
+                            }
+                        }
+                    }
+
+                    adapter.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    /*private class LoadContactsTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... params) {
-            AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
+            *//*AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
                 @Override
                 public void onResult(boolean success) {
                     Log.d(TAG, "didRefresh Contacts");
@@ -238,7 +283,7 @@ public class ContactsFragment extends Fragment {
                     });
 
                 }
-            });
+            });*//*
             return "Executed";
         }
 
@@ -305,7 +350,7 @@ public class ContactsFragment extends Fragment {
         }
 
         return myContacts;
-    }
+    }*/
 
     public void setListener(ChatItemClickListener listener) {
         this.listener = listener;
@@ -368,8 +413,10 @@ public class ContactsFragment extends Fragment {
             /*Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
             convertView.startAnimation(animation);
             lastPosition = position;*/
-
-                cell.setUserData(getItem(position));
+                Contact contact = getItem(position);
+                if (contact != null) {
+                    cell.setUserData(getItem(position));
+                }
                 return convertView;
 
             } else {
@@ -398,39 +445,20 @@ public class ContactsFragment extends Fragment {
     private class Cell {
         public ImageView imgProfile;
         public TextView txtName, txtBio;
-        public User user;
+        public String userId, userName, userPhoto;
 
         public Cell(View view){
-            this.imgProfile = (ImageView)view.findViewById(R.id.img_profile);
+            this.imgProfile = (ImageView) view.findViewById(R.id.img_profile);
             this.txtName = (TextView) view.findViewById(R.id.txtName);
             this.txtBio = (TextView) view.findViewById(R.id.txtBio);
         }
 
         public void setUserData(Contact contact){
-            String name = contact.getName();
-            String photo = contact.getPhoto();
-
-            txtName.setText(name);
-            Util.setProfileImage(photo, imgProfile);
-
-            Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(contact.getUid());
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue() != null) {
-                        for (DataSnapshot child : dataSnapshot.getChildren()) {
-                            Map<String, Object> userData = (Map<String, Object>) child.getValue();
-                            user = new User(userData);
-                            break;
-                        }
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.e(TAG, databaseError.toString());
-                }
-            });
+            userId = contact.getUid();
+            userPhoto = contact.getPhoto();
+            userName = contact.getName();
+            txtName.setText(userName);
+            Util.setProfileImage(userPhoto, imgProfile);
         }
     }
 

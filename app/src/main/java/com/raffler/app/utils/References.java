@@ -19,7 +19,7 @@ public class References {
     public FirebaseAnalytics analytics;
 
     public DatabaseReference usersRef, contactsRef, chatsRef, messagesRef, rafflesRef, prizesRef;
-    public DatabaseReference holdersRef, newsRef, versionRef;
+    public DatabaseReference holdersRef, newsRef, versionRef, phonesRef, contactListRef;
 
     public static void init(Context context, FirebaseDatabase database) {
         instance = new References(context, database);
@@ -45,9 +45,10 @@ public class References {
         holdersRef = database.getReference(Constant.Holders);
         newsRef = database.getReference(Constant.NEWS);
         versionRef = database.getReference(Constant.VERSION);
+        phonesRef = database.getReference(Constant.PHONES);
+        contactListRef = database.getReference(Constant.CONTACT_LIST);
         analytics = FirebaseAnalytics.getInstance(context);
     }
-
 
     public User getUser() {
         return user;

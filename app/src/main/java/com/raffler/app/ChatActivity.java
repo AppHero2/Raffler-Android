@@ -2,7 +2,6 @@ package com.raffler.app;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -16,12 +15,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -67,14 +67,16 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private static final int REQUEST_CONTACT = 567;
     private static final String TAG = ChatActivity.class.getSimpleName();
 
-    private EditText messageEditText;
-    private TextView titleToolbarTextView;
-    private TextView descToolbarTextView;
-    private TextView txtRafflesCount;
+    private EditText etMessageSend;
+    private TextView tvTitle;
+    private TextView tvDescription;
+    private TextView tvRafflePoints;
     private User sender, receiver;
     private FrameLayout btnSend;
     private ChatFragment chatFragment;
     private LinearLayout layoutTopBanner;
+    private RelativeLayout layoutRefresh;
+    private ProgressBar progressBar;
     private AppCompatButton btnBlock, btnAdd;
 
     private DatabaseReference usersRef, messagesRef, chatsRef, presenceRef, connnectedUsersRef;
@@ -84,7 +86,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private NewMessageListener newMessageListener;
 
     private List<String> connectedUsers = new ArrayList<>();
-
+    private Chat currentChat;
     private int raffles_point = 0;
 
     @Override
@@ -94,7 +96,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         usersRef = References.getInstance().usersRef;
         Chat chat = AppManager.getInstance().selectedChat;
-        chatId = Util.generateChatKeyFrom(AppManager.getInstance().userId, chat.getUser().getIdx());
+        chatId = Util.generateChatKeyFrom(AppManager.getInstance().userId, chat.getUserId());
         lastMessageId = chat.getMessageId() == null ? "" : chat.getMessageId();
         messagesRef = References.getInstance().messagesRef.child(chatId);
         chatsRef = References.getInstance().chatsRef.child(chatId);
@@ -126,32 +128,34 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         layoutTopBanner = (LinearLayout) findViewById(R.id.layout_top_banner);
         layoutTopBanner.setVisibility(View.GONE);
-        /*btnBlock = (AppCompatButton) findViewById(R.id.btnBlock);
+        btnBlock = (AppCompatButton) findViewById(R.id.btnBlock);
         btnBlock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: 9/7/2017 block user
+
             }
         });
         btnAdd = (AppCompatButton) findViewById(R.id.btnAdd);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: 9/7/2017 add contact user
-                Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION, ContactsContract.Contacts.CONTENT_URI);
+                /*Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION, ContactsContract.Contacts.CONTENT_URI);
                 // Sets the MIME type to match the Contacts Provider
                 intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
                 // Inserts a Phone number
                 intent.putExtra(ContactsContract.Intents.Insert.PHONE, receiver.getPhone());
-                startActivityForResult(intent, REQUEST_CONTACT);
+                startActivityForResult(intent, REQUEST_CONTACT);*/
             }
-        });*/
+        });
 
-        titleToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_title);
-        descToolbarTextView = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
-        descToolbarTextView.setText(null);
-        txtRafflesCount = (TextView) toolbar.findViewById(R.id.tv_count);
-        txtRafflesCount.setText(String.valueOf(raffles_point));
+        layoutRefresh = (RelativeLayout) findViewById(R.id.layout_refresh);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
+        tvTitle = (TextView) toolbar.findViewById(R.id.textView_toolbar_title);
+        tvDescription = (TextView) toolbar.findViewById(R.id.textView_toolbar_description);
+        tvDescription.setText(null);
+        tvRafflePoints = (TextView) toolbar.findViewById(R.id.tv_count);
+        tvRafflePoints.setText(String.valueOf(raffles_point));
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -162,8 +166,8 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         });
 
-        messageEditText = (EditText) findViewById(R.id.editText_message);
-        messageEditText.addTextChangedListener(new TextWatcher() {
+        etMessageSend = (EditText) findViewById(R.id.editText_message);
+        etMessageSend.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -192,14 +196,13 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         });
 
-        loadData();
-
-        checkContactStatus();
-
-        startTrackingReceiver();
-        startTrackingPresence();
-
         chatFragment = ChatFragment.newInstance(chatId, lastMessageId);
+        chatFragment.setResultListener(new ResultListener() {
+            @Override
+            public void onResult(boolean success) {
+                layoutRefresh.setVisibility(View.GONE);
+            }
+        });
         this.newMessageListener = chatFragment.messageListener;
         try {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, chatFragment).commitAllowingStateLoss();
@@ -208,6 +211,10 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         }
 
         AppManager.getInstance().setUserValueListenerForChat(this);
+
+        currentChat = AppManager.getInstance().selectedChat;
+
+        loadData();
     }
 
     @Override
@@ -225,7 +232,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                         Toast.makeText(ChatActivity.this, "Could not find that phone number.", Toast.LENGTH_SHORT).show();
                     }
 
-                    checkContactStatus();
+                    updateContactName();
                 }
             });
         }
@@ -253,15 +260,15 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     @Override
     public void onLoadedUser(User user) {
         raffles_point = user.getRaffle_point();
-        txtRafflesCount.setText(String.valueOf(raffles_point));
+        tvRafflePoints.setText(String.valueOf(raffles_point));
     }
 
-    private void checkContactStatus() {
+    private void updateContactName() {
 
         String receiverPhone = receiver.getPhone();
         String phoneContactId = AppManager.getPhoneContactId(receiverPhone);
         if (phoneContactId == null) {
-            titleToolbarTextView.setText(receiverPhone);
+            tvTitle.setText(receiverPhone);
             try {
                 // phone must begin with '+'
                 PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
@@ -269,7 +276,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                                     /*int countryCode = numberProto.getCountryCode();
                                     long number = numberProto.getNationalNumber();*/
                 String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
-                titleToolbarTextView.setText(formatedPhoneNumber);
+                tvTitle.setText(formatedPhoneNumber);
 
             } catch (NumberParseException e) {
                 System.err.println("NumberParseException was thrown: " + e.toString());
@@ -278,18 +285,27 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             Contact contact = AppManager.getContacts().get(phoneContactId);
             String contactName = contact.getName();
             if (contactName == null)
-                titleToolbarTextView.setText(receiverPhone);
+                tvTitle.setText(receiverPhone);
             else
-                titleToolbarTextView.setText(contactName);
+                tvTitle.setText(contactName);
         }
     }
 
     private void loadData() {
-        sender = AppManager.getSession();
-        receiver = AppManager.getInstance().selectedChat.getUser();
 
-        if (receiver == null)
-            finish();
+        sender = AppManager.getSession();
+        String title = currentChat.getTitle();
+        tvTitle.setText(title);
+        String contactId = currentChat.getUserId();
+
+        AppManager.getUser(contactId, new UserValueListener() {
+            @Override
+            public void onLoadedUser(User user) {
+                receiver = user;
+                startTrackingReceiver();
+                startTrackingPresence();
+            }
+        });
 
         usersRef.child(sender.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(0);
     }
@@ -302,9 +318,9 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                     Map<String, Object> userData = (Map<String, Object>) dataSnapshot.getValue();
                     receiver = new User(userData);
                     if (receiver.getUserAction() == TYPING) {
-                        descToolbarTextView.setText(R.string.chat_user_typing);
+                        tvDescription.setText(R.string.chat_user_typing);
                     } else if (receiver.getUserStatus() == ONLINE) {
-                        descToolbarTextView.setText(R.string.chat_user_online);
+                        tvDescription.setText(R.string.chat_user_online);
                     } else {
                         long lastSeen = System.currentTimeMillis();
                         for (Map.Entry<String, Object> entry: receiver.getLastseens().entrySet()){
@@ -315,7 +331,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                             }
                         }
 
-                        descToolbarTextView.setText(
+                        tvDescription.setText(
                                 String.format(
                                         Locale.getDefault(),
                                         "%s %s at %s",
@@ -386,7 +402,11 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     }
 
     private void sendMessage(){
-        final String text = messageEditText.getText().toString();
+
+        if (receiver == null)
+            return;
+
+        final String text = etMessageSend.getText().toString();
         if (text.trim().length() == 0) {
             return;
         }
@@ -480,7 +500,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         chatsRef.updateChildren(messageData);
 
-        messageEditText.setText(null);
+        etMessageSend.setText(null);
 
         // analysis
         Bundle params = new Bundle();

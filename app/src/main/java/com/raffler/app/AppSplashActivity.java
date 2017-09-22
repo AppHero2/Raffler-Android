@@ -1,5 +1,6 @@
 package com.raffler.app;
 
+import android.*;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -7,9 +8,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -20,8 +25,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -52,14 +61,18 @@ public class AppSplashActivity extends AppCompatActivity {
             }
         };
 
-        // allow user to click and dismiss the splash screen prematurely
-        View rootView = findViewById(android.R.id.content);
-        rootView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismissSplash();
-            }
-        });
+        TextView tv_copyright = (TextView) findViewById(R.id.tv_copyright);
+        try {
+            PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
+            String versionName = pInfo.versionName;
+            String versionCode = String.valueOf(pInfo.versionCode);
+            String copyright = getString(R.string.copyright_version) + versionName + "(" + versionCode + ")"
+                    + getString(R.string.copyright_company);
+            tv_copyright.setText(copyright);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -121,7 +134,14 @@ public class AppSplashActivity extends AppCompatActivity {
             AppManager.getInstance().startTrackingNews(firebaseUser.getUid());
             User user = AppManager.getSession();
             if (user != null) {
-                startActivity(new Intent(this, MainActivity.class));
+                if (checkPermissions()) {
+                    AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+                        @Override
+                        public void onResult(boolean success) {
+                            startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
+                        }
+                    });
+                }
             } else {
                 startActivity(new Intent(this, RegisterUserActivity.class));
             }
@@ -129,5 +149,53 @@ public class AppSplashActivity extends AppCompatActivity {
             startActivity(new Intent(this, RegisterPhoneActivity.class));
         }
         this.finish();
+    }
+
+    public static final int MULTIPLE_PERMISSIONS = 989;
+
+    String[] permissions= new String[]{
+            android.Manifest.permission.READ_CONTACTS,
+            android.Manifest.permission.WRITE_CONTACTS
+    };
+
+    private  boolean checkPermissions() {
+        int result;
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        for (String p:permissions) {
+            result = ContextCompat.checkSelfPermission(this,p);
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(p);
+            }
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),MULTIPLE_PERMISSIONS );
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MULTIPLE_PERMISSIONS:{
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    // permissions granted.
+                    AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+                        @Override
+                        public void onResult(boolean success) {
+                            startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
+                        }
+                    });
+                } else {
+                    String permissionList = "";
+                    for (String per : permissions) {
+                        permissionList += "\n" + per;
+                    }
+                    // permissions list of don't granted permission
+                    Toast.makeText(this, permissionList + "not granted.", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+        }
     }
 }

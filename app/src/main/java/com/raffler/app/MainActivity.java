@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.DatabaseReference;
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     private DatabaseReference userStatusRef;
 
-    private String[] tabTitle={"CHAT", "RAFFLES", "CONTACTS"};
+    private String[] tabTitle = new String[3];
     int[] unreadData ={0, 0, 0};
     Map<String, Long> unreadCount = new HashMap<>();
 
@@ -67,11 +68,10 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_PROGRESS);
-        setContentView(R.layout.activity_main);
 
-        setProgressBarIndeterminateVisibility(true);
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_main);
 
         userStatusRef = References.getInstance().usersRef.child(AppManager.getInstance().userId).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
@@ -191,10 +191,6 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.menu_home, menu);
         // Associate searchable configuration with the SearchView
-//        RelativeLayout rafflesLayout = (RelativeLayout) menu.findItem(R.id.menu_raffles).getActionView();
-//
-//        txtRaffles = rafflesLayout.findViewById(R.id.tv_count);
-//        txtRaffles.setText(String.valueOf(raffles_point));
 
         menuItemRefresh = menu.findItem(R.id.menu_refresh);
         menuItemRefresh.setVisible(false);
@@ -230,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 return true;
             case R.id.menu_settings:
                 // TODO: 9/14/2017 Settings
+                Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -238,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     @Override
     public void onSelectedChat(Chat chat) {
-        if (chat.getUser() == null ){
+        if (chat.getUserId() == null ){
             return;
         }
 
@@ -303,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         TextView tv_title = (TextView) view.findViewById(R.id.tv_title);
         TextView tv_count = (TextView) view.findViewById(R.id.tv_count);
         tv_title.setText(tabTitle[pos]);
-        if(unreadData[pos]>0)
+        if(unreadData[pos] > 0)
         {
             tv_count.setVisibility(View.VISIBLE);
             tv_count.setText(""+ unreadData[pos]);
@@ -316,7 +313,11 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     private void setupTabIcons()
     {
-        for(int i=0; i<tabTitle.length; i++)
+        tabTitle[0] = getString(R.string.tab_title_chats);
+        tabTitle[1] = getString(R.string.tab_title_raffles);
+        tabTitle[2] = getString(R.string.tab_title_contacts);
+
+        for(int i = 0; i < tabTitle.length; i++)
         {
             /*TabLayout.Tab tabitem = tabLayout.newTab();
             tabitem.setCustomView(prepareTabView(i));

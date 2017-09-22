@@ -81,7 +81,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
         private ImageView imgProfile;
 
         public ChatInfo mItem;
-        public User mUser;
+        public String mContactId;
         public String mMessageId;
         public String mPhoneContactId, mPhoneContactName, mPhoneContactNumber;
         public long mUnreadCount = 0;
@@ -112,6 +112,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 }
             }
 
+            mContactId = contactId;
             String userPhoto = (String) info.getPhotos().get(contactId);
             String userPhone = (String) info.getPhones().get(contactId);
             String lastMessage = info.getLastMessage();
@@ -128,15 +129,6 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             updateLastMessage(lastMessage);
 
             updateContactPhoto(userPhoto);
-
-            AppManager.getUser(contactId, new UserValueListener() {
-                @Override
-                public void onLoadedUser(final User user) {
-                    if (user != null) {
-                        mUser = user;
-                    }
-                }
-            });
 
             updateOnClickListener();
         }
@@ -181,18 +173,20 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
         }
 
         private void updateLastMessage(String message){
-            String lastMessage = message;
-            String[] lastMessages = lastMessage.split("\n");
-            if (lastMessages.length > 1) {
-                if (lastMessages[0].length() > 25)
-                    lastMessage = lastMessages[0].substring(0, 25).concat("...");
-                else
-                    lastMessage = lastMessages[0].concat("...");
-            } else if (lastMessage.length() > 25) {
-                lastMessage = lastMessage.substring(0, 25).concat("...");
-            }
+            if (message != null) {
+                String lastMessage = message;
+                String[] lastMessages = lastMessage.split("\n");
+                if (lastMessages.length > 1) {
+                    if (lastMessages[0].length() > 25)
+                        lastMessage = lastMessages[0].substring(0, 25).concat("...");
+                    else
+                        lastMessage = lastMessages[0].concat("...");
+                } else if (lastMessage.length() > 25) {
+                    lastMessage = lastMessage.substring(0, 25).concat("...");
+                }
 
-            tvMessage.setText(lastMessage);
+                tvMessage.setText(lastMessage);
+            }
         }
 
         private void updateDate(Date date){
@@ -224,16 +218,11 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
         private void updateContactName(String phone) {
             mPhoneContactNumber = phone;
-            String phoneContactId = AppManager.getPhoneContactId(phone);
-            if (phoneContactId != null){
-                mPhoneContactId = phoneContactId;
-                Contact contact = AppManager.getContacts().get(phoneContactId);
-                mPhoneContactName = contact.getName();
-                tvUsername.setText(mPhoneContactName);
-            } else {
+
+            Contact contact = AppManager.getInstance().getPhoneContact(phone);
+            if (contact == null) {
                 mPhoneContactId = null;
-                mPhoneContactName = null;
-                tvUsername.setText(phone);
+                mPhoneContactName = phone;
 
                 try {
                     // phone must begin with '+'
@@ -245,7 +234,11 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 } catch (NumberParseException e) {
                     System.err.println("NumberParseException was thrown: " + e.toString());
                 }
+            } else {
+                mPhoneContactId = contact.getIdx();
+                mPhoneContactName = contact.getName();
             }
+            tvUsername.setText(mPhoneContactName);
         }
 
         private void updateContactPhoto(String photo) {
@@ -257,7 +250,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 @Override
                 public void onClick(View v) {
                     if (chatItemClickListener != null) {
-                        Chat chat = new Chat(mUser, mMessageId, mUnreadCount);
+                        Chat chat = new Chat(mPhoneContactName, mContactId, mMessageId, mUnreadCount);
                         chatItemClickListener.onSelectedChat(chat);
                     }
                 }
@@ -266,8 +259,8 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
         private void updateData(final Message message, String contactId) {
 
+            mContactId = contactId;
             mMessageId = message.getIdx();
-
             imgProfile.setImageResource(R.drawable.ic_profile_person);
             AppManager.getUser(contactId, new UserValueListener() {
                 @Override
@@ -276,7 +269,6 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                         if (mPhoneContactNumber == null)
                             tvUsername.setText(user.getName());
                         Util.setProfileImage(user.getPhoto(), imgProfile);
-                        mUser = user;
                     }
                 }
             });

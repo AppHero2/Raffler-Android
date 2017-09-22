@@ -72,7 +72,6 @@ public class RegisterUserActivity extends AppCompatActivity {
     private static final String TAG = "RegisterUserActivity";
 
     private FirebaseAuth mAuth;
-    private DatabaseReference usersRef;
     private String userId;
 
     private EditText etName;
@@ -101,14 +100,12 @@ public class RegisterUserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register_user);
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        userId = AppManager.getInstance().userId;
-        // firebase
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        usersRef = database.getReference("Users");
-        usersRef.child(userId).child("uid").setValue(userId);
         String phone = firebaseUser.getPhoneNumber();
-        usersRef.child(userId).child("phone").setValue(phone);
+        userId = AppManager.getInstance().userId;
+        mAuth = FirebaseAuth.getInstance();
+        References.getInstance().usersRef.child(userId).child("uid").setValue(userId);
+        References.getInstance().usersRef.child(userId).child("phone").setValue(phone);
+        References.getInstance().phonesRef.child(userId).setValue(phone);
 
         hud = KProgressHUD.create(this)
                 .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
@@ -121,7 +118,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_DONE){
                     String name = etName.getText().toString();
-                    usersRef.child(userId).child("name").setValue(name);
+                    References.getInstance().usersRef.child(userId).child("name").setValue(name);
                 }
                 return false;
             }
@@ -131,7 +128,7 @@ public class RegisterUserActivity extends AppCompatActivity {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus){
                     String name = etName.getText().toString();
-                    usersRef.child(userId).child("name").setValue(name);
+                    References.getInstance().usersRef.child(userId).child("name").setValue(name);
                 }
             }
         });
@@ -156,8 +153,13 @@ public class RegisterUserActivity extends AppCompatActivity {
                     String alert_message = getString(R.string.register_user_alert_empty);
                     Util.showAlert(alert_title, alert_message, RegisterUserActivity.this);
                 } else {
-                    startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
-                    RegisterUserActivity.this.finish();
+                    AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+                        @Override
+                        public void onResult(boolean success) {
+                            startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
+                            RegisterUserActivity.this.finish();
+                        }
+                    });
                 }
             }
         });
@@ -367,7 +369,6 @@ public class RegisterUserActivity extends AppCompatActivity {
 
     private void galleryIntent()
     {
-
         if (checkPermissions()){
             if (Build.VERSION.SDK_INT <= 19) {
                 /*Intent intent = new Intent();
@@ -411,8 +412,7 @@ public class RegisterUserActivity extends AppCompatActivity {
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     bar.setVisibility(View.GONE);
                     final Uri profileURL = taskSnapshot.getDownloadUrl();
-                    usersRef.child(userId).child("photo").setValue(profileURL.toString());
-
+                    References.getInstance().usersRef.child(userId).child("photo").setValue(profileURL.toString());
 
                     Util.setProfileImage(profileURL.toString(), imgProfile, new ImageLoadingListener() {
                         @Override
@@ -450,54 +450,48 @@ public class RegisterUserActivity extends AppCompatActivity {
         if (!checkPermissions()) return;
 
         hud.show();
-        AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
+        Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(userId);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onResult(boolean success) {
-                Log.d(TAG, "didRefresh Contacts");
-                Query query = References.getInstance().usersRef.orderByChild("uid").equalTo(userId);
-                query.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.getValue() != null) {
-                            for (DataSnapshot child: dataSnapshot.getChildren()) {
-                                Map<String, Object> userData = (Map<String, Object>) child.getValue();
-                                User user = new User(userData);
-                                etName.setText(user.getName());
-                                Util.setProfileImage(user.getPhoto(), imgProfile, new ImageLoadingListener() {
-                                    @Override
-                                    public void onLoadingStarted(String s, View view) {
-                                        bar.setVisibility(View.VISIBLE);
-                                    }
-
-                                    @Override
-                                    public void onLoadingFailed(String s, View view, FailReason failReason) {
-                                        bar.setVisibility(View.GONE);
-                                    }
-
-                                    @Override
-                                    public void onLoadingComplete(String s, View view, Bitmap bitmap) {
-                                        bitmapProfile = bitmap;
-                                        bar.setVisibility(View.GONE);
-                                    }
-
-                                    @Override
-                                    public void onLoadingCancelled(String s, View view) {
-                                        bar.setVisibility(View.GONE);
-                                    }
-                                });
-                                AppManager.saveSession(user);
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getValue() != null) {
+                    for (DataSnapshot child: dataSnapshot.getChildren()) {
+                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
+                        User user = new User(userData);
+                        etName.setText(user.getName());
+                        Util.setProfileImage(user.getPhoto(), imgProfile, new ImageLoadingListener() {
+                            @Override
+                            public void onLoadingStarted(String s, View view) {
+                                bar.setVisibility(View.VISIBLE);
                             }
-                        }
 
-                        hud.dismiss();
-                    }
+                            @Override
+                            public void onLoadingFailed(String s, View view, FailReason failReason) {
+                                bar.setVisibility(View.GONE);
+                            }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Toast.makeText(RegisterUserActivity.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
-                        hud.dismiss();
+                            @Override
+                            public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                                bitmapProfile = bitmap;
+                                bar.setVisibility(View.GONE);
+                            }
+
+                            @Override
+                            public void onLoadingCancelled(String s, View view) {
+                                bar.setVisibility(View.GONE);
+                            }
+                        });
+                        AppManager.saveSession(user);
                     }
-                });
+                }
+
+                hud.dismiss();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(RegisterUserActivity.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
+                hud.dismiss();
             }
         });
 

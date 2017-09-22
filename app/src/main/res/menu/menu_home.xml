@@ -9,10 +9,11 @@
         app:actionLayout="@layout/item_actionbar_raffles"
         app:showAsAction="always" />-->
 
-    <item android:id="@+id/menu_refresh"
+    <item
+        android:id="@+id/menu_refresh"
         android:title="@string/action_refresh"
         app:actionLayout="@layout/item_actionbar_refresh"
-        app:showAsAction="always"/>
+        app:showAsAction="always" />
     <item
         android:id="@+id/menu_notification"
         android:title="Notification"

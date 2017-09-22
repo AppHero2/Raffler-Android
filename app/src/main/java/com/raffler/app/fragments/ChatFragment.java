@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +15,12 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.raffler.app.R;
 import com.raffler.app.adapters.ChatRecyclerViewAdapter;
 import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Message;
 import com.raffler.app.utils.References;
 
@@ -47,6 +50,12 @@ public class ChatFragment extends BaseFragment {
     private DatabaseReference usersRef, messagesRef, chatsRef;
 
     public NewMessageListener messageListener;
+
+    private ResultListener resultListener;
+
+    public void setResultListener(ResultListener resultListener) {
+        this.resultListener = resultListener;
+    }
 
     public ChatFragment() {
         messageListener = new NewMessageListener() {
@@ -170,6 +179,8 @@ public class ChatFragment extends BaseFragment {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 if (dataSnapshot.getValue() != null) {
+                    long count = dataSnapshot.getChildrenCount();
+                    Log.d(TAG, "" + count);
                     Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
                     updateMessage(messageData);
                 }
@@ -200,6 +211,20 @@ public class ChatFragment extends BaseFragment {
         };
 
         query.addChildEventListener(newMessagesListener);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (resultListener != null)
+                    resultListener.onResult(true);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                if (resultListener != null)
+                    resultListener.onResult(true);
+            }
+        });
     }
 
     @Override

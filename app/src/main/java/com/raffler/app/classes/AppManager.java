@@ -65,7 +65,6 @@ public class AppManager {
     public List<News> newsList = new ArrayList<>();
 
     private AppManager() {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
             userId = firebaseUser.getUid();
@@ -371,6 +370,72 @@ public class AppManager {
         return isExist;
     }
 
+    public void loadPhoneContacts(ResultListener listener){
+        long startnow;
+        long endnow;
+
+        startnow = android.os.SystemClock.uptimeMillis();
+
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String[] projection = new String[] {
+                Phone._ID,
+                Phone.DISPLAY_NAME,
+                Phone.NUMBER
+        };
+
+        Cursor people = context.getContentResolver().query(uri, projection, null, null, null);
+        int indexId = people.getColumnIndex(Phone._ID);
+        int indexName = people.getColumnIndex(Phone.DISPLAY_NAME);
+        int indexNumber = people.getColumnIndex(Phone.NUMBER);
+
+        if(people.moveToFirst()) {
+            do {
+                String idx = people.getString(indexId);
+                String name   = people.getString(indexName);
+                String number = people.getString(indexNumber);
+                // Do work...
+                String phone = number.replace(" ", "").replace("-", "");
+                Contact contact = new Contact(idx, name, phone);
+                boolean isExist = false;
+                for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+                    if (entry.getKey().equals(contact.getIdx())){
+                        isExist = true;
+                        break;
+                    }
+                }
+                if (!isExist)
+                    phoneContacts.put(idx, contact);
+
+            } while (people.moveToNext());
+        }
+
+        endnow = android.os.SystemClock.uptimeMillis();
+        Log.d("AppManager", "TimeForContacts " + (endnow - startnow) + " ms");
+
+        if (listener != null) {
+            listener.onResult(true);
+        }
+    }
+
+    public Contact getPhoneContact(String phone) {
+        Contact existing_contact = null;
+        for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()) {
+            String contactId = entry.getKey();
+            Contact contact = entry.getValue();
+            String contactPhone = contact.getPhone();
+            if (!contactPhone.contains("+")){
+                Country country = Country.getCountryFromSIM(context);
+                String regionCode = country.getDialCode();
+                contactPhone = regionCode + contactPhone;
+            }
+            if (contactPhone.equals(phone)) {
+                existing_contact = contact;
+                break;
+            }
+        }
+        return existing_contact;
+    }
+
     public void addNewContact(Uri contactUri, final ResultListener listener){
         String contactID = null;
         String contactNumber = null;
@@ -465,46 +530,8 @@ public class AppManager {
         return idx;
     }
     public void refreshPhoneContacts(ResultListener listener){
-        long startnow;
-        long endnow;
 
-        startnow = android.os.SystemClock.uptimeMillis();
-
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String[] projection = new String[] {
-                Phone._ID,
-                Phone.DISPLAY_NAME,
-                Phone.NUMBER
-        };
-
-        Cursor people = context.getContentResolver().query(uri, projection, null, null, null);
-        int indexId = people.getColumnIndex(Phone._ID);
-        int indexName = people.getColumnIndex(Phone.DISPLAY_NAME);
-        int indexNumber = people.getColumnIndex(Phone.NUMBER);
-
-        if(people.moveToFirst()) {
-            do {
-                String idx = people.getString(indexId);
-                String name   = people.getString(indexName);
-                String number = people.getString(indexNumber);
-                // Do work...
-                String phone = number.replace(" ", "").replace("-", "");
-                Contact contact = new Contact(idx, name, phone);
-                boolean isExist = false;
-                for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
-                    if (entry.getKey().equals(contact.getIdx())){
-                        isExist = true;
-                        break;
-                    }
-                }
-                if (!isExist)
-                    phoneContacts.put(idx, contact);
-
-            } while (people.moveToNext());
-        }
-
-        endnow = android.os.SystemClock.uptimeMillis();
-        Log.d("AppManager", "TimeForContacts " + (endnow - startnow) + " ms");
+        loadPhoneContacts(null);
 
         loadNewContacts(listener);
     }
