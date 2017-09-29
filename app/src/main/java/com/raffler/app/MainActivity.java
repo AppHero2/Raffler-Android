@@ -1,7 +1,10 @@
 package com.raffler.app;
 
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.graphics.Color;
+import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -12,7 +15,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,9 +38,11 @@ import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.News;
+import com.raffler.app.models.NewsType;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserStatus;
 import com.raffler.app.utils.References;
+import com.raffler.app.utils.Util;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     Map<String, Long> unreadCount = new HashMap<>();
 
     private int raffles_point = 0;
+    private User mUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +78,10 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         setContentView(R.layout.activity_main);
 
-        userStatusRef = References.getInstance().usersRef.child(AppManager.getInstance().userId).child("userStatus");
+        mUser = AppManager.getSession();
+        References.getInstance().contactListRef.child(mUser.getIdx()).child("phone").setValue(mUser.getPhone());
+        References.getInstance().contactListRef.child(mUser.getIdx()).child("photo").setValue(mUser.getPhoto());
+        userStatusRef = References.getInstance().usersRef.child(mUser.getIdx()).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
 
         raffles_point = AppManager.getSession().getRaffle_point();
@@ -118,7 +126,117 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         AppManager.getInstance().setUserValueListenerMain(this);
 
-        // push notification part
+        initPushNotification();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        userStatusRef.setValue(UserStatus.ONLINE.ordinal());
+
+        // Clear all notification
+        OneSignal.clearOneSignalNotifications();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        userStatusRef.setValue(UserStatus.OFFLINE.ordinal());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        userStatusRef.setValue(UserStatus.OFFLINE.ordinal());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_home, menu);
+        // Associate searchable configuration with the SearchView
+
+        menuItemRefresh = menu.findItem(R.id.menu_refresh);
+        menuItemRefresh.setVisible(false);
+        menuItemNews = menu.findItem(R.id.menu_notification);
+        MenuItemBadge.update(this, menuItemNews, new MenuItemBadge.Builder()
+            .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_notification_md))
+            .iconTintColor(Color.WHITE)
+            .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
+            .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
+        updateNewsBadgeCount(AppManager.getInstance().newsList);
+
+        menuItemPoints = menu.findItem(R.id.menu_points);
+        MenuItemBadge.update(this, menuItemPoints, new MenuItemBadge.Builder()
+                .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_sack_md))
+                .iconTintColor(Color.WHITE)
+                .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
+                .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
+        MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.menu_points:
+                startActivity(new Intent(this, WalletActivity.class));
+                return true;
+            case R.id.menu_notification:
+                startActivity(new Intent(this, NewsActivity.class));
+                return true;
+            case R.id.menu_settings:
+                Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onSelectedChat(Chat chat) {
+
+        if (chat.getUserId() == null ) return;
+
+        AppManager.getInstance().selectedChat = chat;
+        Intent intent = new Intent(this, ChatActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onUpdatedNewsList(List<News> newsList) {
+        updateNewsBadgeCount(newsList);
+    }
+
+    @Override
+    public void onUnreadMessages(String chatId, long count) {
+        unreadCount.put(chatId, count);
+        int total_unread_count = 0;
+        for (Map.Entry<String, Long> entry : unreadCount.entrySet()){
+            //String key = entry.getKey();
+            long value = entry.getValue();
+            total_unread_count += value;
+        }
+        updateTabBadgeCount(0, total_unread_count);
+    }
+
+    @Override
+    public void onLoadedUser(User user) {
+        if (user != null) {
+            raffles_point = AppManager.getSession().getRaffle_point();
+            if (menuItemPoints != null)
+                MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
+        }
+    }
+
+    /**
+     * this method is used to start OneSignal(PushNotification)
+     */
+    private void initPushNotification(){
         OneSignal.startInit(this)
                 .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
                 .unsubscribeWhenNotificationsAreDisabled(false)
@@ -157,128 +275,9 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 FirebaseDatabase database = FirebaseDatabase.getInstance();
                 Map<String, Object> pushToken = new HashMap<>();
                 pushToken.put("pushToken", userId);
-                database.getReference("Users").child(AppManager.getInstance().userId).updateChildren(pushToken);
+                database.getReference("Users").child(mUser.getIdx()).updateChildren(pushToken);
             }
         });
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        userStatusRef.setValue(UserStatus.ONLINE.ordinal());
-
-        // Clear all notification
-        OneSignal.clearOneSignalNotifications();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        userStatusRef.setValue(UserStatus.OFFLINE.ordinal());
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        userStatusRef.setValue(UserStatus.OFFLINE.ordinal());
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(final Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_home, menu);
-        // Associate searchable configuration with the SearchView
-
-        menuItemRefresh = menu.findItem(R.id.menu_refresh);
-        menuItemRefresh.setVisible(false);
-
-        menuItemNews = menu.findItem(R.id.menu_notification);
-        MenuItemBadge.update(this, menuItemNews, new MenuItemBadge.Builder()
-            .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_notification_md))
-            .iconTintColor(Color.WHITE)
-            .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
-            .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
-        updateNewsBadgeCount(AppManager.getInstance().newsList);
-
-        menuItemPoints = menu.findItem(R.id.menu_points);
-        MenuItemBadge.update(this, menuItemPoints, new MenuItemBadge.Builder()
-                .iconDrawable(ContextCompat.getDrawable(this, R.drawable.ic_sack_md))
-                .iconTintColor(Color.WHITE)
-                .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
-                .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
-        MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        switch (item.getItemId()) {
-            case R.id.menu_points:
-                startActivity(new Intent(this, WalletActivity.class));
-                return true;
-            case R.id.menu_notification:
-                startActivity(new Intent(this, NewsActivity.class));
-                return true;
-            case R.id.menu_settings:
-                // TODO: 9/14/2017 Settings
-                Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void onSelectedChat(Chat chat) {
-        if (chat.getUserId() == null ){
-            return;
-        }
-
-        AppManager.getInstance().selectedChat = chat;
-        Intent intent = new Intent(this, ChatActivity.class);
-        startActivity(intent);
-    }
-
-    @Override
-    public void onUpdatedNewsList(List<News> newsList) {
-        updateNewsBadgeCount(newsList);
-    }
-
-    @Override
-    public void onUnreadMessages(String chatId, long count) {
-        unreadCount.put(chatId, count);
-        int total_unread_count = 0;
-        for (Map.Entry<String, Long> entry : unreadCount.entrySet()){
-            String key = entry.getKey();
-            long value = entry.getValue();
-            total_unread_count += value;
-        }
-        updateTabBadgeCount(0, total_unread_count);
-    }
-
-    @Override
-    public void onLoadedUser(User user) {
-        if (user != null) {
-            raffles_point = AppManager.getSession().getRaffle_point();
-            if (menuItemPoints != null)
-                MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
-        }
-    }
-
-    private void updateNewsBadgeCount(List<News> newsList){
-        int numberOfnews = 0;
-        for (News news : newsList){
-            if (!news.isRead()) {
-                numberOfnews += 1;
-            }
-        }
-        if (menuItemNews != null)
-            MenuItemBadge.getBadgeTextView(menuItemNews).setBadgeCount(numberOfnews);
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -328,6 +327,11 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     }
 
+    /**
+     * this method is used to update badge count on Tab
+     * @param index
+     * @param count
+     */
     private void updateTabBadgeCount(int index, int count){
         View customView = tabLayout.getTabAt(index).getCustomView();
         TextView tv_count = (TextView) customView.findViewById(R.id.tv_count);
@@ -339,4 +343,24 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         else
             tv_count.setVisibility(View.GONE);
     }
+
+    /**
+     * this method is used to show news feeds.
+     * @param newsList
+     */
+    private void updateNewsBadgeCount(List<News> newsList){
+        int numberOfnews = 0;
+        for (News news : newsList){
+            if (!news.isRead()) {
+                numberOfnews += 1;
+                if (news.getType() == NewsType.WINNER) {
+                    Util.showAlert(news.getTitle(), news.getContent(), this);
+                }
+            }
+        }
+        if (menuItemNews != null)
+            MenuItemBadge.getBadgeTextView(menuItemNews).setBadgeCount(numberOfnews);
+    }
+
+
 }

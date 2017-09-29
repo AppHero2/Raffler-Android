@@ -4,11 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -29,11 +29,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.kaopiz.kprogresshud.KProgressHUD;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
-import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.Contact;
 import com.raffler.app.models.User;
@@ -42,7 +40,6 @@ import com.raffler.app.utils.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +59,6 @@ public class ContactsFragment extends Fragment {
     private DatabaseReference usersRef, contactsRef;
 
     private ListView listView;
-    private KProgressHUD hud;
     private FloatingActionButton btnNewContact;
 
     private MenuItem progressBar;
@@ -89,7 +85,7 @@ public class ContactsFragment extends Fragment {
 
         mUser = AppManager.getSession();
         usersRef = References.getInstance().usersRef;
-        contactsRef = References.getInstance().contactsRef.child(AppManager.getInstance().userId);
+        contactsRef = References.getInstance().contactsRef.child(mUser.getIdx());
 
         TextView txtNoData = (TextView) view.findViewById(R.id.txtNoData);
         listView = (ListView) view.findViewById(R.id.list_contacts);
@@ -126,11 +122,6 @@ public class ContactsFragment extends Fragment {
             }
         });
 
-        hud = KProgressHUD.create(getActivity())
-                .setStyle(KProgressHUD.Style.SPIN_INDETERMINATE)
-                .setWindowColor(ContextCompat.getColor(getActivity(), R.color.colorTransparency))
-                .setDimAmount(0.5f);
-
         /*btnNewContact = (FloatingActionButton) view.findViewById(R.id.fab_contact);
         btnNewContact.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -155,6 +146,7 @@ public class ContactsFragment extends Fragment {
                 startActivityForResult(intent, REQUEST_CONTACT);
             }
         });*/
+
         return view;
     }
 
@@ -179,14 +171,20 @@ public class ContactsFragment extends Fragment {
             // Get the URI and query the content provider for the phone number
             Uri contactUri = data.getData();
 
+            /* This method was removed at git v1.0.2 b51~52
             AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
                 @Override
                 public void onResult(boolean success) {
                     // ???
                 }
-            });
+            });*/
 
         } else if (requestCode == REQUEST_INVITE && resultCode == RESULT_OK) {
+            User user = AppManager.getSession();
+            long raffles_point = user.getRaffle_point();
+            usersRef.child(user.getIdx()).child("raffle_point").setValue(raffles_point + 5);
+            Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.contact_alert_earning_extra), getActivity());
+        } else if (requestCode == REQUEST_INVITE){
             User user = AppManager.getSession();
             long raffles_point = user.getRaffle_point();
             usersRef.child(user.getIdx()).child("raffle_point").setValue(raffles_point + 5);
@@ -198,7 +196,8 @@ public class ContactsFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        findContactsInLocal();
+        // refresh contact list once entering foreground
+        new FindContactsTask().execute("");
     }
 
     @Override
@@ -225,6 +224,9 @@ public class ContactsFragment extends Fragment {
         }
     }
 
+    /**
+     * this method is used to check contacts between local & server.
+     */
     private void findContactsInLocal(){
         Query query = References.getInstance().contactListRef;
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -261,99 +263,37 @@ public class ContactsFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                FirebaseCrash.report(databaseError.toException());
             }
         });
     }
 
-    /*private class LoadContactsTask extends AsyncTask<String, Void, String> {
+    public void setListener(ChatItemClickListener listener) {
+        this.listener = listener;
+    }
+
+    public class FindContactsTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... params) {
-            *//*AppManager.getInstance().refreshPhoneContacts(new ResultListener() {
-                @Override
-                public void onResult(boolean success) {
-                    Log.d(TAG, "didRefresh Contacts");
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (progressBar != null) progressBar.setVisible(false);
-                            loadContacts();
-                        }
-                    });
 
-                }
-            });*//*
+            findContactsInLocal();
+
             return "Executed";
         }
 
         @Override
         protected void onPostExecute(String result) {
-
+            Log.d(TAG, result);
         }
 
         @Override
         protected void onPreExecute() {
-            if (progressBar != null) progressBar.setVisible(true);
+            Log.d(TAG, "onPreExecute");
         }
 
         @Override
         protected void onProgressUpdate(Void... values) {}
-    }
-
-    private void refreshContact(){
-        new LoadContactsTask().execute("");
-    }
-
-    private void loadContacts(){
-        User session = AppManager.getSession();
-        contacts.clear();
-        Map<String, Contact> mapData = AppManager.getContacts();
-        for (Map.Entry<String, Contact> entry : mapData.entrySet()){
-            String contactId = entry.getKey();
-            Contact contact = entry.getValue();
-            if (session != null && contact != null){
-                if (contact.getPhone().equals(session.getPhone())){
-
-                } else {
-                    if (contact.getUid() != null){
-                        boolean isExist = false;
-                        for (Contact item:contacts){
-                            if (item.getUid().equals(contact.getUid())){
-                                isExist = true;
-                            }
-                        }
-
-                        if (!isExist)
-                            contacts.add(contact);
-                    }
-                }
-            }
-        }
-
-        adapter.notifyDataSetChanged();
-    }
-
-    private ArrayList<String> loadCustomTypeContacts(){
-        Cursor c = getActivity().getContentResolver().query(ContactsContract.RawContacts.CONTENT_URI,
-                new String[] { ContactsContract.RawContacts.CONTACT_ID, ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY },
-                ContactsContract.RawContacts.ACCOUNT_TYPE + "= ?",
-                new String[] { "com.raffler.app" }, null);
-
-        ArrayList<String> myContacts = new ArrayList<String>();
-        int contactNameColumn = c.getColumnIndex(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY);
-        while (c.moveToNext())
-        {
-            // You can also read RawContacts.CONTACT_ID to read the
-            // ContactsContract.Contacts table or any of the other related ones.
-            myContacts.add(c.getString(contactNameColumn));
-        }
-
-        return myContacts;
-    }*/
-
-    public void setListener(ChatItemClickListener listener) {
-        this.listener = listener;
     }
 
     private class ContactListAdapter extends BaseAdapter {
@@ -395,7 +335,6 @@ public class ContactsFragment extends Fragment {
             return 0;
         }
 
-        private int lastPosition = -1;
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
@@ -410,9 +349,6 @@ public class ContactsFragment extends Fragment {
                     cell = (Cell) convertView.getTag();
                 }
 
-            /*Animation animation = AnimationUtils.loadAnimation(context, (position > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
-            convertView.startAnimation(animation);
-            lastPosition = position;*/
                 Contact contact = getItem(position);
                 if (contact != null) {
                     cell.setUserData(getItem(position));

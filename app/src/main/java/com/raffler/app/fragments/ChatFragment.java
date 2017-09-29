@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -31,13 +32,14 @@ import java.util.Map;
 
 public class ChatFragment extends BaseFragment {
 
+    private static final String USER_ID = "user_id";
     private static final String CHAT_ID = "chat_id";
     private static final String LAST_ID = "last_id";
     private static final String TAG = ChatFragment.class.getSimpleName();
 
     private int mColumnCount = 1;
-    public int limit = 1000;
-    private String chatId, lastMessageId;
+    private int limit = 1000;
+    private String userId, chatId, lastMessageId;
 
     private RecyclerView recyclerView;
     private boolean isMax = false;
@@ -47,7 +49,7 @@ public class ChatFragment extends BaseFragment {
     private List<Message> messages = new ArrayList<>();
     private ChatRecyclerViewAdapter adapter;
 
-    private DatabaseReference usersRef, messagesRef, chatsRef;
+    private DatabaseReference messagesRef;
 
     public NewMessageListener messageListener;
 
@@ -64,14 +66,16 @@ public class ChatFragment extends BaseFragment {
                 messages.add(message);
                 if (adapter != null)
                     adapter.notifyDataSetChanged();
+
                 readjust();
             }
         };
     }
 
-    public static ChatFragment newInstance(String chatId, String lastMessageId) {
+    public static ChatFragment newInstance(String userId, String chatId, String lastMessageId) {
         ChatFragment fragment = new ChatFragment();
         Bundle args = new Bundle();
+        args.putSerializable(USER_ID, userId);
         args.putSerializable(CHAT_ID, chatId);
         args.putSerializable(LAST_ID, lastMessageId);
         fragment.setArguments(args);
@@ -83,11 +87,10 @@ public class ChatFragment extends BaseFragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
+            userId = (String) getArguments().getSerializable(USER_ID);
             chatId = (String) getArguments().getSerializable(CHAT_ID);
             lastMessageId = (String) getArguments().getSerializable(LAST_ID);
-            usersRef = References.getInstance().usersRef.child(AppManager.getInstance().userId);
             messagesRef = References.getInstance().messagesRef.child(chatId);
-            chatsRef = References.getInstance().chatsRef.child(chatId);
         }
     }
 
@@ -126,7 +129,6 @@ public class ChatFragment extends BaseFragment {
                         if (y > 0 && y <= 20 && messages.size() >= limit) {
                             limit += 10;
                             query.removeEventListener(newMessagesListener);
-
                             query = messagesRef.orderByChild("createdAt").limitToLast(limit);
                             query.addChildEventListener(newMessagesListener);
                         }
@@ -162,7 +164,6 @@ public class ChatFragment extends BaseFragment {
             });
 
             trackMessages();
-
         }
 
         return view;
@@ -173,8 +174,11 @@ public class ChatFragment extends BaseFragment {
         super.onStart();
     }
 
+    /**
+     * this method is used to track messages
+     */
     private void trackMessages() {
-        query = messagesRef.orderByChild("idx").limitToLast(limit);
+        query = messagesRef.orderByChild("updatedAt").limitToLast(limit);
         newMessagesListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -196,7 +200,9 @@ public class ChatFragment extends BaseFragment {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+                if (dataSnapshot.getValue() != null) {
+                    //TODO: remove data from existing
+                }
             }
 
             @Override
@@ -206,7 +212,7 @@ public class ChatFragment extends BaseFragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                FirebaseCrash.report(databaseError.toException());
             }
         };
 
@@ -243,17 +249,19 @@ public class ChatFragment extends BaseFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-
     }
 
+    /**
+     * this method is used to update incoming new message and exist one.
+     * @param messageData
+     */
     private void updateMessage (Map<String, Object> messageData) {
-        Message message = new Message(messageData);
+        Message message = new Message(userId, messageData);
         if (message.getIdx() == null)
             return;
 
@@ -273,6 +281,9 @@ public class ChatFragment extends BaseFragment {
         readjust();
     }
 
+    /**
+     * this method is used to scroll down for chat list
+     */
     public void readjust() {
         recyclerView.scrollToPosition(recyclerView.getAdapter().getItemCount() - 1);
     }

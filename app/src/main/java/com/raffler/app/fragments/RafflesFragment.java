@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatButton;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +27,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -237,7 +239,7 @@ public class RafflesFragment extends Fragment {
 
         startTrackingRaffles();
 
-        AppManager.getInstance().setUservalueListenerForRaffles(new UserValueListener() {
+        AppManager.getInstance().setUserValueListenerForRaffles(new UserValueListener() {
             @Override
             public void onLoadedUser(User user) {
                 if (user != null) {
@@ -251,12 +253,20 @@ public class RafflesFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_raffles_fragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     private void startTrackingRaffles(){
+
+        if (childEventListener != null) return;
+
         childEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -297,14 +307,15 @@ public class RafflesFragment extends Fragment {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                FirebaseCrash.report(databaseError.toException());
             }
         };
         query.addChildEventListener(childEventListener);
     }
 
     private void stopTrackingRaffles(){
-        query.removeEventListener(childEventListener);
+        if (childEventListener != null)
+            query.removeEventListener(childEventListener);
     }
 
     /**

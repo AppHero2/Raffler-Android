@@ -18,7 +18,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -29,9 +28,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
 import com.onesignal.OneSignal;
 import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
@@ -40,7 +36,6 @@ import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.ChatType;
-import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.MessageType;
@@ -79,10 +74,10 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private ProgressBar progressBar;
     private AppCompatButton btnBlock, btnAdd;
 
-    private DatabaseReference usersRef, messagesRef, chatsRef, presenceRef, connnectedUsersRef;
+    private DatabaseReference usersRef, messagesRef, chatsRef, presenceRef, connectedUsersRef;
     private String chatId, lastMessageId;
-    private ValueEventListener receiverValueEventListenter;
-    private ChildEventListener presenceValueEventListenter;
+    private ValueEventListener receiverValueEventListener;
+    private ChildEventListener presenceValueEventListener;
     private NewMessageListener newMessageListener;
 
     private List<String> connectedUsers = new ArrayList<>();
@@ -94,19 +89,19 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        sender = AppManager.getSession();
         usersRef = References.getInstance().usersRef;
         Chat chat = AppManager.getInstance().selectedChat;
-        chatId = Util.generateChatKeyFrom(AppManager.getInstance().userId, chat.getUserId());
+        chatId = Util.generateChatKeyFrom(sender.getIdx(), chat.getUserId());
         lastMessageId = chat.getMessageId() == null ? "" : chat.getMessageId();
         messagesRef = References.getInstance().messagesRef.child(chatId);
         chatsRef = References.getInstance().chatsRef.child(chatId);
-        connnectedUsersRef = chatsRef.child("connectedUser");
+        connectedUsersRef = chatsRef.child("connectedUser");
 
-        String userId = AppManager.getInstance().userId;
-        raffles_point = AppManager.getSession().getRaffle_point();
+        raffles_point = sender.getRaffle_point();
 
         // detect user disconnected
-        presenceRef = connnectedUsersRef.child(userId);
+        presenceRef = connectedUsersRef.child(sender.getIdx());
         presenceRef.onDisconnect().removeValue();
 
         // register user as connected
@@ -175,7 +170,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                DatabaseReference reference = usersRef.child(AppManager.getInstance().userId).child("userAction");
+                DatabaseReference reference = usersRef.child(sender.getIdx()).child("userAction");
                 if (charSequence.length() > 0) {
                     reference.setValue(UserAction.TYPING.ordinal());
                 } else {
@@ -196,7 +191,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         });
 
-        chatFragment = ChatFragment.newInstance(chatId, lastMessageId);
+        chatFragment = ChatFragment.newInstance(sender.getIdx(), chatId, lastMessageId);
         chatFragment.setResultListener(new ResultListener() {
             @Override
             public void onResult(boolean success) {
@@ -225,6 +220,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             // Get the URI and query the content provider for the phone number
             Uri contactUri = data.getData();
 
+            /* This method was removed at git version (v1.0.2 b51)
             AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
                 @Override
                 public void onResult(boolean success) {
@@ -234,7 +230,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
                     updateContactName();
                 }
-            });
+            });*/
         }
     }
 
@@ -263,37 +259,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         tvRafflePoints.setText(String.valueOf(raffles_point));
     }
 
-    private void updateContactName() {
-
-        String receiverPhone = receiver.getPhone();
-        String phoneContactId = AppManager.getPhoneContactId(receiverPhone);
-        if (phoneContactId == null) {
-            tvTitle.setText(receiverPhone);
-            try {
-                // phone must begin with '+'
-                PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-                Phonenumber.PhoneNumber numberProto = phoneUtil.parse(receiverPhone, "");
-                                    /*int countryCode = numberProto.getCountryCode();
-                                    long number = numberProto.getNationalNumber();*/
-                String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
-                tvTitle.setText(formatedPhoneNumber);
-
-            } catch (NumberParseException e) {
-                System.err.println("NumberParseException was thrown: " + e.toString());
-            }
-        } else {
-            Contact contact = AppManager.getContacts().get(phoneContactId);
-            String contactName = contact.getName();
-            if (contactName == null)
-                tvTitle.setText(receiverPhone);
-            else
-                tvTitle.setText(contactName);
-        }
-    }
-
     private void loadData() {
-
-        sender = AppManager.getSession();
         String title = currentChat.getTitle();
         tvTitle.setText(title);
         String contactId = currentChat.getUserId();
@@ -311,7 +277,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     }
 
     private void startTrackingReceiver(){
-        receiverValueEventListenter = new ValueEventListener() {
+        receiverValueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() != null) {
@@ -348,20 +314,21 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                FirebaseCrash.report(databaseError.toException());
             }
         };
 
-        usersRef.child(receiver.getIdx()).addValueEventListener(receiverValueEventListenter);
+        usersRef.child(receiver.getIdx()).addValueEventListener(receiverValueEventListener);
     }
 
     private void stopTrackingReceiver(){
-        usersRef.removeEventListener(receiverValueEventListenter);
+        if (receiverValueEventListener != null)
+            usersRef.removeEventListener(receiverValueEventListener);
     }
 
     private void startTrackingPresence(){
 
-        presenceValueEventListenter = new ChildEventListener() {
+        presenceValueEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String userId = dataSnapshot.getKey();
@@ -394,11 +361,12 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
             }
         };
 
-        connnectedUsersRef.addChildEventListener(presenceValueEventListenter);
+        connectedUsersRef.addChildEventListener(presenceValueEventListener);
     }
 
     private void stopTrackingPresence(){
-        connnectedUsersRef.removeEventListener(presenceValueEventListenter);
+        if (presenceValueEventListener != null)
+            connectedUsersRef.removeEventListener(presenceValueEventListener);
     }
 
     private void sendMessage(){
@@ -434,7 +402,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         messageData.put("updatedAt", currentTime);
         messageData.put("idx", messageId);
 
-        final Message message = new Message(messageData);
+        final Message message = new Message(sender.getIdx(), messageData);
         if (newMessageListener != null) {
             newMessageListener.onGetNewMessage(message);
         }

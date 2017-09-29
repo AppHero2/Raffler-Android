@@ -37,8 +37,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
@@ -53,6 +51,7 @@ import com.raffler.app.classes.AppConsts;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
+import com.raffler.app.tasks.LoadContactsTask;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
@@ -88,7 +87,6 @@ public class RegisterUserActivity extends AppCompatActivity {
     String[] permissions= new String[]{
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS,
-            Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.CAMERA,
@@ -100,8 +98,8 @@ public class RegisterUserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register_user);
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        String phone = firebaseUser.getPhoneNumber();
-        userId = AppManager.getInstance().userId;
+        final String phone = firebaseUser.getPhoneNumber();
+        userId = firebaseUser.getUid();
         mAuth = FirebaseAuth.getInstance();
         References.getInstance().usersRef.child(userId).child("uid").setValue(userId);
         References.getInstance().usersRef.child(userId).child("phone").setValue(phone);
@@ -153,13 +151,19 @@ public class RegisterUserActivity extends AppCompatActivity {
                     String alert_message = getString(R.string.register_user_alert_empty);
                     Util.showAlert(alert_title, alert_message, RegisterUserActivity.this);
                 } else {
-                    AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+
+                    if (!checkPermissions()) return;
+
+                    hud.show();
+                    LoadContactsTask task = new LoadContactsTask(new ResultListener() {
                         @Override
                         public void onResult(boolean success) {
+                            hud.dismiss();
                             startActivity(new Intent(RegisterUserActivity.this, MainActivity.class));
                             RegisterUserActivity.this.finish();
                         }
                     });
+                    task.execute("");
                 }
             }
         });
@@ -371,11 +375,6 @@ public class RegisterUserActivity extends AppCompatActivity {
     {
         if (checkPermissions()){
             if (Build.VERSION.SDK_INT <= 19) {
-                /*Intent intent = new Intent();
-                intent.setType("image");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(intent, REQUEST_GALLERY);*/
                 Intent intent = new Intent();
                 intent.setType("image/jpeg");
                 intent.setAction(Intent.ACTION_GET_CONTENT);

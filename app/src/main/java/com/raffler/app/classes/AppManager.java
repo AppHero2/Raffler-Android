@@ -4,31 +4,27 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.raffler.app.country.Country;
-import com.raffler.app.interfaces.ContactFinderListener;
-import com.raffler.app.interfaces.ContactUpdatedListener;
 import com.raffler.app.interfaces.NewsValueListener;
 import com.raffler.app.interfaces.ResultListener;
-import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.Contact;
-import com.raffler.app.models.Message;
-import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.News;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
@@ -53,24 +49,24 @@ public class AppManager {
     }
 
     private Context context;
+    private Country country;
     private ValueEventListener trackUserListener;
     private ChildEventListener trackNewsListener;
-    private UserValueListener userValueListenerMain, userValueListenerForChat, uservalueListenerForRaffles;
+    private UserValueListener userValueListenerMain, userValueListenerForChat, userValueListenerForRaffles;
     private NewsValueListener newsValueListenerMain, newsValueListenerForNews;
-    private ContactUpdatedListener contactUpdatedListener;
 
     public Chat selectedChat;
-    public String userId;
     public Map<String, Contact> phoneContacts = new HashMap<>();
     public List<News> newsList = new ArrayList<>();
 
     private AppManager() {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (firebaseUser != null) {
-            userId = firebaseUser.getUid();
-        }
+
     }
 
+    /**
+     * this method is used to track user
+     * @param uid : user identity
+     */
     public void startTrackingUser(String uid) {
         if (trackUserListener != null)
             return;
@@ -87,8 +83,8 @@ public class AppManager {
                     if (userValueListenerForChat != null) {
                         userValueListenerForChat.onLoadedUser(user);
                     }
-                    if (uservalueListenerForRaffles != null) {
-                        uservalueListenerForRaffles.onLoadedUser(user);
+                    if (userValueListenerForRaffles != null) {
+                        userValueListenerForRaffles.onLoadedUser(user);
                     }
                 }
             }
@@ -102,9 +98,14 @@ public class AppManager {
     }
 
     public void stopTrackingUser(String uid){
-        References.getInstance().usersRef.child(uid).removeEventListener(trackUserListener);
+        if (trackUserListener != null)
+            References.getInstance().usersRef.child(uid).removeEventListener(trackUserListener);
     }
 
+    /**
+     * this method is used to track news for a user
+     * @param uid : user identity
+     */
     public void startTrackingNews(String uid){
         if (trackNewsListener != null)
             return;
@@ -155,17 +156,17 @@ public class AppManager {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                FirebaseCrash.report(databaseError.toException());
             }
         };
 
         References.getInstance().newsRef.child(uid).addChildEventListener(trackNewsListener);
     }
 
-    public void stopTrackingNews(String uid){
-        References.getInstance().newsRef.child(uid).removeEventListener(trackNewsListener);
-    }
-
+    /**
+     * this method is used to update existing news
+     * @param data : updated data
+     */
     private void updateNewsData(Map<String, Object> data){
         News news = new News(data);
         if (news.getIdx() == null)
@@ -193,6 +194,11 @@ public class AppManager {
         }
     }
 
+    /**
+     * This function is used to get user data from firebase database
+     * @param userId : registered user id to get
+     * @param listener : callback to get event
+     */
     public static void getUser(String userId, final UserValueListener listener) {
         if (userId != null) {
             Query query = References.getInstance().usersRef.child(userId);
@@ -220,40 +226,10 @@ public class AppManager {
         }
     }
 
-    public static void getUnreadMessageCount(final String chatId, final UnreadMessageListener listener){
-
-        Query queryUnreadMessages = References.getInstance().messagesRef.child(chatId).orderByChild("status").equalTo(MessageStatus.DELIVERED.ordinal());
-        queryUnreadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null) {
-                    int unread_count = 0;
-                    for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        Map<String, Object> messageData = (Map<String, Object>) child.getValue();
-                        Message message = new Message(messageData);
-                        if (!message.getSenderId().equals(AppManager.getInstance().userId)) {
-                            unread_count += 1;
-                        }
-                    }
-
-                    if (listener != null) {
-                        listener.onUnreadMessages(chatId, unread_count);
-                    }
-                } else {
-                    if (listener != null) {
-                        listener.onUnreadMessages(chatId, 0);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e("ChatListAdapter", databaseError.toString());
-            }
-        });
-
-    }
-
+    /**
+     * save user data to local storage
+     * @param user
+     */
     public static void saveSession(User user){
         Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
@@ -277,6 +253,10 @@ public class AppManager {
         editor.commit();
     }
 
+    /**
+     * get user data from local storage
+     * @return user
+     */
     public static User getSession() {
         Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
@@ -316,6 +296,11 @@ public class AppManager {
         }
     }
 
+    /**
+     * delete user data from local storage
+     * this method might be used when user logout
+     * @param context
+     */
     public static void deleteSession(Context context){
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -323,6 +308,10 @@ public class AppManager {
         editor.commit();
     }
 
+    /**
+     * save contacts data into local storage
+     * @param contacts
+     */
     public static void saveContact(Map<String,Contact> contacts){
         Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
@@ -333,6 +322,10 @@ public class AppManager {
         editor.commit();
     }
 
+    /**
+     * get saved contacts data from local storage
+     * @return dictionary format
+     */
     public static Map<String, Contact> getContacts(){
         Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
@@ -343,39 +336,13 @@ public class AppManager {
         return contacts;
     }
 
-    public static Map<String, Contact> getNewContacts(){
-        Map<String, Contact> newContacts = new HashMap<>();
-        Map<String, Contact> phoneContacts = AppManager.getInstance().phoneContacts;
-        for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
-            String contactId = entry.getKey();
-            Contact contact = entry.getValue();
-            boolean isExist = AppManager.isExistingContact(contactId);
-            if (!isExist) {
-                newContacts.put(contactId, contact);
-            }
-        }
-        return newContacts;
-    }
-
-    public static boolean isExistingContact(String contactId){
-        boolean isExist = false;
-        Map<String, Contact> savedContacts = AppManager.getContacts();
-        for (Map.Entry<String, Contact> entry : savedContacts.entrySet()){
-            Contact contact = entry.getValue();
-            if (contactId.equals(contact.getIdx())){
-                isExist = true;
-                break;
-            }
-        }
-        return isExist;
-    }
-
+    /**
+     * load all contacts from Phone Contact
+     * this method needs async task because it may take too longer to load
+     * @param listener : success result handler
+     */
     public void loadPhoneContacts(ResultListener listener){
-        long startnow;
-        long endnow;
-
-        startnow = android.os.SystemClock.uptimeMillis();
-
+        long startnow = android.os.SystemClock.uptimeMillis();
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String[] projection = new String[] {
                 Phone._ID,
@@ -409,22 +376,32 @@ public class AppManager {
             } while (people.moveToNext());
         }
 
-        endnow = android.os.SystemClock.uptimeMillis();
+        long endnow = android.os.SystemClock.uptimeMillis();
+        long processingDuration = endnow - startnow;
         Log.d("AppManager", "TimeForContacts " + (endnow - startnow) + " ms");
+
+        // analysis
+        Bundle params = new Bundle();
+        params.putLong("duration", processingDuration);
+        References.getInstance().analytics.logEvent("load_contacts", params);
 
         if (listener != null) {
             listener.onResult(true);
         }
     }
 
+    /**
+     * this method is used to find contact with a phone number
+     * @param phone : needs to find
+     * @return contact
+     */
     public Contact getPhoneContact(String phone) {
         Contact existing_contact = null;
         for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()) {
-            String contactId = entry.getKey();
+            //String contactId = entry.getKey();
             Contact contact = entry.getValue();
             String contactPhone = contact.getPhone();
             if (!contactPhone.contains("+")){
-                Country country = Country.getCountryFromSIM(context);
                 String regionCode = country.getDialCode();
                 contactPhone = regionCode + contactPhone;
             }
@@ -436,219 +413,12 @@ public class AppManager {
         return existing_contact;
     }
 
-    public void addNewContact(Uri contactUri, final ResultListener listener){
-        String contactID = null;
-        String contactNumber = null;
-        String contactName = "";
-
-        // getting contacts ID
-        Cursor cursorID = context.getContentResolver().query(contactUri,
-                new String[]{ContactsContract.Contacts._ID},
-                null, null, null);
-        if (cursorID.moveToFirst()) {
-            contactID = cursorID.getString(cursorID.getColumnIndex(ContactsContract.Contacts._ID));
-        }
-        cursorID.close();
-        Cursor cursorName = context.getContentResolver().query(contactUri, null, null, null, null);
-        if (cursorName.moveToFirst()) {
-            // DISPLAY_NAME = The display name for the contact.
-            // HAS_PHONE_NUMBER =   An indicator of whether this contact has at least one phone number.
-            contactName = cursorName.getString(cursorName.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-        }
-
-        cursorName.close();
-
-        // Using the contact ID now we will get contact phone number
-        Cursor cursorPhone = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
-
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                    /*ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ? AND " +
-                            ContactsContract.CommonDataKinds.Phone.TYPE + " = " +
-                            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,*/
-
-                new String[]{contactID},
-                null);
-
-        if (cursorPhone.moveToFirst()) {
-            contactNumber = cursorPhone.getString(cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-        }
-
-        cursorPhone.close();
-
-        final String idx = contactID;
-        final String name = contactName;
-        final String phone = contactNumber.replace(" ", "").replace("-", "");
-
-        Query query = References.getInstance().usersRef.orderByChild("phone").equalTo(phone);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null) {
-                    for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
-                        User user = new User(userData);
-                        Contact contact = new Contact(idx, name, phone, user.getIdx(), user.getPhoto());
-                        Map<String, Contact> contacts = AppManager.getContacts();
-                        contacts.put(idx, contact);
-                        AppManager.saveContact(contacts);
-                        if (listener != null)
-                            listener.onResult(true);
-                    }
-                } else {
-                    if (listener != null)
-                        listener.onResult(false);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, databaseError.toString());
-                if (listener != null)
-                    listener.onResult(false);
-            }
-        });
-
-        refreshPhoneContacts(null);
-    }
-
-    private List<Contact> newContacts = new ArrayList<>();
-    public static String getPhoneContactId(String phonenumber){
-        Map<String, Contact> contacts = AppManager.getContacts();
-        String idx = null;
-        if (contacts != null){
-            for (Map.Entry<String, Contact> entry : contacts.entrySet()){
-                String contactId = entry.getKey();
-                Contact contact = entry.getValue();
-                if (contact.getPhone().equals(phonenumber)) {
-                    idx = contactId;
-                    break;
-                }
-            }
-        }
-
-        return idx;
-    }
-    public void refreshPhoneContacts(ResultListener listener){
-
-        loadPhoneContacts(null);
-
-        loadNewContacts(listener);
-    }
-
-    private void loadNewContacts(final ResultListener listener){
-        Map<String, Contact> contacts = AppManager.getNewContacts();
-        for (Map.Entry<String, Contact> entry: contacts.entrySet()) {
-            Contact contact = entry.getValue();
-            boolean isExist = false;
-            for (Contact newContact : newContacts){
-                if (newContact.getIdx().equals(contact.getIdx())){
-                    isExist = true;
-                    break;
-                }
-            }
-            if (!isExist){
-                newContacts.add(contact);
-            }
-        }
-
-        lookingContacts(0, new ResultListener() {
-            @Override
-            public void onResult(boolean success) {
-                if (listener != null) {
-                    listener.onResult(success);
-                }
-            }
-        });
-    }
-
-    private void lookingContacts(final int index, final ResultListener listener){
-        if (index < newContacts.size()) {
-            Contact contact = newContacts.get(index);
-            AppManager.getInstance().findContactFromServer(contact, new ContactFinderListener() {
-                @Override
-                public void onLoadedContact(boolean success, Contact newContact) {
-                    if (success){
-                        Map<String, Contact> contactMap = AppManager.getContacts();
-                        contactMap.put(newContact.getIdx(), newContact);
-                        AppManager.saveContact(contactMap);
-                    }
-
-                    lookingContacts(index + 1, listener);
-                }
-            });
-        } else {
-
-            if (listener != null) {
-                listener.onResult(true);
-            }
-
-            if (contactUpdatedListener!= null) {
-                List<Contact> contactList = new ArrayList<>();
-                for (Map.Entry<String, Contact> entry: getContacts().entrySet()) {
-                    contactList.add(entry.getValue());
-                }
-                contactUpdatedListener.onUpdatedContacts(contactList);
-            }
-        }
-    }
-
-    public void findContactFromServer(final Contact contact, final ContactFinderListener listener){
-
-        String contactPhone = contact.getPhone();
-        if (!contactPhone.contains("+")){
-            Country country = Country.getCountryFromSIM(context);
-            String regionCode = country.getDialCode();
-            contactPhone = regionCode + contactPhone;
-        }
-
-        String queryString = contactPhone + "{f8ff}";
-        Query query = References.getInstance().usersRef.orderByChild("phone").equalTo(contactPhone); //.startAt(contactPhone).endAt(queryString);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null) {
-                    for (DataSnapshot child: dataSnapshot.getChildren()) {
-                        String key = child.getKey();
-                        Map<String, Object> userData = (Map<String, Object>) child.getValue();
-                        User user = new User(userData);
-                        contact.setUid(user.getIdx());
-                        contact.setPhoto(user.getPhoto());
-                        if (listener != null) {
-                            listener.onLoadedContact(true, contact);
-                        }
-
-                        /*try {
-                            // phone must begin with '+'
-                            PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-                            Phonenumber.PhoneNumber numberProto = phoneUtil.parse(userPhone, "");
-                            int countryCode = numberProto.getCountryCode();
-                            long number = numberProto.getNationalNumber();
-
-                        } catch (NumberParseException e) {
-                            System.err.println("NumberParseException was thrown: " + e.toString());
-                        }*/
-
-                    }
-                } else {
-                    if (listener != null) {
-                        listener.onLoadedContact(false, null);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e(TAG, databaseError.getDetails());
-                if (listener != null) {
-                    listener.onLoadedContact(false, null);
-                }
-            }
-        });
-    }
-
     public void setContext(Context context) {
         this.context = context;
+    }
+
+    public void setCountry(Country country) {
+        this.country = country;
     }
 
     public void setUserValueListenerMain(UserValueListener userValueListenerMain) {
@@ -659,8 +429,8 @@ public class AppManager {
         this.userValueListenerForChat = userValueListenerForChat;
     }
 
-    public void setUservalueListenerForRaffles(UserValueListener uservalueListenerForRaffles) {
-        this.uservalueListenerForRaffles = uservalueListenerForRaffles;
+    public void setUserValueListenerForRaffles(UserValueListener userValueListenerForRaffles) {
+        this.userValueListenerForRaffles = userValueListenerForRaffles;
     }
 
     public void setNewsValueListenerMain(NewsValueListener newsValueListenerMain) {
@@ -669,9 +439,5 @@ public class AppManager {
 
     public void setNewsValueListenerForNews(NewsValueListener newsValueListenerForNews) {
         this.newsValueListenerForNews = newsValueListenerForNews;
-    }
-
-    public void setContactUpdatedListener(ContactUpdatedListener contactUpdatedListener) {
-        this.contactUpdatedListener = contactUpdatedListener;
     }
 }

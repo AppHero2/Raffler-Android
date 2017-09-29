@@ -1,7 +1,7 @@
 package com.raffler.app.utils;
 
 /**
- * Created by Shiburagi on 20/08/2016.
+ * Created by Ghost on 20/08/2016.
  */
 public class Constant {
 

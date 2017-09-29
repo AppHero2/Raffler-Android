@@ -161,7 +161,8 @@ public class WalletActivity extends AppCompatActivity {
     }
 
     private void stopTrackingPrizes(){
-        query.removeEventListener(childEventListener);
+        if (childEventListener != null)
+            query.removeEventListener(childEventListener);
     }
 
     private void updateNewsData(Map<String, Object> data){

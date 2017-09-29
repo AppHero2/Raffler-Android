@@ -10,6 +10,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.raffler.app.classes.AppManager;
+import com.raffler.app.country.Country;
 import com.raffler.app.utils.References;
 
 /**
@@ -33,6 +34,7 @@ public class AppApplication extends Application {
         References.init(this, database);
 
         AppManager.getInstance().setContext(getApplicationContext());
+        AppManager.getInstance().setCountry(Country.getCountryFromSIM(getApplicationContext()));
 
         // Initialize image loader
         initImageLoader(this);

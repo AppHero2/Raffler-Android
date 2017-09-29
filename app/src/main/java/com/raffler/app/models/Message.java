@@ -20,7 +20,7 @@ import static com.raffler.app.utils.Util.getStringFromData;
 
 public class Message {
 
-    private String idx, text, resource;
+    private String idx, uid, text, resource;
     private ChatType chatType = PERSONAL;
     private MessageType messageType = TEXT;
     private MessageStatus status = SENDING;
@@ -28,7 +28,8 @@ public class Message {
     private String senderId, senderName, senderPhoto;
     private Date createdAt, updatedAt;
 
-    public Message(Map<String, Object> data){
+    public Message(String userId, Map<String, Object> data){
+        this.uid = userId;
         this.updateValue(data);
     }
 
@@ -42,9 +43,8 @@ public class Message {
         this.chatType = ChatType.values()[getIntFromData("chatType", data)];
         this.messageType = MessageType.values()[getIntFromData("messageType", data)];
         this.status = MessageStatus.values()[getIntFromData("status", data)];
-        String userId = AppManager.getInstance().userId;
-        if (userId != null && this.senderId != null)
-            this.userType = senderId.equals(userId) ? SELF : OTHER;
+        if (this.uid != null && this.senderId != null)
+            this.userType = senderId.equals(this.uid) ? SELF : OTHER;
         this.createdAt = getDateFromData("createdAt", data);
         this.updatedAt = getDateFromData("updatedAt", data);
     }

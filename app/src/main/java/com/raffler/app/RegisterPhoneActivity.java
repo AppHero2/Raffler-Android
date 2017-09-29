@@ -293,8 +293,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
 
                             FirebaseUser user = task.getResult().getUser();
                             user.updatePhoneNumber(credential);
-                            AppManager.getInstance().userId = user.getUid();
-                            // ...
+
                             startActivity(new Intent(RegisterPhoneActivity.this, RegisterUserActivity.class));
                             RegisterPhoneActivity.this.finish();
                         } else {

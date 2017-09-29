@@ -16,6 +16,9 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.raffler.app.R;
+import com.raffler.app.RegisterUserActivity;
+import com.raffler.app.alertView.AlertView;
+import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.UserValueListener;
@@ -28,6 +31,7 @@ import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +40,7 @@ import static com.raffler.app.utils.Util.getMapDataFromData;
 
 public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRecyclerViewAdapter.ViewHolder> {
 
+    private User mUser;
     private final List<ChatInfo> mValues;
     private ChatItemClickListener chatItemClickListener;
 
@@ -45,6 +50,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
     public ChatListRecyclerViewAdapter(List<ChatInfo> items) {
         mValues = items;
+        mUser = AppManager.getSession();
     }
 
     @Override
@@ -107,7 +113,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
             String[] userIds = Util.getUserIdsFrom(idx);
             String contactId = null;
             for (String userId : userIds) {
-                if (!userId.equals(AppManager.getInstance().userId)) {
+                if (!userId.equals(mUser.getIdx())) {
                     contactId = userId;
                 }
             }
@@ -140,14 +146,14 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (dataSnapshot.getValue() != null) {
                         Map<String, Object> messageData = (Map<String, Object>) dataSnapshot.getValue();
-                        Message message = new Message(messageData);
+                        Message message = new Message(mUser.getIdx(), messageData);
                         Map<String, Object> phones = getMapDataFromData("phones", messageData);
                         if (message.getChatType() == ChatType.PERSONAL) {
                             String key = dataSnapshot.getKey();
                             String[] userIds = Util.getUserIdsFrom(key);
                             String contactId = null;
                             for (String userId : userIds) {
-                                if (!userId.equals(AppManager.getInstance().userId)) {
+                                if (!userId.equals(mUser.getIdx())) {
                                     contactId = userId;
                                 }
                             }
@@ -229,8 +235,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                     PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
                     PhoneNumber numberProto = phoneUtil.parse(phone, "");
                     String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
-                    tvUsername.setText(formatedPhoneNumber);
-
+                    mPhoneContactName = formatedPhoneNumber;
                 } catch (NumberParseException e) {
                     System.err.println("NumberParseException was thrown: " + e.toString());
                 }

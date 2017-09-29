@@ -1,6 +1,5 @@
 package com.raffler.app;
 
-import android.*;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -11,7 +10,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,6 +25,7 @@ import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
+import com.raffler.app.tasks.LoadContactsTask;
 import com.raffler.app.utils.References;
 
 import java.util.ArrayList;
@@ -44,6 +43,8 @@ public class AppSplashActivity extends AppCompatActivity {
 
     private Handler handler;
     private Runnable runnable;
+
+    private String currentVersion;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,8 +67,8 @@ public class AppSplashActivity extends AppCompatActivity {
             PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
             String versionName = pInfo.versionName;
             String versionCode = String.valueOf(pInfo.versionCode);
-            String copyright = getString(R.string.copyright_version) + versionName + "(" + versionCode + ")"
-                    + getString(R.string.copyright_company);
+            currentVersion = versionName + "(" + versionCode + ")";
+            String copyright = getString(R.string.copyright_version) + currentVersion + getString(R.string.copyright_company);
             tv_copyright.setText(copyright);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
@@ -89,6 +90,9 @@ public class AppSplashActivity extends AppCompatActivity {
         handler.removeCallbacks(runnable);
     }
 
+    /**
+     * this method is used to check version number
+     */
     private void checkVersionNumber(){
         Query query = References.getInstance().versionRef.child("android");
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -100,7 +104,7 @@ public class AppSplashActivity extends AppCompatActivity {
                         PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
                         int versionCode = pInfo.versionCode;
                         if (serverVersion > versionCode){
-                            AlertView alertView = new AlertView(getString(R.string.alert_title_notice), "You must update this app to the latest version", getResources().getString(R.string.alert_button_okay), null, null, AppSplashActivity.this, AlertView.Style.Alert, new OnItemClickListener() {
+                            AlertView alertView = new AlertView(getString(R.string.alert_title_notice), "Your current version is "+ currentVersion +"\nYou must update this app to the latest version", getResources().getString(R.string.alert_button_okay), null, null, AppSplashActivity.this, AlertView.Style.Alert, new OnItemClickListener() {
                                 @Override
                                 public void onItemClick(Object o, int position) {
                                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.raffler.app"));
@@ -127,6 +131,9 @@ public class AppSplashActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * this method is used to finish splash screen
+     */
     private void dismissSplash(){
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null){
@@ -135,12 +142,12 @@ public class AppSplashActivity extends AppCompatActivity {
             User user = AppManager.getSession();
             if (user != null) {
                 if (checkPermissions()) {
-                    AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+                    new LoadContactsTask(new ResultListener() {
                         @Override
                         public void onResult(boolean success) {
                             startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
                         }
-                    });
+                    }).execute("");
                 }
             } else {
                 startActivity(new Intent(this, RegisterUserActivity.class));
@@ -151,6 +158,7 @@ public class AppSplashActivity extends AppCompatActivity {
         this.finish();
     }
 
+    
     public static final int MULTIPLE_PERMISSIONS = 989;
 
     String[] permissions= new String[]{
@@ -177,15 +185,16 @@ public class AppSplashActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case MULTIPLE_PERMISSIONS:{
+            case MULTIPLE_PERMISSIONS: {
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     // permissions granted.
-                    AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+                    new LoadContactsTask(new ResultListener() {
                         @Override
                         public void onResult(boolean success) {
                             startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
                         }
-                    });
+                    }).execute("");
+
                 } else {
                     String permissionList = "";
                     for (String per : permissions) {
