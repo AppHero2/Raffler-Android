@@ -92,6 +92,14 @@ public class Util {
         }
     }
 
+    public static void setURLImage(String url, ImageView imgView, ImageLoadingListener listener) {
+        if (url != null) {
+            if (ImageLoader.getInstance() != null) {
+                ImageLoader.getInstance().displayImage(url, imgView, Util.displayImageOptions_original, listener);
+            }
+        }
+    }
+
     public static void requestPermission(Activity activity, String permission) {
         if (ContextCompat.checkSelfPermission(activity, permission)
                 != PackageManager.PERMISSION_GRANTED) {

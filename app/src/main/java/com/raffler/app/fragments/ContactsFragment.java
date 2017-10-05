@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -106,15 +107,16 @@ public class ContactsFragment extends Fragment {
                         }
                     }
                 } else if (i == contacts.size()){
+                    String link_val = "https://play.google.com/store/apps/details?id=" + getActivity().getPackageName();
+                    String body = "<a href=" + link_val + ">" + link_val + "</a>";
+                    String data = "Hey,\n\n " +
+                            "I'm trying this new texting app called Raffler.\n" +
+                            "You get raffle points for each text, and you can win free prizes.\n\n" + body;
                     Intent sendIntent = new Intent();
+                    sendIntent.setType("text/html");
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Awesome Raffler app");
-                    sendIntent.putExtra(Intent.EXTRA_TEXT,
-                            "Hey,\n\n " +
-                                    "I'm trying this new texting app called Raffler.\n" +
-                                    "You get raffle points for each text, and you can win free prizes.\n\n" +
-                                    "https://play.google.com/store/apps/details?id=com.raffler.app");
-                    sendIntent.setType("text/plain");
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, Html.fromHtml(data));
                     startActivityForResult(sendIntent, REQUEST_INVITE);
                 } else {
                     Toast.makeText(getActivity(), "This feature is coming soon.", Toast.LENGTH_SHORT).show();
@@ -126,7 +128,7 @@ public class ContactsFragment extends Fragment {
         btnNewContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                *//*  set profile photo
+                *//*  set profile ic_photo
                 ArrayList<ContentValues> data = new ArrayList<ContentValues>();
                 Bitmap bit = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
                 ContentValues row = new ContentValues();
@@ -140,7 +142,7 @@ public class ContactsFragment extends Fragment {
                 // Inserts a Phone number
                 *//*intent.putExtra(ContactsContract.Intents.Insert.PHONE, mPhoneNumber.getText())*//*
 
-                *//* set profile photo
+                *//* set profile ic_photo
                 intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, data);*//*
 
                 startActivityForResult(intent, REQUEST_CONTACT);
@@ -151,7 +153,7 @@ public class ContactsFragment extends Fragment {
     }
 
     /**
-     * This function is prepared for update contact profile
+     * This function is prepared for update ic_contact2 profile
      * @param bitmap
      * @return
      */
@@ -217,7 +219,7 @@ public class ContactsFragment extends Fragment {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.menu_refresh:
-
+                findContactsInLocal();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -228,6 +230,7 @@ public class ContactsFragment extends Fragment {
      * this method is used to check contacts between local & server.
      */
     private void findContactsInLocal(){
+        if (progressBar != null) progressBar.setVisible(true);
         Query query = References.getInstance().contactListRef;
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -238,7 +241,7 @@ public class ContactsFragment extends Fragment {
                         String key = entry.getKey();
                         Map<String, Object> data = (Map<String, Object>) entry.getValue();
                         String phone = (String) data.get("phone");
-                        String photo = (String) data.get("photo");
+                        String photo = (String) data.get("ic_photo");
 
                         Contact contact = AppManager.getInstance().getPhoneContact(phone);
                         if (contact != null) {
@@ -257,6 +260,7 @@ public class ContactsFragment extends Fragment {
                         }
                     }
 
+                    if (progressBar != null) progressBar.setVisible(false);
                     adapter.notifyDataSetChanged();
                 }
             }

@@ -104,11 +104,27 @@
 
     <include layout="@layout/content_chat"/>
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/appBar">
+
+        <io.codetail.widget.RevealFrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include layout="@layout/media_attach_menu" />
+
+        </io.codetail.widget.RevealFrameLayout>
+
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/layout_top_banner"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:orientation="horizontal"
+        android:visibility="gone"
         android:layout_below="@+id/appBar"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"

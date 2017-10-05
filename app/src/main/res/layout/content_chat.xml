@@ -61,6 +61,16 @@
                         android:background="#0000"
                         android:id="@+id/editText_message"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                    <ImageButton
+                        android:id="@+id/btn_attach"
+                        android:src="@drawable/ic_attach"
+                        android:scaleType="fitCenter"
+                        android:background="@null"
+                        android:layout_alignParentBottom="true"
+                        android:layout_toLeftOf="@+id/camera"
+                        android:padding="5dp"
+                        android:layout_width="35dp"
+                        android:layout_height="match_parent"  />
                 </LinearLayout>
 
                 <ImageView

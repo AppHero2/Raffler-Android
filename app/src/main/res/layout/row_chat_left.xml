@@ -28,15 +28,49 @@
             android:paddingRight="@dimen/chat_margin"
             android:paddingTop="@dimen/chat_margin">
 
-            <com.raffler.app.widgets.ATextView
-                android:id="@+id/textView_message"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/chat_margin"
-                android:layout_toLeftOf="@+id/textView_datetime"
-                android:text="hai               "
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@color/colorBlack" />
+                android:orientation="vertical">
+
+                <!-- Photo Message -->
+                <RelativeLayout
+                    android:id="@+id/layout_photo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/img_photo"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"
+                        android:scaleType="centerCrop"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/bgColor_overlay"
+                        android:layout_alignBottom="@+id/img_photo" />
+
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_centerHorizontal="true" />
+                </RelativeLayout>
+
+                <com.raffler.app.widgets.ATextView
+                    android:id="@+id/tv_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/chat_margin"
+                    android:layout_toLeftOf="@+id/textView_datetime"
+                    android:text="hai               "
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/colorBlack" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_gravity="bottom|right"
@@ -56,12 +90,13 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
                 <ImageView
-                    android:id="@+id/imageView_status"
+                    android:id="@+id/img_status"
                     android:visibility="gone"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_sent_gray_24dp" />
             </LinearLayout>
+
         </FrameLayout>
 
         <ImageView

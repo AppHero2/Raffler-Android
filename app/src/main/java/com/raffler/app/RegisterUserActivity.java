@@ -279,7 +279,7 @@ public class RegisterUserActivity extends AppCompatActivity {
     private void onClickProfile(){
         new AlertView.Builder().setContext(this)
                 .setStyle(AlertView.Style.ActionSheet)
-                .setTitle("Take your photo from")
+                .setTitle("Take your ic_photo from")
                 .setMessage(null)
                 .setCancelText("Cancel")
                 .setDestructive("Camera", "Gallery")
@@ -301,7 +301,7 @@ public class RegisterUserActivity extends AppCompatActivity {
                             });
 
                         }else if (position == 1){
-                            // gallery
+                            // ic_gallery
                             RegisterUserActivity.this.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -411,7 +411,7 @@ public class RegisterUserActivity extends AppCompatActivity {
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     bar.setVisibility(View.GONE);
                     final Uri profileURL = taskSnapshot.getDownloadUrl();
-                    References.getInstance().usersRef.child(userId).child("photo").setValue(profileURL.toString());
+                    References.getInstance().usersRef.child(userId).child("ic_photo").setValue(profileURL.toString());
 
                     Util.setProfileImage(profileURL.toString(), imgProfile, new ImageLoadingListener() {
                         @Override

@@ -237,7 +237,7 @@ public class AppManager {
         editor.putString("uid", user.getIdx());
         editor.putString("bio", user.getBio());
         editor.putString("name", user.getName());
-        editor.putString("photo", user.getPhoto());
+        editor.putString("ic_photo", user.getPhoto());
         editor.putString("phone", user.getPhone());
         editor.putString("pushToken", user.getPushToken());
         editor.putInt("userStatus", user.getUserStatus().ordinal());
@@ -262,7 +262,7 @@ public class AppManager {
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
         String uid = sharedPreferences.getString("uid", null);
         String name = sharedPreferences.getString("name", "?");
-        String photo = sharedPreferences.getString("photo", "?");
+        String photo = sharedPreferences.getString("ic_photo", "?");
         String phone = sharedPreferences.getString("phone", "");
         String bio = sharedPreferences.getString("bio", "?");
         String pushToken = sharedPreferences.getString("pushToken", "?");
@@ -279,7 +279,7 @@ public class AppManager {
             Map<String, Object> data = new HashMap<>();
             data.put("uid", uid);
             data.put("name", name);
-            data.put("photo", photo);
+            data.put("ic_photo", photo);
             data.put("phone", phone);
             data.put("bio", bio);
             data.put("pushToken", pushToken);
@@ -391,9 +391,9 @@ public class AppManager {
     }
 
     /**
-     * this method is used to find contact with a phone number
+     * this method is used to find ic_contact2 with a phone number
      * @param phone : needs to find
-     * @return contact
+     * @return ic_contact2
      */
     public Contact getPhoneContact(String phone) {
         Contact existing_contact = null;

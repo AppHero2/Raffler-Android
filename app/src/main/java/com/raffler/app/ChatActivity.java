@@ -1,24 +1,44 @@
 package com.raffler.app;
 
+import android.*;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.crash.FirebaseCrash;
@@ -32,6 +52,7 @@ import com.onesignal.OneSignal;
 import com.raffler.app.adapters.NewMessageListener;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.fragments.ChatFragment;
+import com.raffler.app.interfaces.FileUploadListener;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
@@ -41,6 +62,8 @@ import com.raffler.app.models.MessageStatus;
 import com.raffler.app.models.MessageType;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserAction;
+import com.raffler.app.utils.AmazonUtil;
+import com.raffler.app.utils.ImagePicker;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
@@ -48,17 +71,25 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import io.codetail.animation.SupportAnimator;
+import io.codetail.animation.ViewAnimationUtils;
+
 import static com.raffler.app.models.UserAction.TYPING;
 import static com.raffler.app.models.UserStatus.ONLINE;
 
-public class ChatActivity extends AppCompatActivity implements UserValueListener{
+public class ChatActivity extends AppCompatActivity implements UserValueListener, View.OnClickListener{
 
+    private static final int PICK_IMAGE_ID = 234; // the number doesn't matter
     private static final int REQUEST_CONTACT = 567;
     private static final String TAG = ChatActivity.class.getSimpleName();
 
@@ -83,6 +114,10 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     private List<String> connectedUsers = new ArrayList<>();
     private Chat currentChat;
     private int raffles_point = 0;
+
+    private LinearLayout mRevealView;
+    private boolean hidden = true;
+    private ImageButton btnGallery, btnPhoto, btnVideo, btnAudio, btnLocation, btnContact;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +155,32 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 }
             });
         }
+
+        mRevealView = (LinearLayout) findViewById(R.id.reveal_items);
+        mRevealView.setVisibility(View.GONE);
+
+        btnGallery = (ImageButton) findViewById(R.id.gallery_img_btn);
+        btnPhoto = (ImageButton) findViewById(R.id.photo_img_btn);
+        btnVideo = (ImageButton) findViewById(R.id.video_img_btn);
+        btnAudio = (ImageButton) findViewById(R.id.audio_img_btn);
+        btnLocation = (ImageButton) findViewById(R.id.location_img_btn);
+        btnContact = (ImageButton) findViewById(R.id.contact_img_btn);
+
+        btnGallery.setOnClickListener(this);
+        btnPhoto.setOnClickListener(this);
+        btnVideo.setOnClickListener(this);
+        btnAudio.setOnClickListener(this);
+        btnLocation.setOnClickListener(this);
+        btnContact.setOnClickListener(this);
+
+        ImageButton btnAttach = (ImageButton) findViewById(R.id.btn_attach);
+        btnAttach.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                showRevealView();
+                onPickImage(view);
+            }
+        });
 
         layoutTopBanner = (LinearLayout) findViewById(R.id.layout_top_banner);
         layoutTopBanner.setVisibility(View.GONE);
@@ -213,24 +274,94 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     }
 
     @Override
+    public View onCreateView(String name, Context context, AttributeSet attrs) {
+        return super.onCreateView(name, context, attrs);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CONTACT && resultCode == RESULT_OK) {
-            // Get the URI and query the content provider for the phone number
-            Uri contactUri = data.getData();
+        switch(requestCode) {
+            case PICK_IMAGE_ID:
+                if(resultCode != RESULT_CANCELED){
+                    /*if (data != null) {
+                        if (data.getExtras() == null){
+                            Bitmap bitmap = ImagePicker.getImageFromResult(this, resultCode, data);
+                            Log.e("FROM GALLERY OR PHOTOS", bitmap.toString());
+                        }else{
+                            Bitmap photo = (Bitmap) data.getExtras().get("data");
+                            Log.e("FROM CAMERA", data.getExtras().toString());
+                        }
+                    }*/
+                    try{
+                        Bitmap bitmap = ImagePicker.getImageFromResult(this, resultCode, data);
+                        //create a file to write bitmap data
+                        File f = new File(this.getCacheDir(), "tmp.jpg");
+                        f.createNewFile();
 
-            /* This method was removed at git version (v1.0.2 b51)
-            AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
-                @Override
-                public void onResult(boolean success) {
-                    if (!success){
-                        Toast.makeText(ChatActivity.this, "Could not find that phone number.", Toast.LENGTH_SHORT).show();
+                        //Convert bitmap to byte array
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                        byte[] bitmapdata = bos.toByteArray();
+
+                        //write the bytes in file
+                        FileOutputStream fos = new FileOutputStream(f);
+                        fos.write(bitmapdata);
+                        fos.flush();
+                        fos.close();
+
+                        Uri uri = Uri.fromFile(f);
+                        sendPhoto(uri);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
 
-                    updateContactName();
                 }
-            });*/
+                break;
+            case REQUEST_GALLERY:
+                if (resultCode != RESULT_CANCELED) {
+                    if (data != null) {
+                        mCurrentPhotoPath = data.getData();
+                        if (mCurrentPhotoPath != null) {
+                            sendPhoto(mCurrentPhotoPath);
+                        }
+                    }
+                }
+                break;
+            case REQUEST_CAMERA:
+                if (resultCode != RESULT_CANCELED) {
+                    if (mCurrentPhotoPath != null) {
+                        sendPhoto(mCurrentPhotoPath);
+                    }
+                }
+                break;
+            case REQUEST_CONTACT:
+                if (resultCode == RESULT_OK) {
+                    // Get the URI and query the content provider for the phone number
+                    Uri contactUri = data.getData();
+
+                    /* This method was removed at git version (v1.0.2 b51)
+                    AppManager.getInstance().addNewContact(contactUri, new ResultListener() {
+                        @Override
+                        public void onResult(boolean success) {
+                            if (!success){
+                                Toast.makeText(ChatActivity.this, "Could not find that phone number.", Toast.LENGTH_SHORT).show();
+                            }
+
+                            updateContactName();
+                        }
+                    });*/
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
         }
     }
 
@@ -254,9 +385,112 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
     }
 
     @Override
+    public void onClick(View v) {
+        hideRevealView();
+        switch (v.getId()) {
+            case R.id.gallery_img_btn:
+                galleryIntent();
+                break;
+            case R.id.photo_img_btn:
+                try {
+                    cameraIntent();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.video_img_btn:
+
+                break;
+            case R.id.audio_img_btn:
+
+                break;
+            case R.id.location_img_btn:
+
+                break;
+            case R.id.contact_img_btn:
+
+                break;
+        }
+    }
+
+    @Override
     public void onLoadedUser(User user) {
         raffles_point = user.getRaffle_point();
         tvRafflePoints.setText(String.valueOf(raffles_point));
+    }
+
+    private void showRevealView() {
+        int cx = (mRevealView.getLeft() + mRevealView.getRight());
+        int cy = mRevealView.getTop();
+        int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
+
+        //Below Android LOLIPOP Version
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            SupportAnimator animator =
+                    ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+            animator.setInterpolator(new AccelerateDecelerateInterpolator());
+            animator.setDuration(700);
+
+            SupportAnimator animator_reverse = animator.reverse();
+
+            if (hidden) {
+                mRevealView.setVisibility(View.VISIBLE);
+                animator.start();
+                hidden = false;
+            } else {
+                animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart() {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd() {
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+
+                    }
+
+                    @Override
+                    public void onAnimationCancel() {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat() {
+
+                    }
+                });
+                animator_reverse.start();
+            }
+        }
+        // Android LOLIPOP And ABOVE Version
+        else {
+            if (hidden) {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+                mRevealView.setVisibility(View.VISIBLE);
+                anim.start();
+                hidden = false;
+            } else {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
+                anim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+                    }
+                });
+                anim.start();
+            }
+        }
+    }
+
+    private void hideRevealView() {
+        if (mRevealView.getVisibility() == View.VISIBLE) {
+            mRevealView.setVisibility(View.GONE);
+            hidden = true;
+        }
     }
 
     private void loadData() {
@@ -474,5 +708,242 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         Bundle params = new Bundle();
         params.putString("sender", sender.getIdx());
         References.getInstance().analytics.logEvent("send_message", params);
+    }
+
+    private void sendPhoto(Uri filePath){
+        if (receiver == null)
+            return;
+
+        if (filePath == null)
+            return;
+
+        final DatabaseReference reference = messagesRef.push();
+        final String messageId = reference.getKey();
+        final long currentTime = System.currentTimeMillis();
+        final Map<String, Object> messageData = new HashMap<>();
+        final Map<String, Object> phones = new HashMap<>();
+        phones.put(sender.getIdx(), sender.getPhone());
+        phones.put(receiver.getIdx(), receiver.getPhone());
+        final Map<String, Object> photos = new HashMap<>();
+        photos.put(sender.getIdx(), sender.getPhoto()==null?"":sender.getPhoto());
+        photos.put(receiver.getIdx(), receiver.getPhoto()==null?"":receiver.getPhoto());
+        messageData.put("text", "");
+        messageData.put("phones", phones);
+        messageData.put("photos", photos);
+        messageData.put("senderId", sender.getIdx());
+        messageData.put("senderName", sender.getName());
+        messageData.put("senderPhoto", sender.getPhoto());
+        messageData.put("chatType", ChatType.PERSONAL.ordinal());
+        messageData.put("messageType", MessageType.PHOTO.ordinal());
+        messageData.put("status", MessageStatus.SENDING.ordinal());
+        messageData.put("createdAt", currentTime);
+        messageData.put("updatedAt", currentTime);
+        messageData.put("idx", messageId);
+
+        final Message message = new Message(sender.getIdx(), messageData);
+        message.setAttachFilePath(filePath);
+        if (newMessageListener != null) {
+            newMessageListener.onGetNewMessage(message);
+        }
+
+        // upload photo to aws s3
+        File fileToUpload = new File(filePath.getPath());
+        uploadPhoto(fileToUpload, new FileUploadListener() {
+            @Override
+            public void onSuccess(boolean success, final String uploadedPath) {
+                if (success) {
+                    // update message delivery status
+                    messageData.put("status", MessageStatus.SENT.ordinal());
+                    reference.setValue(messageData).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            messageData.put("resource", uploadedPath);
+                            messageData.put("status", MessageStatus.DELIVERED.ordinal());
+                            reference.setValue(messageData);
+                            usersRef.child(sender.getIdx()).child("raffle_point").setValue(raffles_point + 1);
+                        }
+                    });
+
+                    Map<String, Object> chatInfo = new HashMap<>();
+                    chatInfo.put("phones", phones);
+                    chatInfo.put("photos", photos);
+                    chatInfo.put("lastSender", sender.getPhone());
+                    chatInfo.put("lastMessage", getString(R.string.chat_send_photo));
+                    chatInfo.put("lastMessageId", messageId);
+                    chatInfo.put("updatedAt", currentTime);
+                    usersRef.child(sender.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+                    usersRef.child(receiver.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+
+                    if (!connectedUsers.contains(receiver.getIdx())) {
+
+                        // update unread message count
+                        Query query = usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount");
+                        query.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.getValue() != null) {
+                                    long unreadCount = (long)dataSnapshot.getValue();
+                                    usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(unreadCount+1);
+                                } else {
+                                    usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(1);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                FirebaseCrash.report(databaseError.toException());
+                            }
+                        });
+
+                        // send push notification
+                        try {
+                            JSONArray receivers = new JSONArray();
+                            receivers.put(receiver.getPushToken());
+                            JSONObject pushObject = new JSONObject();
+                            JSONObject contents = new JSONObject();
+                            contents.put("en", getString(R.string.chat_send_photo));
+                            JSONObject headings = new JSONObject();
+                            headings.put("en", sender.getName()==null?sender.getPhone():sender.getName());
+                            pushObject.put("headings", headings);
+                            pushObject.put("contents", contents);
+                            pushObject.put("include_player_ids", receivers);
+                            OneSignal.postNotification(pushObject, null);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    chatsRef.updateChildren(messageData);
+
+                    // analysis
+                    Bundle params = new Bundle();
+                    params.putString("sender", sender.getIdx());
+                    References.getInstance().analytics.logEvent("send_photo", params);
+                }
+            }
+
+            @Override
+            public void onProgress(int percent) {
+                Log.d(TAG, percent + "%");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.d(TAG, e.toString());
+            }
+        });
+    }
+
+    public void onPickImage(View view) {
+        Intent chooseImageIntent = ImagePicker.getPickImageIntent(this);
+        startActivityForResult(chooseImageIntent, PICK_IMAGE_ID);
+    }
+
+    public static final int MULTIPLE_PERMISSIONS = 989;
+    String[] permissions= new String[]{
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            android.Manifest.permission.CAMERA,
+    };
+
+    private  boolean checkPermissions() {
+        int result;
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        for (String p:permissions) {
+            result = ContextCompat.checkSelfPermission(this,p);
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(p);
+            }
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), MULTIPLE_PERMISSIONS );
+            return false;
+        }
+        return true;
+    }
+
+    private static final int REQUEST_CAMERA = 982;
+    private static final int REQUEST_GALLERY = 983;
+    private Uri mCurrentPhotoPath;
+    private void cameraIntent() throws IOException
+    {
+        if (checkPermissions()){
+
+            final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
+            File newdir = new File(dir);
+            newdir.mkdirs();
+            String file = dir+"photo.jpg";
+            File newfile = new File(file);
+            try {
+                newfile.createNewFile();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            mCurrentPhotoPath = Uri.fromFile(newfile);
+
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCurrentPhotoPath);
+            startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+        }
+    }
+
+    private void galleryIntent()
+    {
+        if (checkPermissions()){
+            if (Build.VERSION.SDK_INT <= 19) {
+                Intent intent = new Intent();
+                intent.setType("image/jpeg");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, REQUEST_GALLERY);
+            } else if (Build.VERSION.SDK_INT > 19) {
+                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, REQUEST_GALLERY);
+            }
+        }
+    }
+
+    private TransferUtility transferUtility;
+    private TransferObserver transferObserver;
+    private void uploadPhoto(File file, final FileUploadListener listener){
+        long currentTime = System.currentTimeMillis();
+        transferUtility = AmazonUtil.getTransferUtility(this);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType("image/png");
+        transferObserver = transferUtility.upload(
+                "raffler-app/attached_Images",
+                "IMG_" + currentTime + ".png",
+                file,
+                metadata
+        );
+
+        transferObserver.setTransferListener(new TransferListener() {
+            @Override
+            public void onStateChanged(int id, TransferState state) {
+                if (state == TransferState.COMPLETED){
+                    final String fileName = transferObserver.getKey();
+                    final String filePath = "https://s3.amazonaws.com/raffler-app/attached_Images/" + fileName;
+                    Log.d(TAG, filePath);
+                    if (listener != null) listener.onSuccess(true, filePath);
+                } else {
+                    //if (listener != null) listener.onResult(false);
+                }
+            }
+
+            @Override
+            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+                if (bytesTotal != 0) {
+                    int percentage = (int) (bytesCurrent/bytesTotal * 100);
+                    if (listener != null) listener.onProgress(percentage);
+                }
+            }
+
+            @Override
+            public void onError(int id, Exception ex) {
+                if (listener != null) listener.onError(ex);
+            }
+        });
     }
 }

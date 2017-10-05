@@ -176,8 +176,7 @@ public class ChatListFragment extends Fragment {
     public void setChatItemClickListener(ChatItemClickListener chatItemClickListener) {
         this.chatItemClickListener = chatItemClickListener;
     }
-
-
+    
     /**
      * observer to check changed contacts
      */
@@ -203,7 +202,7 @@ public class ChatListFragment extends Fragment {
                     String content_Type = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTENT_TYPE));
                     String type = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
 
-                    Log.d("------ contact id : "+contact_id+"----", "----onChange fired by content ---observer--------");
+                    Log.d("------ ic_contact2 id : "+contact_id+"----", "----onChange fired by content ---observer--------");
                     Log.d("------display_name : "+display_name+"----", "----onChange fired by content ---observer--------");
                     Log.d("------data : "+data+"----", "----onChange fired by content ---observer--------");
                     Log.d("------content_Type : "+content_Type+"----", "----onChange fired by content ---observer--------");
@@ -218,16 +217,18 @@ public class ChatListFragment extends Fragment {
                 new LoadContactsTask(new ResultListener() {
                     @Override
                     public void onResult(boolean success) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (chatInfoList != null) {
-                                    if (chatInfoList.size() > 0) {
-                                        adapter.notifyDataSetChanged();
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (chatInfoList != null) {
+                                        if (chatInfoList.size() > 0) {
+                                            adapter.notifyDataSetChanged();
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                 }).execute("");
 

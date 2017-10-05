@@ -1,6 +1,8 @@
 package com.raffler.app;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.graphics.Color;
 import android.os.Handler;
@@ -11,6 +13,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,6 +22,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.getkeepsafe.taptargetview.TapTarget;
+import com.getkeepsafe.taptargetview.TapTargetView;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -48,12 +54,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import nl.dionsegijn.konfetti.KonfettiView;
+import nl.dionsegijn.konfetti.models.Shape;
+import nl.dionsegijn.konfetti.models.Size;
+
 public class MainActivity extends AppCompatActivity implements ChatItemClickListener, UnreadMessageListener, UserValueListener, NewsValueListener{
 
     private static final String TAG = "MainActivity";
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    private KonfettiView konfettiView;
 
     private MenuItem menuItemRefresh, menuItemNews, menuItemPoints;
 
@@ -80,11 +91,14 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         mUser = AppManager.getSession();
         References.getInstance().contactListRef.child(mUser.getIdx()).child("phone").setValue(mUser.getPhone());
-        References.getInstance().contactListRef.child(mUser.getIdx()).child("photo").setValue(mUser.getPhoto());
+        References.getInstance().contactListRef.child(mUser.getIdx()).child("ic_photo").setValue(mUser.getPhoto());
         userStatusRef = References.getInstance().usersRef.child(mUser.getIdx()).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
 
         raffles_point = AppManager.getSession().getRaffle_point();
+
+        konfettiView = (KonfettiView)findViewById(R.id.konfettiView);
+
 
         //Initializing viewPager
         viewPager = (ViewPager) findViewById(R.id.viewpager);
@@ -175,6 +189,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 .textBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent))
                 .textColor(ContextCompat.getColor(this, R.color.colorPrimary)));
         MenuItemBadge.getBadgeTextView(menuItemPoints).setText(String.valueOf(raffles_point));
+
+        showTip();
 
         return true;
     }
@@ -355,6 +371,17 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 numberOfnews += 1;
                 if (news.getType() == NewsType.WINNER) {
                     Util.showAlert(news.getTitle(), news.getContent(), this);
+
+                    konfettiView.build()
+                            .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA, Color.RED, Color.CYAN)
+                            .setDirection(0.0, 359.0)
+                            .setSpeed(1f, 5f)
+                            .setFadeOutEnabled(true)
+                            .setTimeToLive(20000L)
+                            .addShapes(Shape.RECT, Shape.CIRCLE)
+                            .addSizes(new Size(10, 5f))
+                            .setPosition(-50f, konfettiView.getWidth() + 50f, -50f, -50f)
+                            .stream(100, 5000L);
                 }
             }
         }
@@ -362,5 +389,39 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
             MenuItemBadge.getBadgeTextView(menuItemNews).setBadgeCount(numberOfnews);
     }
 
+    private void showTip(){
+
+        SharedPreferences sharedPreferences = getSharedPreferences("Tip", Context.MODE_PRIVATE);
+        boolean showedTip = sharedPreferences.getBoolean("showedTip", false);
+        if (!showedTip) {
+            final SpannableString spannedDesc = new SpannableString("These are your raffle points. You get 1 raffle point for each message you send and 5 for each invitation you send. Use raffle points to win prizes!");
+            /*spannedDesc.setSpan(new UnderlineSpan(), spannedDesc.length() - "TapTargetView".length(), spannedDesc.length(), 0);*/
+            TapTargetView.showFor(this, TapTarget.forView(MenuItemBadge.getBadgeTextView(menuItemPoints), "Raffle Point", spannedDesc)
+                    .cancelable(true)
+                    .drawShadow(true)
+                    .titleTextDimen(R.dimen.title_text_size)
+                    .tintTarget(false), new TapTargetView.Listener() {
+                @Override
+                public void onTargetClick(TapTargetView view) {
+                    super.onTargetClick(view);
+                    // .. which evidently starts the sequence we defined earlier
+                }
+
+                @Override
+                public void onOuterCircleClick(TapTargetView view) {
+                    super.onOuterCircleClick(view);
+                }
+
+                @Override
+                public void onTargetDismissed(TapTargetView view, boolean userInitiated) {
+
+                }
+            });
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("showedTip", true);
+            editor.commit();
+        }
+    }
 
 }

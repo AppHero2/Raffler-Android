@@ -145,8 +145,7 @@ public class ChatFragment extends BaseFragment {
                         int maxScroll = recyclerView.computeVerticalScrollRange();
                         int currentScroll = recyclerView.computeVerticalScrollOffset() + recyclerView.computeVerticalScrollExtent();
 
-                        final int scroll = currentScroll +
-                                Math.abs(i7 - i3);
+                        final int scroll = currentScroll + Math.abs(i7 - i3);
 
                         if (scroll >= maxScroll)
                             if (getView() != null)

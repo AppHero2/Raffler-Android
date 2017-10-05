@@ -75,7 +75,6 @@ public class CountryPicker extends DialogFragment {
 
         adapter = new CountryListAdapter(getActivity(), selectedCountriesList);
         countryListView.setAdapter(adapter);
-
         countryListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override

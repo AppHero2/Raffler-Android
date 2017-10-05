@@ -29,7 +29,9 @@
     <string name="chat_user_typing">typing</string>
     <string name="chat_user_online">online</string>
     <string name="chat_user_lastseen">Last seen</string>
-    <string name="chat_list_nodata">No Chats\nAdd your friends to Contacts</string>
+    <string name="chat_list_empty">No Chats\nAdd your friends to Contacts</string>
+    <string name="chat_attach_select_photo">Select a photo</string>
+    <string name="chat_send_photo">sent an image</string>
 
     <!-- Raffles -->
     <string name="raffles_title">Raffles</string>

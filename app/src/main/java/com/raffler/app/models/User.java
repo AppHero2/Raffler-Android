@@ -33,7 +33,7 @@ public class User {
     public void updateData(Map<String, Object> data){
         this.idx = getStringFromData("uid", data);
         this.name = getStringFromData("name", data);
-        this.photo = getStringFromData("photo", data);
+        this.photo = getStringFromData("ic_photo", data);
         this.phone = getStringFromData("phone", data);
         this.bio = getStringFromData("bio", data);
         this.pushToken = getStringFromData("pushToken", data);

@@ -1,7 +1,9 @@
 package com.raffler.app.models;
 
-import com.raffler.app.classes.AppManager;
 
+import android.net.Uri;
+
+import java.io.File;
 import java.util.Date;
 import java.util.Map;
 
@@ -27,6 +29,7 @@ public class Message {
     private UserType userType = SELF;
     private String senderId, senderName, senderPhoto;
     private Date createdAt, updatedAt;
+    private Uri attachFilePath;
 
     public Message(String userId, Map<String, Object> data){
         this.uid = userId;
@@ -97,4 +100,11 @@ public class Message {
         return userType;
     }
 
+    public void setAttachFilePath(Uri attachFilePath) {
+        this.attachFilePath = attachFilePath;
+    }
+
+    public Uri getAttachFilePath() {
+        return attachFilePath;
+    }
 }
