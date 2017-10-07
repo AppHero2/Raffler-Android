@@ -89,7 +89,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
         public ChatInfo mItem;
         public String mContactId;
         public String mMessageId;
-        public String mPhoneContactId, mPhoneContactName, mPhoneContactNumber;
+        public String mPhoneContactName, mPhoneContactNumber;
         public long mUnreadCount = 0;
         public int typeTextColor;
 
@@ -224,25 +224,24 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
 
         private void updateContactName(String phone) {
             mPhoneContactNumber = phone;
+            mPhoneContactName = phone;
 
-            Contact contact = AppManager.getInstance().getPhoneContact(phone);
-            if (contact == null) {
-                mPhoneContactId = null;
-                mPhoneContactName = phone;
-
-                try {
-                    // phone must begin with '+'
-                    PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
-                    PhoneNumber numberProto = phoneUtil.parse(phone, "");
-                    String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+            try {
+                // phone must begin with '+'
+                PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                PhoneNumber numberProto = phoneUtil.parse(phone, "");
+                String countryCode = "+" + String.valueOf(numberProto.getCountryCode());
+                String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+                Contact contact = AppManager.getInstance().getPhoneContact(phone, countryCode);
+                if (contact == null) {
                     mPhoneContactName = formatedPhoneNumber;
-                } catch (NumberParseException e) {
-                    System.err.println("NumberParseException was thrown: " + e.toString());
+                } else {
+                    mPhoneContactName = contact.getName();
                 }
-            } else {
-                mPhoneContactId = contact.getIdx();
-                mPhoneContactName = contact.getName();
+            } catch (NumberParseException e) {
+                System.err.println("NumberParseException was thrown: " + e.toString());
             }
+
             tvUsername.setText(mPhoneContactName);
         }
 

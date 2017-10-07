@@ -30,6 +30,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
@@ -128,7 +131,7 @@ public class ContactsFragment extends Fragment {
         btnNewContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                *//*  set profile ic_photo
+                *//*  set profile photo
                 ArrayList<ContentValues> data = new ArrayList<ContentValues>();
                 Bitmap bit = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
                 ContentValues row = new ContentValues();
@@ -142,7 +145,7 @@ public class ContactsFragment extends Fragment {
                 // Inserts a Phone number
                 *//*intent.putExtra(ContactsContract.Intents.Insert.PHONE, mPhoneNumber.getText())*//*
 
-                *//* set profile ic_photo
+                *//* set profile photo
                 intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, data);*//*
 
                 startActivityForResult(intent, REQUEST_CONTACT);
@@ -230,7 +233,14 @@ public class ContactsFragment extends Fragment {
      * this method is used to check contacts between local & server.
      */
     private void findContactsInLocal(){
-        if (progressBar != null) progressBar.setVisible(true);
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (progressBar != null) progressBar.setVisible(true);
+                }
+            });
+        }
         Query query = References.getInstance().contactListRef;
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -241,27 +251,45 @@ public class ContactsFragment extends Fragment {
                         String key = entry.getKey();
                         Map<String, Object> data = (Map<String, Object>) entry.getValue();
                         String phone = (String) data.get("phone");
-                        String photo = (String) data.get("ic_photo");
+                        String photo = (String) data.get("photo");
 
-                        Contact contact = AppManager.getInstance().getPhoneContact(phone);
-                        if (contact != null) {
-                            contact.setUid(key);
-                            contact.setPhoto(photo);
-                            boolean isExist = false;
-                            for (Contact c : contacts) {
-                                if (c.getPhone().equals(contact.getPhone())){
-                                    isExist = true;
-                                    break;
+                        try {
+                            // phone must begin with '+'
+                            PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                            Phonenumber.PhoneNumber numberProto = phoneUtil.parse(phone, "");
+                            String countryCode = "+" + String.valueOf(numberProto.getCountryCode());
+
+                            Contact contact = AppManager.getInstance().getPhoneContact(phone, countryCode);
+                            if (contact != null) {
+                                contact.setUid(key);
+                                contact.setPhoto(photo);
+                                boolean isExist = false;
+                                for (Contact c : contacts) {
+                                    if (c.getPhone().equals(contact.getPhone())){
+                                        isExist = true;
+                                        break;
+                                    }
+                                }
+                                if (!isExist) {
+                                    if (!mUser.getPhone().equals(contact.getPhone())) contacts.add(contact);
                                 }
                             }
-                            if (!isExist) {
-                                if (!mUser.getPhone().equals(contact.getPhone())) contacts.add(contact);
-                            }
+
+                        } catch (NumberParseException e) {
+                            System.err.println("NumberParseException was thrown: " + e.toString());
                         }
+
                     }
 
-                    if (progressBar != null) progressBar.setVisible(false);
-                    adapter.notifyDataSetChanged();
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (progressBar != null) progressBar.setVisible(false);
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
                 }
             }
 

@@ -217,18 +217,20 @@ public class ChatListFragment extends Fragment {
                 new LoadContactsTask(new ResultListener() {
                     @Override
                     public void onResult(boolean success) {
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (chatInfoList != null) {
-                                        if (chatInfoList.size() > 0) {
-                                            adapter.notifyDataSetChanged();
-                                        }
+                        if (getActivity() == null)
+                            return;
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (chatInfoList != null) {
+                                    if (chatInfoList.size() > 0) {
+                                        adapter.notifyDataSetChanged();
                                     }
                                 }
-                            });
-                        }
+                            }
+                        });
+
                     }
                 }).execute("");
 

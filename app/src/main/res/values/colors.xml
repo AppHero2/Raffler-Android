@@ -16,6 +16,7 @@
     <!-- Text colors -->
     <color name="colorTextPrimary">#FFFFFF</color>
     <color name="colorTextDisable">#66FFFFFF</color>
+    <color name="colorTextAutoLink">#014666</color>
 
     <!-- Phone Verification -->
     <color name="colorPhoneVerificationText">#202020</color>
@@ -36,8 +37,7 @@
     <!-- Color Chat -->
     <color name="colorChatBackground">#dfe3ee</color>
 
-
-    <!--AlertView-->
+    <!-- AlertView -->
     <color name="bgColor_overlay">#60000000</color>
     <color name="bgColor_alertview_alert">#3d3d3d</color>
     <color name="bgColor_alertview_alert_start">#3d3d3d</color>

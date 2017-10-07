@@ -74,6 +74,8 @@
                     android:layout_toLeftOf="@+id/layout_count"
                     android:paddingLeft="@dimen/activity_horizontal_margin"
                     android:paddingRight="@dimen/activity_horizontal_margin"
+                    android:autoLink="all"
+                    android:textColorLink="@color/colorTextAutoLink"
                     android:textSize="@dimen/medium_text"
                     android:textColor="@color/colorChatListTextTrans"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small" />

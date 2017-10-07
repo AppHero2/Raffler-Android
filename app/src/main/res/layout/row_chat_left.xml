@@ -67,6 +67,8 @@
                     android:layout_marginLeft="@dimen/chat_margin"
                     android:layout_toLeftOf="@+id/textView_datetime"
                     android:text="hai               "
+                    android:autoLink="all"
+                    android:textColorLink="@color/colorTextAutoLink"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                     android:textColor="@color/colorBlack" />
 

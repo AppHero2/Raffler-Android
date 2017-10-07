@@ -3,10 +3,7 @@ package com.raffler.app;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.ContentObserver;
 import android.graphics.Color;
-import android.os.Handler;
-import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -14,7 +11,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.SpannableString;
-import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -91,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         mUser = AppManager.getSession();
         References.getInstance().contactListRef.child(mUser.getIdx()).child("phone").setValue(mUser.getPhone());
-        References.getInstance().contactListRef.child(mUser.getIdx()).child("ic_photo").setValue(mUser.getPhoto());
+        References.getInstance().contactListRef.child(mUser.getIdx()).child("photo").setValue(mUser.getPhoto());
         userStatusRef = References.getInstance().usersRef.child(mUser.getIdx()).child("userStatus");
         userStatusRef.onDisconnect().setValue(UserStatus.OFFLINE.ordinal());
 

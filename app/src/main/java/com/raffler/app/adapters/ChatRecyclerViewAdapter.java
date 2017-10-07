@@ -16,7 +16,6 @@ import android.text.SpannableString;
 import android.text.style.AlignmentSpan;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -31,12 +30,12 @@ import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.models.Message;
 import com.raffler.app.models.MessageStatus;
-import com.raffler.app.models.MessageType;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserType;
 import com.raffler.app.utils.Blur;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
+import com.raffler.app.widgets.ATextView;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
@@ -46,7 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 
 public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -202,7 +200,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     public class OwnMessageViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
-        public final TextView messageView;
+        public final ATextView messageView;
         public final TextView dateView;
         private final ImageView imgStatus;
         private ImageView imgPhoto;
@@ -213,7 +211,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         public OwnMessageViewHolder(View view) {
             super(view);
             mView = view;
-            messageView = (TextView) view.findViewById(R.id.tv_message);
+            messageView = (ATextView) view.findViewById(R.id.tv_message);
             dateView = (TextView) view.findViewById(R.id.textView_datetime);
             imgStatus = (ImageView) view.findViewById(R.id.img_status);
             imgPhoto = (ImageView) view.findViewById(R.id.img_photo);

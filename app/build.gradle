@@ -15,8 +15,8 @@ android {
         applicationId "com.raffler.app"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 58
-        versionName "1.0.6"
+        versionCode 62
+        versionName "1.0.9"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",
                                 // Project number pulled from dashboard, local value is ignored.

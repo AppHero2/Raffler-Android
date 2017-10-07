@@ -237,7 +237,7 @@ public class AppManager {
         editor.putString("uid", user.getIdx());
         editor.putString("bio", user.getBio());
         editor.putString("name", user.getName());
-        editor.putString("ic_photo", user.getPhoto());
+        editor.putString("photo", user.getPhoto());
         editor.putString("phone", user.getPhone());
         editor.putString("pushToken", user.getPushToken());
         editor.putInt("userStatus", user.getUserStatus().ordinal());
@@ -262,7 +262,7 @@ public class AppManager {
         SharedPreferences sharedPreferences = context.getSharedPreferences("AppSession", Context.MODE_PRIVATE);
         String uid = sharedPreferences.getString("uid", null);
         String name = sharedPreferences.getString("name", "?");
-        String photo = sharedPreferences.getString("ic_photo", "?");
+        String photo = sharedPreferences.getString("photo", "?");
         String phone = sharedPreferences.getString("phone", "");
         String bio = sharedPreferences.getString("bio", "?");
         String pushToken = sharedPreferences.getString("pushToken", "?");
@@ -279,7 +279,7 @@ public class AppManager {
             Map<String, Object> data = new HashMap<>();
             data.put("uid", uid);
             data.put("name", name);
-            data.put("ic_photo", photo);
+            data.put("photo", photo);
             data.put("phone", phone);
             data.put("bio", bio);
             data.put("pushToken", pushToken);
@@ -395,7 +395,7 @@ public class AppManager {
      * @param phone : needs to find
      * @return ic_contact2
      */
-    public Contact getPhoneContact(String phone) {
+    public Contact getPhoneContact(String phone, String countryCode) {
         Contact existing_contact = null;
         for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()) {
             //String contactId = entry.getKey();
@@ -404,10 +404,21 @@ public class AppManager {
             if (!contactPhone.contains("+")){
                 String regionCode = country.getDialCode();
                 contactPhone = regionCode + contactPhone;
-            }
-            if (contactPhone.equals(phone)) {
-                existing_contact = contact;
-                break;
+                if (phone.contains(regionCode)){
+                    String nationalPhoneNumber = phone.replace(regionCode, "");
+                    if (contactPhone.contains(nationalPhoneNumber)) {
+                        existing_contact = contact;
+                        break;
+                    }
+                }
+            } else {
+                if (contactPhone.contains(countryCode)){
+                    String nationalPhoneNumber = phone.replace(countryCode, "");
+                    if (contactPhone.contains(nationalPhoneNumber)) {
+                        existing_contact = contact;
+                        break;
+                    }
+                }
             }
         }
         return existing_contact;
