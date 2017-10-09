@@ -147,6 +147,17 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
         // Clear all notification
         OneSignal.clearOneSignalNotifications();
+
+        // Check contacts
+        if (AppManager.getInstance().phoneContacts.size() == 0) {
+            // analysis
+
+            Bundle params = new Bundle();
+            params.putString("user", mUser.getPhone());
+            References.getInstance().analytics.logEvent("empty_contacts", params);
+            startActivity(new Intent(this, AppSplashActivity.class));
+            this.finish();
+        }
     }
 
     @Override

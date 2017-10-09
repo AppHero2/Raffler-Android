@@ -15,8 +15,8 @@ android {
         applicationId "com.raffler.app"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 64
-        versionName "1.0.9"
+        versionCode 66
+        versionName "1.1.0"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         manifestPlaceholders = [onesignal_app_id               : "7be96e60-3549-4004-bfc7-a8f191fb8bfe",
@@ -57,9 +57,7 @@ dependencies {
     compile(name: 'LabelView', ext: 'aar')
     compile(name: 'CircularReveal-1.1.1', ext: 'aar')
     //--> onesginal
-    compile('com.onesignal:OneSignal:[3.6.0, 3.99.99]') {
-//        exclude group: 'com.google.android.gms'
-    }
+    compile(name: 'OneSignal-3.6.3', ext: 'aar')
     compile 'com.google.android.gms:play-services-gcm:11.0.4'
     //--> onsignal
 
@@ -71,6 +69,7 @@ dependencies {
     compile 'com.amazonaws:aws-android-sdk-s3:2.2.22'
     compile 'com.google.code.gson:gson:2.7'
     compile 'com.raycoarana.codeinputview:codeinputview:1.1.3'
+    compile 'com.google.firebase:firebase-config:11.0.4'
     compile 'com.google.firebase:firebase-storage:11.0.4'
     compile 'com.google.firebase:firebase-database:11.0.4'
     compile 'com.google.firebase:firebase-auth:11.0.4'

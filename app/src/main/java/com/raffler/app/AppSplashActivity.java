@@ -1,25 +1,34 @@
 package com.raffler.app;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.raffler.app.alertView.AlertView;
 import com.raffler.app.alertView.OnItemClickListener;
 import com.raffler.app.classes.AppManager;
@@ -27,6 +36,7 @@ import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.User;
 import com.raffler.app.tasks.LoadContactsTask;
 import com.raffler.app.utils.References;
+import com.raffler.app.utils.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,16 +104,24 @@ public class AppSplashActivity extends AppCompatActivity {
      * this method is used to check version number
      */
     private void checkVersionNumber(){
-        Query query = References.getInstance().versionRef.child("android");
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+        final FirebaseRemoteConfig firebaseConfig = FirebaseRemoteConfig.getInstance();
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                .build();
+        firebaseConfig.setConfigSettings(configSettings);
+        firebaseConfig.fetch(0)
+        .addOnCompleteListener(this, new OnCompleteListener<Void>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null){
-                    long serverVersion = (long)dataSnapshot.getValue();
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // After config data is successfully fetched, it must be activated before newly fetched
+                    // values are returned.
+                    firebaseConfig.activateFetched();
+                    long remoteVersion = firebaseConfig.getLong("androidVersion");
                     try {
                         PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
                         int versionCode = pInfo.versionCode;
-                        if (serverVersion > versionCode){
+                        if (remoteVersion > versionCode){
                             AlertView alertView = new AlertView(getString(R.string.alert_title_notice), "Your current version is "+ currentVersion +"\nYou must update this app to the latest version", getResources().getString(R.string.alert_button_okay), null, null, AppSplashActivity.this, AlertView.Style.Alert, new OnItemClickListener() {
                                 @Override
                                 public void onItemClick(Object o, int position) {
@@ -119,16 +137,22 @@ public class AppSplashActivity extends AppCompatActivity {
                     } catch (PackageManager.NameNotFoundException e) {
                         e.printStackTrace();
                     }
+
                 } else {
-                    handler.postDelayed(runnable, SPLASH_DURATION);
+                    Toast.makeText(AppSplashActivity.this, "Checking App Version Failed",
+                            Toast.LENGTH_SHORT).show();
+
+                    // checkVersionNumber
+                    Util.wait(1000, new Runnable() {
+                        @Override
+                        public void run() {
+                            checkVersionNumber();
+                        }
+                    });
                 }
             }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                handler.postDelayed(runnable, SPLASH_DURATION);
-            }
         });
+
     }
 
     /**

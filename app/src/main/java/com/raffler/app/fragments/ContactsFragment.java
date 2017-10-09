@@ -110,17 +110,19 @@ public class ContactsFragment extends Fragment {
                         }
                     }
                 } else if (i == contacts.size()){
+
                     String link_val = "https://play.google.com/store/apps/details?id=" + getActivity().getPackageName();
-                    String body = "<a href=" + link_val + ">" + link_val + "</a>";
-                    String data = "Hey,\n\n " +
+//                    String body = "<a href=" + link_val + ">" + link_val + "</a>";
+                    String data = "Hey,\n\n" +
                             "I'm trying this new texting app called Raffler.\n" +
-                            "You get raffle points for each text, and you can win free prizes.\n\n" + body;
+                            "You get raffle points for each text, and you can win free prizes.\n\n" + link_val;
                     Intent sendIntent = new Intent();
-                    sendIntent.setType("text/html");
+                    sendIntent.setType("text/plain");
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Awesome Raffler app");
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, Html.fromHtml(data));
-                    startActivityForResult(sendIntent, REQUEST_INVITE);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, data);
+                    startActivityForResult(Intent.createChooser(sendIntent, getString(R.string.contact_invite)) , REQUEST_INVITE);
+
                 } else {
                     Toast.makeText(getActivity(), "This feature is coming soon.", Toast.LENGTH_SHORT).show();
                 }
