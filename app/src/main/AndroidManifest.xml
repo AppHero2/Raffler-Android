@@ -66,17 +66,19 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
 
-        <!-- <service -->
-        <!-- android:name=".service.SyncService" -->
-        <!-- android:exported="true" -->
-        <!-- tools:ignore="ExportedService"> -->
-        <!-- <intent-filter> -->
-        <!-- <action android:name="android.content.SyncAdapter"/> -->
-        <!-- </intent-filter> -->
-        <!-- <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_adapter"/> -->
-        <!-- <meta-data android:name="android.provider.CONTACTS_STRUCTURE" android:resource="@xml/contacts" /> -->
-        <!-- </service> -->
+        <!-- Custom Contact -->
+         <service
+         android:name=".service.SyncService"
+         android:exported="true"
+         tools:ignore="ExportedService">
+         <intent-filter>
+         <action android:name="android.content.SyncAdapter"/>
+         </intent-filter>
+         <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/sync_adapter"/>
+         <meta-data android:name="android.provider.CONTACTS_STRUCTURE" android:resource="@xml/contacts" />
+         </service>
 
+        <!-- Amazon S3 Transfer Service -->
         <service
             android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
             android:enabled="true" />
