@@ -701,10 +701,11 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 headings.put("en", sender.getName().equals("?")?sender.getPhone():sender.getName());
                 pushObject.put("headings", headings);
                 pushObject.put("contents", contents);
-                pushObject.put("android_group", chatId);
                 pushObject.put("include_player_ids", receivers);
+                pushObject.put("android_group", chatId);
                 JSONObject data = new JSONObject();
                 data.put("sender_phone", sender.getPhone());
+                data.put("sender_photo", sender.getPhoto());
                 data.put("sender_name", sender.getName());
                 pushObject.put("data", data);
                 OneSignal.postNotification(pushObject, null);
@@ -820,6 +821,12 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                             pushObject.put("headings", headings);
                             pushObject.put("contents", contents);
                             pushObject.put("include_player_ids", receivers);
+                            pushObject.put("android_group", chatId);
+                            JSONObject data = new JSONObject();
+                            data.put("sender_phone", sender.getPhone());
+                            data.put("sender_photo", sender.getPhoto());
+                            data.put("sender_name", sender.getName());
+                            pushObject.put("data", data);
                             OneSignal.postNotification(pushObject, null);
                         } catch (JSONException e) {
                             e.printStackTrace();
