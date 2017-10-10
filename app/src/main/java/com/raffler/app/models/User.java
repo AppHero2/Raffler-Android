@@ -42,7 +42,7 @@ public class User {
         this.lastOnlinedAt = getDateFromData("lastOnlinedAt", data);
         this.lastUpdatedAt = getDateFromData("lastUpdatedAt", data);
         this.chats = getMapDataFromData("chats", data);
-        this.lastseens = getMapDataFromData("lastseens", data);
+        this.lastseens = getMapDataFromData("lastSeen", data);
         this.raffles = getMapDataFromData("raffles", data);
         this.raffle_point = getIntFromData("raffle_point", data);
     }

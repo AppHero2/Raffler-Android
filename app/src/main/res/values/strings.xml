@@ -28,6 +28,7 @@
     <string name="today">Today</string>
     <string name="chat_user_typing">typing</string>
     <string name="chat_user_online">online</string>
+    <string name="chat_user_offline">offline</string>
     <string name="chat_user_lastseen">Last seen</string>
     <string name="chat_list_empty">No Chats\nAdd your friends to Contacts</string>
     <string name="chat_attach_select_photo">Select a photo</string>

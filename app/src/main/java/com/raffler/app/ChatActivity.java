@@ -374,6 +374,8 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         presenceRef.onDisconnect().cancel();
         presenceRef.removeValue();
+
+        usersRef.child(sender.getIdx()).child("userAction").setValue(UserAction.IDLE.ordinal());
     }
 
     @Override
@@ -382,6 +384,8 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
 
         presenceRef.onDisconnect().cancel();
         presenceRef.removeValue();
+
+        usersRef.child(sender.getIdx()).child("userAction").setValue(UserAction.IDLE.ordinal());
     }
 
     @Override
@@ -522,7 +526,7 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                     } else if (receiver.getUserStatus() == ONLINE) {
                         tvDescription.setText(R.string.chat_user_online);
                     } else {
-                        long lastSeen = System.currentTimeMillis();
+                        long lastSeen = 0;
                         for (Map.Entry<String, Object> entry: receiver.getLastseens().entrySet()){
                             String key = entry.getKey();
                             if (key.equals(chatId)) {
@@ -531,17 +535,21 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                             }
                         }
 
-                        tvDescription.setText(
-                                String.format(
-                                        Locale.getDefault(),
-                                        "%s %s at %s",
-                                        getResources().getString(R.string.chat_user_lastseen),
-                                        Util.getUserFriendlyDateForChat(
-                                                ChatActivity.this, lastSeen
-                                        ).toLowerCase(),
-                                        Util.getUserTime(lastSeen)
-                                )
-                        );
+                        if (lastSeen == 0) {
+                            tvDescription.setText(R.string.chat_user_offline);
+                        } else {
+                            tvDescription.setText(
+                                    String.format(
+                                            Locale.getDefault(),
+                                            "%s %s at %s",
+                                            getResources().getString(R.string.chat_user_lastseen),
+                                            Util.getUserFriendlyDateForChat(
+                                                    ChatActivity.this, lastSeen
+                                            ).toLowerCase(),
+                                            Util.getUserTime(lastSeen)
+                                    )
+                            );
+                        }
                     }
                 }
             }
@@ -690,10 +698,15 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 JSONObject contents = new JSONObject();
                 contents.put("en", message.getText());
                 JSONObject headings = new JSONObject();
-                headings.put("en", sender.getName()==null?sender.getPhone():sender.getName());
+                headings.put("en", sender.getName().equals("?")?sender.getPhone():sender.getName());
                 pushObject.put("headings", headings);
                 pushObject.put("contents", contents);
+                pushObject.put("android_group", chatId);
                 pushObject.put("include_player_ids", receivers);
+                JSONObject data = new JSONObject();
+                data.put("sender_phone", sender.getPhone());
+                data.put("sender_name", sender.getName());
+                pushObject.put("data", data);
                 OneSignal.postNotification(pushObject, null);
             } catch (JSONException e) {
                 e.printStackTrace();
