@@ -16,6 +16,7 @@ import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Contact;
+import com.raffler.app.utils.Util;
 
 import org.json.JSONObject;
 
@@ -85,9 +86,10 @@ public class NotificationService extends NotificationExtenderService {
                                // Must disable the default sound when setting a custom one
                                 /*builder.mNotification.flags &= ~Notification.DEFAULT_SOUND;
                                 builder.setDefaults(builder.mNotification.flags);*/
+                               Bitmap roundBitmap = Util.getCircleBitmap(loadedImage);
                                return builder.setContentTitle(contact.getName())
 //                                       .setColor(new BigInteger("FF333333", 16).intValue())
-                                       .setLargeIcon(loadedImage);
+                                       .setLargeIcon(roundBitmap);
                                 /*.setSound(Uri.parse("content://media/internal/audio/media/32"))
                                 .setColor(new BigInteger("FF00FF00", 16).intValue())
                                 .setStyle(new NotificationCompat.BigTextStyle().bigText("[Modified Body(bigText)]"))
