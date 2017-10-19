@@ -3,7 +3,7 @@ Whatsapp style texting app
 
 [![platform](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com)
 [![API](https://img.shields.io/badge/API-15%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=15s)
-[![License: ISC](https://img.shields.io/badge/License-ISC-yellow.svg)](https://opensource.org/licenses/ISC)
+[![License: ISC](https://img.shields.io/badge/License-Raffler LLC-yellow.svg)](https://opensource.org/licenses/ISC)
 [![Twitter](https://img.shields.io/badge/Twitter-@rafflerchat-blue.svg?style=flat)](http://twitter.com/rafflerchat)
 
 ## Screenshots
