@@ -2,17 +2,17 @@
 Whatsapp style texting app
 
 [![platform](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com)
-[![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=15s)
+[![API](https://img.shields.io/badge/API-15%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=15s)
 [![License: ISC](https://img.shields.io/badge/License-ISC-yellow.svg)](https://opensource.org/licenses/ISC)
-[![Twitter](https://img.shields.io/badge/Twitter-@dionsegijn-blue.svg?style=flat)](http://twitter.com/rafflerchat)
+[![Twitter](https://img.shields.io/badge/Twitter-@rafflerchat-blue.svg?style=flat)](http://twitter.com/rafflerchat)
 
 ## Screenshots
 
-[<img src="screenshots/Screenshot_1.png" width="250" />]()
-[<img src="screenshots/Screenshot_2.png" width="250" />]()
-[<img src="screenshots/Screenshot_3.png" width="250" />]()
-[<img src="screenshots/Screenshot_4.png" width="250" />]()
-[<img src="screenshots/Screenshot_5.png" width="250" />]()
+[<img src="screenshots/Screenshot_1.png" width="150" />]()
+[<img src="screenshots/Screenshot_2.png" width="150" />]()
+[<img src="screenshots/Screenshot_3.png" width="150" />]()
+[<img src="screenshots/Screenshot_4.png" width="150" />]()
+[<img src="screenshots/Screenshot_5.png" width="150" />]()
 
 ## Current Version
 
