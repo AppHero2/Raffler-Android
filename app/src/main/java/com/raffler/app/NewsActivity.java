@@ -57,23 +57,22 @@ public class NewsActivity extends AppCompatActivity implements NewsValueListener
                 final News news = cell.getNews();
                 if (!news.isRead()){
                     References.getInstance().newsRef.child(user.getIdx()).child(news.getIdx()).child("isRead").setValue(true);
-
-                    if (news.getType() == NewsType.LOSER) {
-                        // analysis
-                        Bundle params = new Bundle();
-                        params.putString("user", user.getPhone());
-                        References.getInstance().analytics.logEvent("lose_raffle", params);
-                    } else if (news.getType() == NewsType.WINNER) {
-                        // analysis
-                        Bundle params = new Bundle();
-                        params.putString("user", user.getPhone());
-                        References.getInstance().analytics.logEvent("win_raffle", params);
-                    } else {
-                        // other event news.
-                    }
                 }
 
-                startActivity(new Intent(NewsActivity.this, WalletActivity.class));
+                if (news.getType() == NewsType.LOSER) {
+                    // analysis
+                    Bundle params = new Bundle();
+                    params.putString("user", user.getPhone());
+                    References.getInstance().analytics.logEvent("lose_raffle", params);
+                } else if (news.getType() == NewsType.WINNER) {
+                    // analysis
+                    Bundle params = new Bundle();
+                    params.putString("user", user.getPhone());
+                    References.getInstance().analytics.logEvent("win_raffle", params);
+                    startActivity(new Intent(NewsActivity.this, WalletActivity.class));
+                } else {
+                    // other event news.
+                }
             }
         });
 

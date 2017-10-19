@@ -9,8 +9,6 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.util.Log;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -56,7 +54,8 @@ public class AppManager {
     private NewsValueListener newsValueListenerMain, newsValueListenerForNews;
 
     public Chat selectedChat;
-    public Map<String, Contact> phoneContacts = new HashMap<>();
+    public boolean loadedPhoneContacts = false;
+    public Map<String, String> phoneContacts = new HashMap<>();
     public List<News> newsList = new ArrayList<>();
 
     private AppManager() {
@@ -312,7 +311,7 @@ public class AppManager {
      * save contacts data into local storage
      * @param contacts
      */
-    public static void saveContact(Map<String,Contact> contacts){
+    public static void saveContacts(Map<String,String> contacts){
         Context context = AppManager.getInstance().context;
         SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -326,11 +325,10 @@ public class AppManager {
      * get saved contacts data from local storage
      * @return dictionary format
      */
-    public static Map<String, Contact> getContacts(){
-        Context context = AppManager.getInstance().context;
+    public static Map<String, String> getContacts(Context context){
         SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
         String contactsDic = sharedPreferences.getString("contacts", null);
-        Map<String,Contact> contacts = new Gson().fromJson(contactsDic, new TypeToken<Map<String, Contact>>(){}.getType());
+        Map<String,String> contacts = new Gson().fromJson(contactsDic, new TypeToken<Map<String, String>>(){}.getType());
         if (contacts == null)
             contacts = new HashMap<>();
         return contacts;
@@ -364,14 +362,16 @@ public class AppManager {
                 String phone = number.replace(" ", "").replace("-", "");
                 Contact contact = new Contact(idx, name, phone);
                 boolean isExist = false;
-                for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()){
+                for (Map.Entry<String, String> entry : phoneContacts.entrySet()){
                     if (entry.getKey().equals(contact.getIdx())){
                         isExist = true;
                         break;
                     }
                 }
                 if (!isExist)
-                    phoneContacts.put(idx, contact);
+                    phoneContacts.put(phone, name);
+
+                saveContacts(phoneContacts);
 
             } while (people.moveToNext());
         }
@@ -391,23 +391,25 @@ public class AppManager {
     }
 
     /**
-     * this method is used to find ic_contact2 with a phone number
+     * this method is used to find contacts with a phone number
      * @param phone : needs to find
-     * @return ic_contact2
+     * @return contacts
      */
     public Contact getPhoneContact(String phone, String countryCode) {
+
+        if (phoneContacts.size() == 0) phoneContacts = getContacts(context);
+
         Contact existing_contact = null;
-        for (Map.Entry<String, Contact> entry : phoneContacts.entrySet()) {
-            //String contactId = entry.getKey();
-            Contact contact = entry.getValue();
-            String contactPhone = contact.getPhone();
+        for (Map.Entry<String, String> entry : phoneContacts.entrySet()) {
+            String contactPhone = entry.getKey();
+            String contactName = entry.getValue();
             if (!contactPhone.contains("+")){
                 String regionCode = country.getDialCode();
                 contactPhone = regionCode + contactPhone;
                 if (phone.contains(regionCode)){
                     String nationalPhoneNumber = phone.replace(regionCode, "");
                     if (contactPhone.contains(nationalPhoneNumber)) {
-                        existing_contact = contact;
+                        existing_contact = new Contact(null, contactName, contactPhone);
                         break;
                     }
                 }
@@ -415,7 +417,7 @@ public class AppManager {
                 if (contactPhone.contains(countryCode)){
                     String nationalPhoneNumber = phone.replace(countryCode, "");
                     if (contactPhone.contains(nationalPhoneNumber)) {
-                        existing_contact = contact;
+                        existing_contact = new Contact(null, contactName, contactPhone);
                         break;
                     }
                 }

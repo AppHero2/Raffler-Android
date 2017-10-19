@@ -1,9 +1,13 @@
 package com.raffler.app;
 
+import android.app.ActivityManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -149,14 +153,14 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         OneSignal.clearOneSignalNotifications();
 
         // Check contacts
-        if (AppManager.getInstance().phoneContacts.size() == 0) {
+        if (AppManager.getInstance().phoneContacts.isEmpty() && !AppManager.getInstance().loadedPhoneContacts) {
             // analysis
-
             Bundle params = new Bundle();
             params.putString("user", mUser.getPhone());
             References.getInstance().analytics.logEvent("empty_contacts", params);
             startActivity(new Intent(this, AppSplashActivity.class));
             this.finish();
+            AppManager.getInstance().loadedPhoneContacts = true;
         }
     }
 
@@ -260,19 +264,34 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
      * this method is used to start OneSignal(PushNotification)
      */
     private void initPushNotification(){
+
+        /*String refreshedToken = FirebaseInstanceId.getInstance().getToken();
+        if (refreshedToken != null) {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            Map<String, Object> pushToken = new HashMap<>();
+            pushToken.put("pushToken", refreshedToken);
+            database.getReference("Users").child(mUser.getIdx()).updateChildren(pushToken);
+            database.getReference("PushTokens").child(mUser.getIdx()).setValue(refreshedToken);
+        }*/
+
         OneSignal.startInit(this)
                 .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
                 .unsubscribeWhenNotificationsAreDisabled(false)
                 .setNotificationOpenedHandler(new OneSignal.NotificationOpenedHandler() {
                     @Override
                     public void notificationOpened(OSNotificationOpenResult result) {
-
+                        Log.d("Notification", result.toString());
                     }
                 })
                 .setNotificationReceivedHandler(new OneSignal.NotificationReceivedHandler() {
                     @Override
                     public void notificationReceived(OSNotification notification) {
-                        Log.d("Notification", notification.toString());
+                        if (isAppOnForeground(MainActivity.this)){
+                            // Clear all notification
+                            OneSignal.clearOneSignalNotifications();
+                        }else{
+                            Log.d("Notification", notification.toString());
+                        }
                     }
                 })
                 .init();
@@ -286,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                             .setMessage("Notifications Disabled!")
                             .show();
                 }
-                Log.i("Debug", "onOSPermissionChanged: " + stateChanges);
+                Log.i(TAG, "onOSPermissionChanged: " + stateChanges);
             }
         });
 
@@ -299,8 +318,24 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
                 Map<String, Object> pushToken = new HashMap<>();
                 pushToken.put("pushToken", userId);
                 database.getReference("Users").child(mUser.getIdx()).updateChildren(pushToken);
+                database.getReference("PushTokens").child(mUser.getIdx()).setValue(userId);
             }
         });
+    }
+
+    private boolean isAppOnForeground(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+        if (appProcesses == null) {
+            return false;
+        }
+        final String packageName = context.getPackageName();
+        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && appProcess.processName.equals(packageName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setupViewPager(ViewPager viewPager) {

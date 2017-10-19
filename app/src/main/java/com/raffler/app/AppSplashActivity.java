@@ -44,7 +44,7 @@ import java.util.List;
 public class AppSplashActivity extends AppCompatActivity {
 
     private static final String TAG = "AppSplashActivity";
-    private static final long SPLASH_DURATION = 2000L;
+    private static final long SPLASH_DURATION = 100L;//2000L;
 
     private Handler handler;
     private Runnable runnable;
@@ -187,21 +187,30 @@ public class AppSplashActivity extends AppCompatActivity {
             AppManager.getInstance().startTrackingNews(firebaseUser.getUid());
             User user = AppManager.getSession();
             if (user != null) {
+                AppManager.getInstance().phoneContacts = AppManager.getContacts(this);
                 if (checkPermissions()) {
-                    new LoadContactsTask(new ResultListener() {
-                        @Override
-                        public void onResult(boolean success) {
-                            startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
-                        }
-                    }).execute("");
+                    if (AppManager.getInstance().phoneContacts.isEmpty() && !AppManager.getInstance().loadedPhoneContacts) {
+                        new LoadContactsTask(new ResultListener() {
+                            @Override
+                            public void onResult(boolean success) {
+                                startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
+                                AppSplashActivity.this.finish();
+                            }
+                        }).execute("");
+                    } else {
+                        startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
+                        this.finish();
+                    }
                 }
             } else {
                 startActivity(new Intent(this, RegisterUserActivity.class));
+                this.finish();
             }
         } else {
             startActivity(new Intent(this, RegisterPhoneActivity.class));
+            this.finish();
         }
-        this.finish();
+
     }
 
     
@@ -233,13 +242,17 @@ public class AppSplashActivity extends AppCompatActivity {
         switch (requestCode) {
             case MULTIPLE_PERMISSIONS: {
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    // permissions granted.
-                    new LoadContactsTask(new ResultListener() {
-                        @Override
-                        public void onResult(boolean success) {
-                            startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
-                        }
-                    }).execute("");
+                    if (AppManager.getInstance().phoneContacts.isEmpty() && !AppManager.getInstance().loadedPhoneContacts) {
+                        // permissions granted.
+                        new LoadContactsTask(new ResultListener() {
+                            @Override
+                            public void onResult(boolean success) {
+                                startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
+                            }
+                        }).execute("");
+                    } else {
+                        startActivity(new Intent(AppSplashActivity.this, MainActivity.class));
+                    }
 
                 } else {
                     String permissionList = "";

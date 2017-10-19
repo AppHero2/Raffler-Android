@@ -186,17 +186,19 @@ public class ContactsFragment extends Fragment {
                 }
             });*/
 
-        } else if (requestCode == REQUEST_INVITE && resultCode == RESULT_OK) {
-            User user = AppManager.getSession();
-            long raffles_point = user.getRaffle_point();
-            usersRef.child(user.getIdx()).child("raffle_point").setValue(raffles_point + 5);
-            Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.contact_alert_earning_extra), getActivity());
-        } else if (requestCode == REQUEST_INVITE){
+        }
+        /*else if (requestCode == REQUEST_INVITE && resultCode == RESULT_OK) {
             User user = AppManager.getSession();
             long raffles_point = user.getRaffle_point();
             usersRef.child(user.getIdx()).child("raffle_point").setValue(raffles_point + 5);
             Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.contact_alert_earning_extra), getActivity());
         }
+        else if (requestCode == REQUEST_INVITE){
+            User user = AppManager.getSession();
+            long raffles_point = user.getRaffle_point();
+            usersRef.child(user.getIdx()).child("raffle_point").setValue(raffles_point + 5);
+            Util.showAlert(getString(R.string.alert_title_notice), getString(R.string.contact_alert_earning_extra), getActivity());
+        }*/
     }
 
     @Override

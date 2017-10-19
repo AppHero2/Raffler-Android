@@ -46,7 +46,7 @@
 
     <!-- Contacts-->
     <string name="contact_no_data">No Contacts</string>
-    <string name="contact_invite">Invite friends (Get points!)</string>
+    <string name="contact_invite">Invite friends</string>
     <string name="contact_help">Contacts help</string>
     <string name="contact_alert_earning_extra">Hurray! You just earned 5 extra raffle points. Please invite more friends to get more points.</string>
 
@@ -84,5 +84,7 @@
     <string name="alert_title_notice">Notice</string>
     <string name="alert_button_okay">Ok</string>
     <string name="alert_button_cancel">Cancel</string>
+
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
 
 </resources>

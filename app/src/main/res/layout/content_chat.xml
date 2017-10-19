@@ -85,6 +85,8 @@
                 android:id="@+id/btnSend"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
                 android:layout_gravity="center_vertical"
                 android:background="@drawable/layerlist_circle_primary">
 

@@ -66,6 +66,13 @@ import com.raffler.app.utils.AmazonUtil;
 import com.raffler.app.utils.ImagePicker;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -622,13 +629,13 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
         }
 
         final DatabaseReference reference = messagesRef.push();
-        String messageId = reference.getKey();
-        long currentTime = System.currentTimeMillis();
+        final String messageId = reference.getKey();
+        final long currentTime = System.currentTimeMillis();
         final Map<String, Object> messageData = new HashMap<>();
-        Map<String, Object> phones = new HashMap<>();
+        final Map<String, Object> phones = new HashMap<>();
         phones.put(sender.getIdx(), sender.getPhone());
         phones.put(receiver.getIdx(), receiver.getPhone());
-        Map<String, Object> photos = new HashMap<>();
+        final Map<String, Object> photos = new HashMap<>();
         photos.put(sender.getIdx(), sender.getPhoto()==null?"":sender.getPhoto());
         photos.put(receiver.getIdx(), receiver.getPhoto()==null?"":receiver.getPhoto());
         messageData.put("text", text);
@@ -656,72 +663,58 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 messageData.put("status", MessageStatus.DELIVERED.ordinal());
                 reference.setValue(messageData);
                 usersRef.child(sender.getIdx()).child("raffle_point").setValue(raffles_point +1);
+
+                Map<String, Object> chatInfo = new HashMap<>();
+                chatInfo.put("phones", phones);
+                chatInfo.put("photos", photos);
+                chatInfo.put("lastSender", sender.getPhone());
+                chatInfo.put("lastMessage", text);
+                chatInfo.put("lastMessageId", messageId);
+                chatInfo.put("updatedAt", currentTime);
+                usersRef.child(sender.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+                usersRef.child(receiver.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+
+                if (!connectedUsers.contains(receiver.getIdx())) {
+
+                    // update unread message count
+                    Query query = usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount");
+                    query.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.getValue() != null) {
+                                long unreadCount = (long)dataSnapshot.getValue();
+                                usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(unreadCount+1);
+                            } else {
+                                usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(1);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            FirebaseCrash.report(databaseError.toException());
+                        }
+                    });
+
+                    // send push notification
+                    String title = sender.getName()==null?sender.getPhone():sender.getName();
+                    String msg = message.getText();
+                    String token = receiver.getPushToken();
+                    sendOneSignalPush(token, title, msg);
+//                    sendPushNotification(token, title, msg);
+                }
+
+                chatsRef.updateChildren(messageData);
+
+                etMessageSend.setText(null);
+
+                // analysis
+                Bundle params = new Bundle();
+                params.putString("sender", sender.getIdx());
+                References.getInstance().analytics.logEvent("send_message", params);
             }
         });
 
-        Map<String, Object> chatInfo = new HashMap<>();
-        chatInfo.put("phones", phones);
-        chatInfo.put("photos", photos);
-        chatInfo.put("lastSender", sender.getPhone());
-        chatInfo.put("lastMessage", text);
-        chatInfo.put("lastMessageId", messageId);
-        chatInfo.put("updatedAt", currentTime);
-        usersRef.child(sender.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
-        usersRef.child(receiver.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
 
-        if (!connectedUsers.contains(receiver.getIdx())) {
-
-            // update unread message count
-            Query query = usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount");
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue() != null) {
-                        long unreadCount = (long)dataSnapshot.getValue();
-                        usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(unreadCount+1);
-                    } else {
-                        usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(1);
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    FirebaseCrash.report(databaseError.toException());
-                }
-            });
-
-            // send push notification
-            try {
-                JSONArray receivers = new JSONArray();
-                receivers.put(receiver.getPushToken());
-                JSONObject pushObject = new JSONObject();
-                JSONObject contents = new JSONObject();
-                contents.put("en", message.getText());
-                JSONObject headings = new JSONObject();
-                headings.put("en", sender.getName().equals("?")?sender.getPhone():sender.getName());
-                pushObject.put("headings", headings);
-                pushObject.put("contents", contents);
-                pushObject.put("include_player_ids", receivers);
-                pushObject.put("android_group", chatId);
-                JSONObject data = new JSONObject();
-                data.put("sender_phone", sender.getPhone());
-                data.put("sender_photo", sender.getPhoto());
-                data.put("sender_name", sender.getName());
-                pushObject.put("data", data);
-                OneSignal.postNotification(pushObject, null);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        chatsRef.updateChildren(messageData);
-
-        etMessageSend.setText(null);
-
-        // analysis
-        Bundle params = new Bundle();
-        params.putString("sender", sender.getIdx());
-        References.getInstance().analytics.logEvent("send_message", params);
     }
 
     private void sendPhoto(Uri filePath){
@@ -775,70 +768,54 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                             messageData.put("status", MessageStatus.DELIVERED.ordinal());
                             reference.setValue(messageData);
                             usersRef.child(sender.getIdx()).child("raffle_point").setValue(raffles_point + 1);
+
+                            Map<String, Object> chatInfo = new HashMap<>();
+                            chatInfo.put("phones", phones);
+                            chatInfo.put("photos", photos);
+                            chatInfo.put("lastSender", sender.getPhone());
+                            chatInfo.put("lastMessage", getString(R.string.chat_send_photo));
+                            chatInfo.put("lastMessageId", messageId);
+                            chatInfo.put("updatedAt", currentTime);
+                            usersRef.child(sender.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+                            usersRef.child(receiver.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
+
+                            if (!connectedUsers.contains(receiver.getIdx())) {
+
+                                // update unread message count
+                                Query query = usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount");
+                                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.getValue() != null) {
+                                            long unreadCount = (long)dataSnapshot.getValue();
+                                            usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(unreadCount+1);
+                                        } else {
+                                            usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(1);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                        FirebaseCrash.report(databaseError.toException());
+                                    }
+                                });
+
+                                //send push
+                                String title = sender.getName()==null?sender.getPhone():sender.getName();
+                                String message = getString(R.string.chat_send_photo);
+                                String token = receiver.getPushToken();
+//                                sendPushNotification(token, title, message);
+                                sendOneSignalPush(token, title, message);
+                            }
+
+                            chatsRef.updateChildren(messageData);
+
+                            // analysis
+                            Bundle params = new Bundle();
+                            params.putString("sender", sender.getIdx());
+                            References.getInstance().analytics.logEvent("send_photo", params);
                         }
                     });
-
-                    Map<String, Object> chatInfo = new HashMap<>();
-                    chatInfo.put("phones", phones);
-                    chatInfo.put("photos", photos);
-                    chatInfo.put("lastSender", sender.getPhone());
-                    chatInfo.put("lastMessage", getString(R.string.chat_send_photo));
-                    chatInfo.put("lastMessageId", messageId);
-                    chatInfo.put("updatedAt", currentTime);
-                    usersRef.child(sender.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
-                    usersRef.child(receiver.getIdx()).child("chats").child(chatId).updateChildren(chatInfo);
-
-                    if (!connectedUsers.contains(receiver.getIdx())) {
-
-                        // update unread message count
-                        Query query = usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount");
-                        query.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.getValue() != null) {
-                                    long unreadCount = (long)dataSnapshot.getValue();
-                                    usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(unreadCount+1);
-                                } else {
-                                    usersRef.child(receiver.getIdx()).child("chats").child(chatId).child("unreadCount").setValue(1);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                                FirebaseCrash.report(databaseError.toException());
-                            }
-                        });
-
-                        // send push notification
-                        try {
-                            JSONArray receivers = new JSONArray();
-                            receivers.put(receiver.getPushToken());
-                            JSONObject pushObject = new JSONObject();
-                            JSONObject contents = new JSONObject();
-                            contents.put("en", getString(R.string.chat_send_photo));
-                            JSONObject headings = new JSONObject();
-                            headings.put("en", sender.getName()==null?sender.getPhone():sender.getName());
-                            pushObject.put("headings", headings);
-                            pushObject.put("contents", contents);
-                            pushObject.put("include_player_ids", receivers);
-                            pushObject.put("android_group", chatId);
-                            JSONObject data = new JSONObject();
-                            data.put("sender_phone", sender.getPhone());
-                            data.put("sender_photo", sender.getPhoto());
-                            data.put("sender_name", sender.getName());
-                            pushObject.put("data", data);
-                            OneSignal.postNotification(pushObject, null);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    chatsRef.updateChildren(messageData);
-
-                    // analysis
-                    Bundle params = new Bundle();
-                    params.putString("sender", sender.getIdx());
-                    References.getInstance().analytics.logEvent("send_photo", params);
                 }
             }
 
@@ -852,6 +829,93 @@ public class ChatActivity extends AppCompatActivity implements UserValueListener
                 Log.d(TAG, e.toString());
             }
         });
+    }
+
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+    OkHttpClient client = new OkHttpClient();
+
+    Call post(String url, String json, Callback callback) {
+        RequestBody body = RequestBody.create(JSON, json);
+        Request request = new Request.Builder()
+                .addHeader("Content-Type","application/json")
+                .addHeader("Authorization","key=AIzaSyAkeFnKc_r6TJSO7tm5OVnzkbni6dEk4Lw")
+                .url(url)
+                .post(body)
+                .build();
+        Call call = client.newCall(request);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public void sendOneSignalPush(String token, String title, String message){
+        try {
+            JSONArray receivers = new JSONArray();
+            receivers.put(receiver.getPushToken());
+            JSONObject pushObject = new JSONObject();
+            JSONObject contents = new JSONObject();
+            contents.put("en", message);
+            JSONObject headings = new JSONObject();
+            headings.put("en", title);
+            pushObject.put("headings", headings);
+            pushObject.put("contents", contents);
+            pushObject.put("include_player_ids", receivers);
+            pushObject.put("android_group", chatId);
+            JSONObject data = new JSONObject();
+            data.put("sender_phone", sender.getPhone());
+            data.put("sender_photo", sender.getPhoto());
+            data.put("sender_name", sender.getName());
+            pushObject.put("data", data);
+            OneSignal.postNotification(pushObject, new OneSignal.PostNotificationResponseHandler() {
+                @Override
+                public void onSuccess(JSONObject jsonObject) {
+                    Log.d(TAG, jsonObject.toString());
+                }
+
+                @Override
+                public void onFailure(JSONObject jsonObject) {
+                    Log.d(TAG, jsonObject.toString());
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+    public void sendPushNotification(String token, String title, String message){
+        try {
+            JSONObject jsonObject = new JSONObject();
+            JSONObject notification = new JSONObject();
+            notification.put("title", title);
+            notification.put("body", message);
+            JSONObject data = new JSONObject();
+            data.put("sender_phone", sender.getPhone());
+            data.put("sender_photo", sender.getPhoto());
+            data.put("sender_name", sender.getName());
+            jsonObject.put("notification", notification);
+            jsonObject.put("data", data);
+            jsonObject.put("to", token);
+
+            post("https://fcm.googleapis.com/fcm/send", jsonObject.toString(), new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    FirebaseCrash.report(e);
+                }
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        String responseStr = response.body().string();
+                        Log.d("Response", responseStr);
+                        // Do what you want to do with the response.
+                    } else {
+                        // Request not successful
+                    }
+                }
+            });
+
+        } catch (JSONException ex) {
+            Log.d("Exception", "JSON exception", ex);
+        }
     }
 
     public void onPickImage(View view) {

@@ -376,6 +376,8 @@ public class Util {
 
     public static Bitmap getCircleBitmap(Bitmap bm) {
 
+        if (bm == null) return null;
+
         int sice = Math.min((bm.getWidth()), (bm.getHeight()));
 
         Bitmap bitmap = ThumbnailUtils.extractThumbnail(bm, sice, sice);
@@ -401,7 +403,6 @@ public class Util {
         paint.setStrokeWidth((float) 4);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(bitmap, rect, rect, paint);
-
         return output;
     }
 }
