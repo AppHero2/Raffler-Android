@@ -11,7 +11,11 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.country.Country;
+import com.raffler.app.models.RealmContactMigration;
 import com.raffler.app.utils.References;
+
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
 
 /**
  * Created by Ghost on 14/8/2017.
@@ -24,6 +28,14 @@ public class AppApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Realm.init(this);
+        RealmConfiguration config = new RealmConfiguration.Builder()
+                .deleteRealmIfMigrationNeeded()
+                //.schemaVersion(2) // Must be bumped when the schema changes
+                //.migration(new RealmContactMigration()) // Migration to run instead of throwing an exception
+                .name("default.realm").build();
+        Realm.setDefaultConfiguration(config);
 
         if(database==null) {
             FirebaseDatabase.getInstance().setPersistenceEnabled(true);

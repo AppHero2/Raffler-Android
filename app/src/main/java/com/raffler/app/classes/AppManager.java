@@ -24,6 +24,7 @@ import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.Contact;
 import com.raffler.app.models.News;
+import com.raffler.app.models.RealmContact;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 
@@ -31,6 +32,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.RealmResults;
 
 /**
  * Created by Ghost on 14/8/2017.
@@ -55,7 +61,7 @@ public class AppManager {
 
     public Chat selectedChat;
     public boolean loadedPhoneContacts = false;
-    public Map<String, String> phoneContacts = new HashMap<>();
+    public RealmList<RealmContact> phoneContacts = new RealmList<>();
     public List<News> newsList = new ArrayList<>();
 
     private AppManager() {
@@ -311,26 +317,26 @@ public class AppManager {
      * save contacts data into local storage
      * @param contacts
      */
-    public static void saveContacts(Map<String,String> contacts){
-        Context context = AppManager.getInstance().context;
-        SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
-        String contactsDic = gson.toJson(contacts);
-        editor.putString("contacts", contactsDic);
-        editor.commit();
+    public static void saveContacts(final RealmList<RealmContact> contacts ){
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        final RealmResults<RealmContact> results = realm.where(RealmContact.class).findAll();
+        results.deleteAllFromRealm();
+        realm.copyToRealmOrUpdate(contacts);
+        realm.commitTransaction();
     }
 
     /**
      * get saved contacts data from local storage
      * @return dictionary format
      */
-    public static Map<String, String> getContacts(Context context){
-        SharedPreferences sharedPreferences = context.getSharedPreferences("Contacts", Context.MODE_PRIVATE);
-        String contactsDic = sharedPreferences.getString("contacts", null);
-        Map<String,String> contacts = new Gson().fromJson(contactsDic, new TypeToken<Map<String, String>>(){}.getType());
-        if (contacts == null)
-            contacts = new HashMap<>();
+    public static RealmList<RealmContact> getContacts(Context context){
+        Realm realm = Realm.getDefaultInstance();
+        RealmResults<RealmContact> results = realm.where(RealmContact.class).findAll();
+        RealmList<RealmContact> contacts = new RealmList<>();
+        for (RealmContact contact: results) {
+            contacts.add(contact);
+        }
         return contacts;
     }
 
@@ -353,6 +359,8 @@ public class AppManager {
         int indexName = people.getColumnIndex(Phone.DISPLAY_NAME);
         int indexNumber = people.getColumnIndex(Phone.NUMBER);
 
+        RealmList<RealmContact> realmContacts = new RealmList<>();
+
         if(people.moveToFirst()) {
             do {
                 String idx = people.getString(indexId);
@@ -360,21 +368,34 @@ public class AppManager {
                 String number = people.getString(indexNumber);
                 // Do work...
                 String phone = number.replace(" ", "").replace("-", "");
-                Contact contact = new Contact(idx, name, phone);
-                boolean isExist = false;
-                for (Map.Entry<String, String> entry : phoneContacts.entrySet()){
-                    if (entry.getKey().equals(contact.getIdx())){
+
+                RealmContact contact = new RealmContact();
+                contact.setIdx(idx);
+                contact.setName(name);
+                contact.setPhone(phone);
+
+                /*boolean isExist = false;
+
+                for (int i = 0; i < phoneContacts.size(); i++){
+                    RealmContact existContact = phoneContacts.get(i);
+                    if (existContact.getIdx().equals(contact.getIdx())){
                         isExist = true;
                         break;
                     }
                 }
-                if (!isExist)
-                    phoneContacts.put(phone, name);
+                if (!isExist){
+                    phoneContacts.add(contact);
+                }*/
 
-                saveContacts(phoneContacts);
+                realmContacts.add(contact);
 
             } while (people.moveToNext());
+
+            saveContacts(realmContacts);
         }
+
+        if (phoneContacts.isEmpty())
+            phoneContacts = getContacts(context);
 
         long endnow = android.os.SystemClock.uptimeMillis();
         long processingDuration = endnow - startnow;
@@ -395,34 +416,37 @@ public class AppManager {
      * @param phone : needs to find
      * @return contacts
      */
-    public Contact getPhoneContact(String phone, String countryCode) {
-
-        if (phoneContacts.size() == 0) phoneContacts = getContacts(context);
+    public Contact getPhoneContactFromContacts(RealmList<RealmContact> contacts, String phone, String countryCode) {
 
         Contact existing_contact = null;
-        for (Map.Entry<String, String> entry : phoneContacts.entrySet()) {
-            String contactPhone = entry.getKey();
-            String contactName = entry.getValue();
-            if (!contactPhone.contains("+")){
-                String regionCode = country.getDialCode();
-                contactPhone = regionCode + contactPhone;
-                if (phone.contains(regionCode)){
-                    String nationalPhoneNumber = phone.replace(regionCode, "");
-                    if (contactPhone.contains(nationalPhoneNumber)) {
-                        existing_contact = new Contact(null, contactName, contactPhone);
-                        break;
-                    }
-                }
-            } else {
-                if (contactPhone.contains(countryCode)){
-                    String nationalPhoneNumber = phone.replace(countryCode, "");
-                    if (contactPhone.contains(nationalPhoneNumber)) {
-                        existing_contact = new Contact(null, contactName, contactPhone);
-                        break;
+        if (contacts != null && !contacts.isEmpty()){
+            for (RealmContact contact: contacts) {
+                if (contact.isValid()){
+                    String contactPhone = contact.getPhone();
+                    String contactName = contact.getName();
+                    if (!contactPhone.contains("+")){
+                        String regionCode = country.getDialCode();
+                        contactPhone = regionCode + contactPhone;
+                        if (phone.contains(regionCode)){
+                            String nationalPhoneNumber = phone.replace(regionCode, "");
+                            if (contactPhone.contains(nationalPhoneNumber)) {
+                                existing_contact = new Contact(null, contactName, contactPhone);
+                                break;
+                            }
+                        }
+                    } else {
+                        if (contactPhone.contains(countryCode)){
+                            String nationalPhoneNumber = phone.replace(countryCode, "");
+                            if (contactPhone.contains(nationalPhoneNumber)) {
+                                existing_contact = new Contact(null, contactName, contactPhone);
+                                break;
+                            }
+                        }
                     }
                 }
             }
         }
+
         return existing_contact;
     }
 

@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,9 +35,12 @@ import com.google.i18n.phonenumbers.Phonenumber;
 import com.raffler.app.R;
 import com.raffler.app.classes.AppManager;
 import com.raffler.app.interfaces.ChatItemClickListener;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Chat;
 import com.raffler.app.models.Contact;
+import com.raffler.app.models.RealmContact;
 import com.raffler.app.models.User;
+import com.raffler.app.tasks.LoadContactsTask;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
@@ -46,6 +48,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import io.realm.RealmList;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -71,9 +75,17 @@ public class ContactsFragment extends Fragment {
     private ContactListAdapter adapter;
 
     private ChatItemClickListener listener;
+    public ResultListener contactUpdatedListener;
 
     public ContactsFragment() {
-        // Required empty public constructor
+        contactUpdatedListener = new ResultListener() {
+            @Override
+            public void onResult(boolean success) {
+                if (success) {
+                    findContactsInLocal();
+                }
+            }
+        };
     }
 
     @Override
@@ -154,6 +166,9 @@ public class ContactsFragment extends Fragment {
             }
         });*/
 
+
+        findContactsInLocal();
+
         return view;
     }
 
@@ -204,9 +219,6 @@ public class ContactsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        // refresh contact list once entering foreground
-        new FindContactsTask().execute("");
     }
 
     @Override
@@ -242,9 +254,26 @@ public class ContactsFragment extends Fragment {
                 @Override
                 public void run() {
                     if (progressBar != null) progressBar.setVisible(true);
+
+                    if (AppManager.getInstance().phoneContacts.isEmpty()) {
+                        new LoadContactsTask(new ResultListener() {
+                            @Override
+                            public void onResult(boolean success) {
+                                findContactsInServer();
+                            }
+                        }).execute("");
+                    } else {
+                        findContactsInServer();
+                    }
                 }
             });
         }
+    }
+
+    private void findContactsInServer(){
+
+        contacts.clear();
+        final RealmList<RealmContact> phoneContacts = AppManager.getContacts(getActivity());
         Query query = References.getInstance().contactListRef;
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -263,7 +292,7 @@ public class ContactsFragment extends Fragment {
                             Phonenumber.PhoneNumber numberProto = phoneUtil.parse(phone, "");
                             String countryCode = "+" + String.valueOf(numberProto.getCountryCode());
 
-                            Contact contact = AppManager.getInstance().getPhoneContact(phone, countryCode);
+                            Contact contact = AppManager.getInstance().getPhoneContactFromContacts(phoneContacts, phone, countryCode);
                             if (contact != null) {
                                 contact.setUid(key);
                                 contact.setPhoto(photo);
@@ -308,7 +337,7 @@ public class ContactsFragment extends Fragment {
         this.listener = listener;
     }
 
-    public class FindContactsTask extends AsyncTask<String, Void, String> {
+    public class RefreshContactsTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... params) {

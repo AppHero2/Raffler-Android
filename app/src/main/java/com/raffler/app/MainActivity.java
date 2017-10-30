@@ -6,8 +6,11 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -40,6 +43,7 @@ import com.raffler.app.fragments.ContactsFragment;
 import com.raffler.app.fragments.RafflesFragment;
 import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.NewsValueListener;
+import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.interfaces.UserValueListener;
 import com.raffler.app.models.Chat;
@@ -47,6 +51,7 @@ import com.raffler.app.models.News;
 import com.raffler.app.models.NewsType;
 import com.raffler.app.models.User;
 import com.raffler.app.models.UserStatus;
+import com.raffler.app.tasks.LoadContactsTask;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
 
@@ -81,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
 
     private int raffles_point = 0;
     private User mUser;
+
+    ResultListener contactsListenerForChatList, contactsListenerForContacts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,6 +148,8 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         AppManager.getInstance().setUserValueListenerMain(this);
 
         initPushNotification();
+
+        getApplication().getContentResolver().registerContentObserver(ContactsContract.Contacts.CONTENT_URI, true,new MyContentObserver(new Handler()));
     }
 
     @Override
@@ -341,10 +350,12 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         chatFragment = new ChatListFragment();
+        this.contactsListenerForChatList = chatFragment.contactUpdatedListener;
         chatFragment.setUnreadMessageListener(this);
         chatFragment.setChatItemClickListener(this);
         rafflesFragment = new RafflesFragment();
         contactsFragment = new ContactsFragment();
+        this.contactsListenerForContacts = contactsFragment.contactUpdatedListener;
         contactsFragment.setListener(this);
         adapter.addFragment(chatFragment,"CHAT");
         adapter.addFragment(rafflesFragment, "RAFFLES");
@@ -466,4 +477,90 @@ public class MainActivity extends AppCompatActivity implements ChatItemClickList
         }
     }
 
+
+    /**
+     * observer to check changed contacts
+     */
+    private class MyContentObserver extends ContentObserver {
+
+        private boolean isLoading = false;
+        public MyContentObserver(Handler h) {
+            super(h);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+
+            try
+            {
+                super.onChange(selfChange);
+
+                /*Uri callUri =ContactsContract.CommonDataKinds.Email.CONTENT_URI;
+                Cursor cur =  cr.query(callUri, null, null, null, null);
+                while (cur.moveToNext()) {
+                    String contact_id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
+                    String display_name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DISPLAY_NAME));
+                    String data = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
+                    String content_Type = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTENT_TYPE));
+                    String type = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
+
+                    Log.d("------ ic_contact2 id : "+contact_id+"----", "----onChange fired by content ---observer--------");
+                    Log.d("------display_name : "+display_name+"----", "----onChange fired by content ---observer--------");
+                    Log.d("------data : "+data+"----", "----onChange fired by content ---observer--------");
+                    Log.d("------content_Type : "+content_Type+"----", "----onChange fired by content ---observer--------");
+                    Log.d("------type : "+type+"----", "----onChange fired by content ---observer--------");
+                }*/
+
+                // analysis
+                Bundle params = new Bundle();
+                params.putString("contact_changed", "");
+                References.getInstance().analytics.logEvent("contact_changed", params);
+
+                AppManager.getInstance().loadPhoneContacts(new ResultListener() {
+                    @Override
+                    public void onResult(boolean success) {
+                        isLoading = false;
+
+                        if (contactsListenerForChatList != null)
+                            contactsListenerForChatList.onResult(true);
+                        if (contactsListenerForContacts != null)
+                            contactsListenerForContacts.onResult(true);
+                    }
+                });
+
+                if (!isLoading) {
+                    isLoading = true;
+
+                    /*new LoadContactsTask(new ResultListener() {
+                        @Override
+                        public void onResult(boolean success) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+
+
+
+                                }
+                            });
+
+                        }
+                    }).execute("");*/
+                }
+
+            }catch(Exception e){e.printStackTrace();
+                FirebaseCrash.report(e);
+                if (contactsListenerForChatList != null)
+                    contactsListenerForChatList.onResult(false);
+                if (contactsListenerForContacts != null)
+                    contactsListenerForContacts.onResult(false);
+            }
+        }
+
+        @Override
+        public boolean deliverSelfNotifications() {
+
+            return true;
+        }
+
+    }
 }

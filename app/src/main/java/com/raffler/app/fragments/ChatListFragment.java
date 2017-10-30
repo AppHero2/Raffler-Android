@@ -1,9 +1,6 @@
 package com.raffler.app.fragments;
 
-import android.database.ContentObserver;
 import android.os.Bundle;
-import android.os.Handler;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -29,13 +26,15 @@ import com.raffler.app.interfaces.ChatItemClickListener;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.interfaces.UnreadMessageListener;
 import com.raffler.app.models.ChatInfo;
+import com.raffler.app.models.RealmContact;
 import com.raffler.app.models.User;
-import com.raffler.app.tasks.LoadContactsTask;
 import com.raffler.app.utils.References;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import io.realm.RealmList;
 
 public class ChatListFragment extends Fragment {
 
@@ -55,9 +54,30 @@ public class ChatListFragment extends Fragment {
 
     private UnreadMessageListener unreadMessageListener;
     private ChatItemClickListener chatItemClickListener;
+    public ResultListener contactUpdatedListener;
 
     public ChatListFragment() {
-
+        contactUpdatedListener = new ResultListener() {
+            @Override
+            public void onResult(boolean success) {
+                if (success) {
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (chatInfoList != null) {
+                                    if (chatInfoList.size() > 0) {
+                                        RealmList<RealmContact> phoneContacts = AppManager.getContacts(getActivity());
+                                        adapter.setPhoneContacts(phoneContacts);
+                                        adapter.notifyDataSetChanged();
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -83,15 +103,14 @@ public class ChatListFragment extends Fragment {
             recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), mColumnCount));
         }
 
-        adapter = new ChatListRecyclerViewAdapter(chatInfoList);
+        RealmList<RealmContact> phoneContacts = AppManager.getContacts(getActivity());
+        adapter = new ChatListRecyclerViewAdapter(chatInfoList, phoneContacts);
         recyclerView.setAdapter(adapter);
         if (chatItemClickListener != null) {
             adapter.setChatItemClickListener(chatItemClickListener);
         }
 
         startTrackingUserChatList();
-
-        getActivity().getApplication().getContentResolver().registerContentObserver(ContactsContract.Contacts.CONTENT_URI, true,new MyContentObserver(new Handler()));
 
         return view;
     }
@@ -175,75 +194,5 @@ public class ChatListFragment extends Fragment {
 
     public void setChatItemClickListener(ChatItemClickListener chatItemClickListener) {
         this.chatItemClickListener = chatItemClickListener;
-    }
-    
-    /**
-     * observer to check changed contacts
-     */
-    private class MyContentObserver extends ContentObserver {
-
-        public MyContentObserver(Handler h) {
-            super(h);
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-
-            try
-            {
-                super.onChange(selfChange);
-
-                /*Uri callUri =ContactsContract.CommonDataKinds.Email.CONTENT_URI;
-                Cursor cur =  cr.query(callUri, null, null, null, null);
-                while (cur.moveToNext()) {
-                    String contact_id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
-                    String display_name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DISPLAY_NAME));
-                    String data = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-                    String content_Type = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTENT_TYPE));
-                    String type = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
-
-                    Log.d("------ ic_contact2 id : "+contact_id+"----", "----onChange fired by content ---observer--------");
-                    Log.d("------display_name : "+display_name+"----", "----onChange fired by content ---observer--------");
-                    Log.d("------data : "+data+"----", "----onChange fired by content ---observer--------");
-                    Log.d("------content_Type : "+content_Type+"----", "----onChange fired by content ---observer--------");
-                    Log.d("------type : "+type+"----", "----onChange fired by content ---observer--------");
-                }*/
-
-                // analysis
-                Bundle params = new Bundle();
-                params.putString("contact_changed", "");
-                References.getInstance().analytics.logEvent("contact_changed", params);
-
-                new LoadContactsTask(new ResultListener() {
-                    @Override
-                    public void onResult(boolean success) {
-                        if (getActivity() == null)
-                            return;
-
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (chatInfoList != null) {
-                                    if (chatInfoList.size() > 0) {
-                                        adapter.notifyDataSetChanged();
-                                    }
-                                }
-                            }
-                        });
-
-                    }
-                }).execute("");
-
-            }catch(Exception e){e.printStackTrace();
-                FirebaseCrash.report(e);
-            }
-        }
-
-        @Override
-        public boolean deliverSelfNotifications() {
-
-            return true;
-        }
-
     }
 }

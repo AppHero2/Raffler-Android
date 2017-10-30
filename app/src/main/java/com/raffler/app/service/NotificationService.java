@@ -19,11 +19,14 @@ import com.raffler.app.classes.AppManager;
 import com.raffler.app.country.Country;
 import com.raffler.app.interfaces.ResultListener;
 import com.raffler.app.models.Contact;
+import com.raffler.app.models.RealmContact;
 import com.raffler.app.utils.Util;
 
 import org.json.JSONObject;
 
 import java.util.Map;
+
+import io.realm.RealmList;
 
 /**
  * Created by Ghost on 10/10/2017.
@@ -47,7 +50,7 @@ public class NotificationService extends NotificationExtenderService {
                     PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
                     Phonenumber.PhoneNumber numberProto = phoneUtil.parse(senderPhone, "");
                     final String countryCode = "+" + String.valueOf(numberProto.getCountryCode());
-                    Map<String, String> contacts = AppManager.getContacts(getApplicationContext());
+                    RealmList<RealmContact> contacts = AppManager.getContacts(getApplicationContext());
                     Country country = Country.getCountryFromSIM(getApplicationContext());
                     final Contact contact = getPhoneContact(senderPhone, countryCode, contacts, country);
                     if (senderName.equals("?"))
@@ -69,11 +72,11 @@ public class NotificationService extends NotificationExtenderService {
         }
     }
 
-    public Contact getPhoneContact(String phone, String countryCode, Map<String, String> contacts, Country country) {
+    public Contact getPhoneContact(String phone, String countryCode, RealmList<RealmContact> contacts, Country country) {
         Contact existing_contact = null;
-        for (Map.Entry<String, String> entry : contacts.entrySet()) {
-            String contactPhone = entry.getKey();
-            String contactName = entry.getValue();
+        for (RealmContact contact: contacts){
+            String contactPhone = contact.getPhone();
+            String contactName = contact.getName();
             if (!contactPhone.contains("+")){
 
                 String regionCode = country.getDialCode();

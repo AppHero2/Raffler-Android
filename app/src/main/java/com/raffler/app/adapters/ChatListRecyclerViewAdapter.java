@@ -27,6 +27,7 @@ import com.raffler.app.models.ChatInfo;
 import com.raffler.app.models.ChatType;
 import com.raffler.app.models.Contact;
 import com.raffler.app.models.Message;
+import com.raffler.app.models.RealmContact;
 import com.raffler.app.models.User;
 import com.raffler.app.utils.References;
 import com.raffler.app.utils.Util;
@@ -36,21 +37,29 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import io.realm.RealmList;
+
 import static com.raffler.app.utils.Util.getMapDataFromData;
 
 public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRecyclerViewAdapter.ViewHolder> {
 
     private User mUser;
     private final List<ChatInfo> mValues;
+    private RealmList<RealmContact> phoneContacts;
     private ChatItemClickListener chatItemClickListener;
 
     public void setChatItemClickListener(ChatItemClickListener chatItemClickListener) {
         this.chatItemClickListener = chatItemClickListener;
     }
 
-    public ChatListRecyclerViewAdapter(List<ChatInfo> items) {
+    public ChatListRecyclerViewAdapter(List<ChatInfo> items, RealmList<RealmContact> phoneContacts) {
+        this.phoneContacts = phoneContacts;
         mValues = items;
         mUser = AppManager.getSession();
+    }
+
+    public void setPhoneContacts(RealmList<RealmContact> phoneContacts) {
+        this.phoneContacts = phoneContacts;
     }
 
     @Override
@@ -232,7 +241,7 @@ public class ChatListRecyclerViewAdapter extends RecyclerView.Adapter<ChatListRe
                 PhoneNumber numberProto = phoneUtil.parse(phone, "");
                 String countryCode = "+" + String.valueOf(numberProto.getCountryCode());
                 String formatedPhoneNumber = phoneUtil.format(numberProto, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
-                Contact contact = AppManager.getInstance().getPhoneContact(phone, countryCode);
+                Contact contact = AppManager.getInstance().getPhoneContactFromContacts(phoneContacts, phone, countryCode);
                 if (contact == null) {
                     mPhoneContactName = formatedPhoneNumber;
                 } else {
