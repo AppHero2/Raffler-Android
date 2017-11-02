@@ -1,5 +1,5 @@
 # Raffler-Android
-Whatsapp style texting app
+Whatsapp style chat app
 
 [![platform](https://img.shields.io/badge/platform-Android-green.svg)](https://www.android.com)
 [![API](https://img.shields.io/badge/API-15%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=15s)
@@ -21,8 +21,8 @@ Download on Google Play:
   <img alt="Android app on Google Play" src="https://developer.android.com/images/brand/en_app_rgb_wo_45.png" />
 </a>
 
-## History
-
+## Frameworks
+Firebase, AWS S3, Onesignal
 
 ## Contribute
 
