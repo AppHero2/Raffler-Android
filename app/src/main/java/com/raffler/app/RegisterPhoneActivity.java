@@ -2,10 +2,10 @@ package com.raffler.app;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -32,7 +32,6 @@ import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.kaopiz.kprogresshud.KProgressHUD;
-import com.raffler.app.classes.AppManager;
 import com.raffler.app.country.Country;
 import com.raffler.app.country.CountryPicker;
 import com.raffler.app.country.CountryPickerListener;
@@ -54,7 +53,7 @@ public class RegisterPhoneActivity extends AppCompatActivity {
     private boolean isValid = false;
 
     private Timer timer;
-    private int timeRemaining = 60;
+    private int timeRemaining = 180;
     private boolean isWaiting = false;
 
     private KProgressHUD hud;

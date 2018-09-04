@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Raffler-Android.iml" filepath="$PROJECT_DIR$/Raffler-Android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Raffler.iml" filepath="$PROJECT_DIR$/Raffler.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
